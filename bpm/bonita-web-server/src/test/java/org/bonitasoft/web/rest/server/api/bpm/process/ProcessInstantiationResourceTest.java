@@ -190,7 +190,7 @@ public class ProcessInstantiationResourceTest extends RestletTest {
     public void should_respond_429_Too_Many_Requests_when_case_creation_limit_reached() throws Exception {
         var retryAfter = new Date();
         doThrow(new ProcessExecutionException(new RuntimeException("aMessage"), retryAfter.getTime()))
-                .when(processAPI).startProcessWithInputs(anyLong(), anyMapOf(String.class, Serializable.class));
+                .when(processAPI).startProcessWithInputs(anyLong(), anyMap());
 
         final Response response = request(URL_API_PROCESS_INSTANTIATION_TEST).post(VALID_POST_BODY);
 
