@@ -103,7 +103,7 @@ public class FormMappingServiceImplTest {
 
         formMappingService.create(PROCESS_DEFINITION_ID, "someHumanTask", 84, SFormMapping.TARGET_UNDEFINED, null);
 
-        verifyZeroInteractions(pageMappingService);
+        verifyNoInteractions(pageMappingService);
     }
 
     @Test

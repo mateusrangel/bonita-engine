@@ -78,7 +78,7 @@ public class CommonResourceTest extends RestletTest {
         // given:
         final CommonResource spy = spy(new CommonResource());
         doReturn(null).when(spy).getRequestParameter(anyString());
-        doNothing().when(spy).verifyNotNullParameter(anyObject(), anyString());
+        doNothing().when(spy).verifyNotNullParameter(any(), anyString());
         final String parameterName = "any string parameter name";
 
         // when:

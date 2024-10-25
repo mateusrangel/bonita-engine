@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.util.Collections;
 
@@ -71,7 +71,7 @@ public class TransitionConditionEvaluatorTest {
         //then
         assertThat(value).isNull();
 
-        verifyZeroInteractions(expressionResolverService);
+        verifyNoInteractions(expressionResolverService);
     }
 
     @Test
@@ -94,7 +94,7 @@ public class TransitionConditionEvaluatorTest {
                     .isEqualTo("Condition expression must return a boolean, on transition: " + transition.getName());
             assertThat(e.getExpressionName()).isEqualTo("isTrue");
 
-            verifyZeroInteractions(expressionResolverService);
+            verifyNoInteractions(expressionResolverService);
         }
 
     }

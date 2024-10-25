@@ -68,7 +68,7 @@ public class EntityMergerTest {
     public void merge_a_simple_serializable_should_not_call_merge_on_bdrService() {
         final String hello = "Hello";
         assertThat(entityMerger.merge("Hello")).isEqualTo(hello);
-        verifyZeroInteractions(bdrService);
+        verifyNoInteractions(bdrService);
     }
 
     @Test
@@ -78,7 +78,7 @@ public class EntityMergerTest {
         listOfEntities.add("Goodbye");
         listOfEntities.add("Have a nice day");
         entityMerger.merge((Serializable) listOfEntities);
-        verifyZeroInteractions(bdrService);
+        verifyNoInteractions(bdrService);
     }
 
 }

@@ -15,6 +15,7 @@ package org.bonitasoft.engine.home;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 
@@ -40,7 +41,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -103,20 +103,20 @@ public class BonitaHomeServerTest {
     }
 
     @Test
-    public void should_context_have_properties_overriden_with_database_properties() throws Exception {
+    public void should_context_have_properties_overridden_with_database_properties() throws Exception {
         //given
         Properties databaseProperties = new Properties();
         databaseProperties.setProperty("overriddenProperty", "databaseValue");
         databaseProperties.setProperty("databaseProperty", "aValueInDb");
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         databaseProperties.store(out, "");
-        doReturn(Collections.singletonList(new BonitaConfiguration("myProp.properties", out.toByteArray())))
+        doReturn(List.of(new BonitaConfiguration("myProp.properties", out.toByteArray())))
                 .when(configurationService).getPlatformEngineConf();
         Properties classPathProperties = new Properties();
         classPathProperties.setProperty("overriddenProperty", "classPathValue");
         classPathProperties.setProperty("classPathProperty", "aValueInClassPath");
         doReturn(classPathProperties).when(bonitaHomeServer)
-                .getPropertiesFromClassPath(ArgumentMatchers.<String> any());
+                .getPropertiesFromClassPath(any(String[].class));
         //when
         Properties allProperties = bonitaHomeServer.getPlatformProperties();
         //then

@@ -56,7 +56,7 @@ public class TenantResourcesServiceImplTest {
         tenantResourcesService.add("resourceName", TenantResourceType.BDM, null, -1);
 
         // then
-        verifyZeroInteractions(recorder);
+        verifyNoInteractions(recorder);
     }
 
     @Test
@@ -65,7 +65,7 @@ public class TenantResourcesServiceImplTest {
         tenantResourcesService.add("resourceName", TenantResourceType.BDM, new byte[] {}, -1);
 
         // then
-        verifyZeroInteractions(recorder);
+        verifyNoInteractions(recorder);
     }
 
     @Test

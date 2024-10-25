@@ -15,7 +15,6 @@ package org.bonitasoft.web.rest.server.api.bdm;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyMap;
-import static org.mockito.ArgumentMatchers.anyMapOf;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -83,7 +82,7 @@ public class BusinessDataQueryResourceTest extends RestletTest {
                 return new BusinessDataQueryResultImpl(JSON_RESPONSE, new BusinessDataQueryMetadataImpl(1, 2, 4L));
             }
         };
-        when(commandAPI.execute(anyString(), anyMapOf(String.class, Serializable.class))).then(answer);
+        when(commandAPI.execute(anyString(), anyMap())).then(answer);
 
         //then
         Conditions modifiedSinceConditions = new Conditions();

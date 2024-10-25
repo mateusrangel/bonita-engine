@@ -224,7 +224,6 @@ public class PageServiceImplTest {
         final byte[] validContent = validPageContent(PAGE_NAME);
         when(pageServiceImpl.getPageByName(PAGE_NAME)).thenReturn(null);
         pageServiceImpl.addPage(newPage, validContent);
-        when(pageServiceImpl.getPageByName(PAGE_NAME)).thenReturn(newPage);
 
         // when
         final SPage newProcessPage = new SPage(PAGE_NAME, 123456, 45, false, CONTENT_NAME);

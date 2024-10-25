@@ -15,7 +15,6 @@ package org.bonitasoft.web.rest.server.engineclient;
 
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyObject;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -104,7 +103,7 @@ public class ProcessEngineClientTest extends APITestWithMock {
         BusinessArchive businessArchive = new BusinessArchive();
         businessArchive.setProcessDefinition(designProcessDefinition);
 
-        when(processAPI.deploy((BusinessArchive) anyObject()))
+        when(processAPI.deploy((BusinessArchive) any()))
                 .thenThrow(new V6FormDeployException(new Exception("a cause")));
 
         expectedException.expect(APIException.class);

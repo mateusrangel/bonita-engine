@@ -505,7 +505,7 @@ public class RetryingWorkExecutorServiceTest {
         workExecutorService.onFailure(workDescriptor, bonitaWork, context,
                 rootCause);
 
-        verifyZeroInteractions(bonitaExecutorService);
+        verifyNoInteractions(bonitaExecutorService);
         verify(bonitaWork, never()).handleFailure(rootCause, emptyMap());
         assertThat(workDescriptor.getRetryCount()).isEqualTo(0);
     }

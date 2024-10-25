@@ -17,9 +17,9 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.bonitasoft.web.rest.server.utils.ResponseAssert.assertThat;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.verify;
 
 import java.io.FileNotFoundException;
 import java.io.Serializable;
@@ -139,7 +139,7 @@ public class UserTaskExecutionResourceTest extends RestletTest {
         doThrow(new ContractViolationException("aMessage", "aMessage",
                 asList("first explanation", "second explanation"), null))
                         .when(processAPI)
-                        .executeUserTask(anyLong(), anyLong(), anyMapOf(String.class, Serializable.class));
+                        .executeUserTask(anyLong(), anyLong(), anyMap());
 
         final Response response = request("/bpm/userTask/2/execution").post(VALID_POST_BODY);
 
@@ -153,7 +153,7 @@ public class UserTaskExecutionResourceTest extends RestletTest {
     @Test
     public void should_respond_500_Internal_server_error_when_error_occurs_on_task_execution() throws Exception {
         doThrow(new FlowNodeExecutionException("aMessage"))
-                .when(processAPI).executeUserTask(anyLong(), anyLong(), anyMapOf(String.class, Serializable.class));
+                .when(processAPI).executeUserTask(anyLong(), anyLong(), anyMap());
 
         final Response response = request("/bpm/userTask/2/execution").post(VALID_POST_BODY);
 
@@ -175,7 +175,7 @@ public class UserTaskExecutionResourceTest extends RestletTest {
     public void should_respond_404_Not_found_when_task_is_not_found_when_trying_to_execute_it() throws Exception {
         when(processAPI.getUserTaskContract(2)).thenReturn(contractDefinition);
         doThrow(new UserTaskNotFoundException("task not found")).when(processAPI)
-                .executeUserTask(anyLong(), anyLong(), anyMapOf(String.class, Serializable.class));
+                .executeUserTask(anyLong(), anyLong(), anyMap());
 
         final Response response = request("/bpm/userTask/2/execution").post(VALID_POST_BODY);
 
@@ -189,7 +189,7 @@ public class UserTaskExecutionResourceTest extends RestletTest {
         final String message = "contract violation !!!!";
         final List<String> explanations = Arrays.asList("explanation1", "explanation2");
         doThrow(new ContractViolationException(message, message, explanations, null)).when(processAPI)
-                .executeUserTask(anyLong(), anyLong(), anyMapOf(String.class, Serializable.class));
+                .executeUserTask(anyLong(), anyLong(), anyMap());
         when(processAPI.getUserTaskContract(1L)).thenReturn(contractDefinition);
         doReturn(1L).when(userTaskExecutionResource).getTaskIdParameter();
         doReturn(response).when(userTaskExecutionResource).getResponse();

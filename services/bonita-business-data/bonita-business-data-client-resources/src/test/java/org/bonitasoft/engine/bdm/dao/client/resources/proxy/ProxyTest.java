@@ -71,7 +71,7 @@ public class ProxyTest {
 
         final String proxyName = entity.getName();
 
-        verifyZeroInteractions(lazyLoader);
+        verifyNoInteractions(lazyLoader);
         assertThat(proxyName).isEqualTo(name);
     }
 
@@ -93,7 +93,7 @@ public class ProxyTest {
 
         entity.getEagerEntity();
 
-        verifyZeroInteractions(lazyLoader);
+        verifyNoInteractions(lazyLoader);
     }
 
     @Test
@@ -104,7 +104,7 @@ public class ProxyTest {
         entity.setLazyEntity(expectedEntity);
         final TestEntity lazyEntity = entity.getLazyEntity();
 
-        verifyZeroInteractions(lazyLoader);
+        verifyNoInteractions(lazyLoader);
         assertThat(lazyEntity).isEqualTo(expectedEntity);
     }
 

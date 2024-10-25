@@ -48,9 +48,12 @@ dependencies {
     testImplementation libs.logback
     testImplementation libs.springTest
     testImplementation libs.systemRules
-    testImplementation libs.mockitoCore
+    testImplementation libs.mockitoJunitJupiter
     testImplementation libs.hamcrest
     testImplementation libs.junit4
+    testImplementation libs.junit5api
+    testRuntimeOnly libs.junitJupiterEngine
+    testRuntimeOnly libs.junitVintageEngine
 }
 
 configurations {
@@ -90,6 +93,9 @@ tasks.named("build") {
 
 tasks.named("test") {
     dependsOn tasks.named("testsJar")
+    useJUnitPlatform {
+        includeEngines 'junit-jupiter', 'junit-vintage'
+    }
 }
 
 tasks.register('testsJar', Jar) {
