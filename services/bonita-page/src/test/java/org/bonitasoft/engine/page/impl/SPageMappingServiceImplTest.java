@@ -25,7 +25,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.nullable;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -407,7 +407,7 @@ public class SPageMappingServiceImplTest {
 
         verify(neverValidRule).isAllowed(nullable(String.class), anyMap());
         verify(validRule).isAllowed(nullable(String.class), anyMap());
-        verifyZeroInteractions(neverValidRule2);
+        verifyNoInteractions(neverValidRule2);
     }
 
     @Test

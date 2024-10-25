@@ -306,7 +306,7 @@ public class JobServiceImplForJobDescriptorTest {
 
         // Then
         Assert.assertEquals(1L, numberOfJobDescriptors);
-        verifyZeroInteractions(recorder);
+        verifyNoInteractions(recorder);
     }
 
     @Test(expected = SBonitaReadException.class)

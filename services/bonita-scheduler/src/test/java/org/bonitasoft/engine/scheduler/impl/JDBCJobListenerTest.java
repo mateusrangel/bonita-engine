@@ -17,7 +17,7 @@ import static org.bonitasoft.engine.scheduler.BonitaJobListener.TRIGGER_NEXT_FIR
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -120,7 +120,7 @@ public class JDBCJobListenerTest {
         jdbcJobListener.jobToBeExecuted(context);
 
         // Then
-        verifyZeroInteractions(jobService);
+        verifyNoInteractions(jobService);
     }
 
     @Test
@@ -132,7 +132,7 @@ public class JDBCJobListenerTest {
         jdbcJobListener.jobToBeExecuted(context);
 
         // Then
-        verifyZeroInteractions(jobService);
+        verifyNoInteractions(jobService);
     }
 
 }

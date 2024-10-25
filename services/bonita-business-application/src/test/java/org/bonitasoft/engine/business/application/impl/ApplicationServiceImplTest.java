@@ -884,7 +884,7 @@ public class ApplicationServiceImplTest {
         applicationServiceImpl.updateApplicationMenu(applicationMenuId, updateDescriptor);
 
         //then
-        verifyZeroInteractions(indexManager);
+        verifyNoInteractions(indexManager);
     }
 
     @Test(expected = SObjectNotFoundException.class)
@@ -1106,7 +1106,7 @@ public class ApplicationServiceImplTest {
         given(applicationService.getLastUsedIndex(4L)).willReturn(7);
 
         //when
-        final int next = applicationServiceImpl.getNextAvailableIndex(4L);
+        final int next = applicationService.getNextAvailableIndex(4L);
 
         //then
         assertThat(next).isEqualTo(8);

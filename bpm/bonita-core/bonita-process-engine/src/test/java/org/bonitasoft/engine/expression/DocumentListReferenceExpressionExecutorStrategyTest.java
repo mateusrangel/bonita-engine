@@ -80,7 +80,7 @@ public class DocumentListReferenceExpressionExecutorStrategyTest {
 
         //then:
         assertThat(result).hasSize(1).containsOnly(expectedDocumentList);
-        verifyZeroInteractions(activityInstanceService);
+        verifyNoInteractions(activityInstanceService);
     }
 
     @Test
@@ -100,7 +100,7 @@ public class DocumentListReferenceExpressionExecutorStrategyTest {
 
         //then:
         assertThat(result).isSameAs(documentListInContext);
-        verifyZeroInteractions(documentService);
+        verifyNoInteractions(documentService);
     }
 
     // =================================================================================================================

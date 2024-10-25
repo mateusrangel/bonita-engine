@@ -18,8 +18,8 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -76,7 +76,7 @@ public class ApiExtensionPageServiceListenerImplTest {
 
         listener.pageInserted(page, content);
 
-        verifyZeroInteractions(pageMappingService, helper);
+        verifyNoInteractions(pageMappingService, helper);
     }
 
     @Test
@@ -312,7 +312,7 @@ public class ApiExtensionPageServiceListenerImplTest {
 
         listener.pageDeleted(page);
 
-        verifyZeroInteractions(pageMappingService, helper);
+        verifyNoInteractions(pageMappingService, helper);
     }
 
     @Test
@@ -435,7 +435,7 @@ public class ApiExtensionPageServiceListenerImplTest {
 
         listener.pageUpdated(page, content);
 
-        verifyZeroInteractions(pageMappingService, helper);
+        verifyNoInteractions(pageMappingService, helper);
     }
 
 }

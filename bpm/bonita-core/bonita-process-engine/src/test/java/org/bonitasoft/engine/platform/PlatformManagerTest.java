@@ -123,8 +123,8 @@ public class PlatformManagerTest {
 
         boolean started = platformManager.start();
 
-        verifyZeroInteractions(platformLifecycleService1);
-        verifyZeroInteractions(platformLifecycleService2);
+        verifyNoInteractions(platformLifecycleService1);
+        verifyNoInteractions(platformLifecycleService2);
         verify(platformStateProvider, never()).setStarted();
         assertThat(started).isFalse();
     }
@@ -147,8 +147,8 @@ public class PlatformManagerTest {
 
         boolean stopped = platformManager.stop();
 
-        verifyZeroInteractions(platformLifecycleService1);
-        verifyZeroInteractions(platformLifecycleService2);
+        verifyNoInteractions(platformLifecycleService1);
+        verifyNoInteractions(platformLifecycleService2);
         verify(platformStateProvider, never()).setStopped();
         assertThat(stopped).isFalse();
     }

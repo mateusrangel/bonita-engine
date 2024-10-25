@@ -27,7 +27,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.nullable;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
@@ -233,8 +233,8 @@ public class BusinessDataExpressionExecutorStrategyTest {
                 context, null, ContainerState.ACTIVE);
 
         assertThat(fetchedBizData).isEqualTo(expectedBizData);
-        verifyZeroInteractions(businessDataRetriever);
-        verifyZeroInteractions(refBusinessDataRetriever);
+        verifyNoInteractions(businessDataRetriever);
+        verifyNoInteractions(refBusinessDataRetriever);
     }
 
     @Test

@@ -82,7 +82,7 @@ public class RefreshClassloaderSynchronizationTest {
     public void should_not_refresh_classloader_when_transaction_is_not_committed() {
         refreshClassloaderSynchronization.afterCompletion(STATUS_MARKED_ROLLBACK);
 
-        verifyZeroInteractions(broadcastService);
-        verifyZeroInteractions(classLoaderUpdater);
+        verifyNoInteractions(broadcastService);
+        verifyNoInteractions(classLoaderUpdater);
     }
 }
