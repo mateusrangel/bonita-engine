@@ -14,16 +14,21 @@
 package org.bonitasoft.console.common.server.filter;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.quality.Strictness.LENIENT;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-import javax.servlet.*;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ReadListener;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletInputStream;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -33,18 +38,23 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.IOUtils;
 import org.bonitasoft.console.common.server.login.HttpServletRequestAccessor;
 import org.bonitasoft.web.toolkit.client.common.json.JSonUtil;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
 
 /**
  * Test class SanitizerFilter
  *
  * @author Vincent Hemery
  */
-public class SanitizerFilterTest {
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = LENIENT)
+class SanitizerFilterTest {
 
     @Mock
     private FilterChain chain;
@@ -70,9 +80,8 @@ public class SanitizerFilterTest {
     @Spy
     SanitizerFilter sanitizerFilter;
 
-    @Before
-    public void setUp() throws Exception {
-        initMocks(this);
+    @BeforeEach
+    void setUp() {
         doReturn(httpSession).when(request).getHttpSession();
         when(request.asHttpServletRequest()).thenReturn(httpRequest);
         when(httpRequest.getMethod()).thenReturn("POST");
@@ -84,7 +93,7 @@ public class SanitizerFilterTest {
     }
 
     @Test
-    public void shouldNotSanitizeWhenDisabled() throws Exception {
+    void shouldNotSanitizeWhenDisabled() throws Exception {
         when(httpRequest.getContentType()).thenReturn("application/json");
         when(sanitizerFilter.isSanitizerEnabled()).thenReturn(false);
 
@@ -96,7 +105,7 @@ public class SanitizerFilterTest {
     }
 
     @Test
-    public void shouldNotAffectAttributeValue() throws Exception {
+    void shouldNotAffectAttributeValue() throws Exception {
         when(httpRequest.getContentType()).thenReturn("application/json");
         when(sanitizerFilter.isSanitizerEnabled()).thenReturn(true);
         final String attributeName = "key";
@@ -115,7 +124,7 @@ public class SanitizerFilterTest {
     }
 
     @Test
-    public void shouldNotAffectParameterValues() throws Exception {
+    void shouldNotAffectParameterValues() throws Exception {
         when(httpRequest.getContentType()).thenReturn("application/json");
         when(sanitizerFilter.isSanitizerEnabled()).thenReturn(true);
         final String parameterName = "key";
@@ -134,7 +143,7 @@ public class SanitizerFilterTest {
     }
 
     @Test
-    public void shouldNotAffectFileUpload() throws Exception {
+    void shouldNotAffectFileUpload() throws Exception {
         when(httpRequest.getContentType()).thenReturn("text/xml");
         when(sanitizerFilter.isSanitizerEnabled()).thenReturn(true);
         final String body = String.format("<?xml version=\"1.0\" encoding=\"UTF-8\"?>%n" +
@@ -159,7 +168,7 @@ public class SanitizerFilterTest {
     }
 
     @Test
-    public void shouldNotAffectNonHtml() throws Exception {
+    void shouldNotAffectNonHtml() throws Exception {
         when(httpRequest.getContentType()).thenReturn("application/json");
         when(sanitizerFilter.isSanitizerEnabled()).thenReturn(true);
         when(sanitizerFilter.getAttributesExcluded()).thenReturn(Collections.emptyList());
@@ -180,7 +189,7 @@ public class SanitizerFilterTest {
     }
 
     @Test
-    public void shouldNotAffectPre() throws Exception {
+    void shouldNotAffectPre() throws Exception {
         when(httpRequest.getContentType()).thenReturn("application/json");
         when(sanitizerFilter.isSanitizerEnabled()).thenReturn(true);
         when(sanitizerFilter.getAttributesExcluded()).thenReturn(Collections.emptyList());
@@ -201,7 +210,7 @@ public class SanitizerFilterTest {
     }
 
     @Test
-    public void shouldNotAffectLinks() throws Exception {
+    void shouldNotAffectLinks() throws Exception {
         when(httpRequest.getContentType()).thenReturn("application/json");
         when(sanitizerFilter.isSanitizerEnabled()).thenReturn(true);
         when(sanitizerFilter.getAttributesExcluded()).thenReturn(Collections.emptyList());
@@ -223,7 +232,7 @@ public class SanitizerFilterTest {
     }
 
     @Test
-    public void shouldSanitizeAttackFromBody() throws Exception {
+    void shouldSanitizeAttackFromBody() throws Exception {
         when(httpRequest.getContentType()).thenReturn("application/JSON");
         when(sanitizerFilter.isSanitizerEnabled()).thenReturn(true);
         when(sanitizerFilter.getAttributesExcluded()).thenReturn(List.of("email", "password"));

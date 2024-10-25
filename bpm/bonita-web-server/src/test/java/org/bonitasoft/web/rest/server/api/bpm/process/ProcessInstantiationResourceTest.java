@@ -16,7 +16,8 @@ package org.bonitasoft.web.rest.server.api.bpm.process;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.bonitasoft.web.rest.server.utils.ResponseAssert.assertThat;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.*;
 
 import java.io.FileNotFoundException;
@@ -160,7 +161,7 @@ public class ProcessInstantiationResourceTest extends RestletTest {
             throws Exception {
         doThrow(new ContractViolationException("aMessage", "aMessage",
                 asList("first explanation", "second explanation"), null))
-                        .when(processAPI).startProcessWithInputs(anyLong(), anyMapOf(String.class, Serializable.class));
+                        .when(processAPI).startProcessWithInputs(anyLong(), anyMap());
         when(processAPI.getProcessContract(PROCESS_DEFINITION_ID)).thenReturn(contractDefinition);
 
         final Response response = request(URL_API_PROCESS_INSTANTIATION_TEST).post(VALID_POST_BODY);
@@ -175,7 +176,7 @@ public class ProcessInstantiationResourceTest extends RestletTest {
     @Test
     public void should_respond_500_Internal_server_error_when_error_occurs_on_process_instantiation() throws Exception {
         doThrow(new ProcessExecutionException("aMessage"))
-                .when(processAPI).startProcessWithInputs(anyLong(), anyMapOf(String.class, Serializable.class));
+                .when(processAPI).startProcessWithInputs(anyLong(), anyMap());
 
         final Response response = request(URL_API_PROCESS_INSTANTIATION_TEST).post(VALID_POST_BODY);
 
@@ -211,7 +212,7 @@ public class ProcessInstantiationResourceTest extends RestletTest {
     @Test
     public void should_respond_404_Not_found_when_task_is_not_found_when_trying_to_execute_it() throws Exception {
         doThrow(new ProcessDefinitionNotFoundException("process not found")).when(processAPI)
-                .startProcessWithInputs(anyLong(), anyMapOf(String.class, Serializable.class));
+                .startProcessWithInputs(anyLong(), anyMap());
         when(processAPI.getProcessContract(PROCESS_DEFINITION_ID)).thenReturn(contractDefinition);
 
         final Response response = request(URL_API_PROCESS_INSTANTIATION_TEST).post(VALID_POST_BODY);
@@ -225,7 +226,7 @@ public class ProcessInstantiationResourceTest extends RestletTest {
         final String message = "contract violation !!!!";
         final List<String> explanations = Arrays.asList("explanation1", "explanation2");
         doThrow(new ContractViolationException(message, message, explanations, null)).when(processAPI)
-                .startProcessWithInputs(anyLong(), anyMapOf(String.class, Serializable.class));
+                .startProcessWithInputs(anyLong(), anyMap());
         doReturn(Long.toString(PROCESS_DEFINITION_ID)).when(processInstantiationResource)
                 .getAttribute(ProcessInstantiationResource.PROCESS_DEFINITION_ID);
         doReturn(contractDefinition).when(processAPI).getProcessContract(PROCESS_DEFINITION_ID);

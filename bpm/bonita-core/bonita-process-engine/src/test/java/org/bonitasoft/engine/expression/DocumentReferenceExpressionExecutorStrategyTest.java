@@ -174,7 +174,7 @@ public class DocumentReferenceExpressionExecutorStrategyTest {
 
         //then:
         assertThat(result).isSameAs(docInContext);
-        verifyZeroInteractions(documentService);
+        verifyNoInteractions(documentService);
     }
 
     @Test

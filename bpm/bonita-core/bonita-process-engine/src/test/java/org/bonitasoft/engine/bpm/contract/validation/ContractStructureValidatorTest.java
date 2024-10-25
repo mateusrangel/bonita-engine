@@ -214,7 +214,7 @@ public class ContractStructureValidatorTest {
     public void should_not_check_type_validation_when_input_is_null() throws Exception {
         final SContractDefinition contract = aContract().withInput(aSimpleInput(TEXT).withName("someNullText")).build();
         validator.validate(contract, Collections.<String, Serializable> singletonMap("someNullText", null));
-        verifyZeroInteractions(typeValidator);
+        verifyNoInteractions(typeValidator);
     }
 
     @Test

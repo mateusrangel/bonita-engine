@@ -18,7 +18,7 @@ import static org.bonitasoft.engine.business.data.DummyBusinessDataRefBuilder.bu
 import static org.bonitasoft.engine.business.data.DummyBusinessDataRefBuilder.buildSimpleRefBusinessData;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -79,8 +79,8 @@ public class BusinessDataRetrieverTest {
 
         //then
         assertThat(retrievedEntity).isNull();
-        verifyZeroInteractions(repository);
-        verifyZeroInteractions(proxyfier);
+        verifyNoInteractions(repository);
+        verifyNoInteractions(proxyfier);
     }
 
     @Test
@@ -111,8 +111,8 @@ public class BusinessDataRetrieverTest {
 
         //then
         assertThat(retrievedEntities).isEmpty();
-        verifyZeroInteractions(repository);
-        verifyZeroInteractions(proxyfier);
+        verifyNoInteractions(repository);
+        verifyNoInteractions(proxyfier);
     }
 
     @Test
@@ -128,8 +128,8 @@ public class BusinessDataRetrieverTest {
         retrievedEntities.add(new Employee());
         // no exceptions
 
-        verifyZeroInteractions(repository);
-        verifyZeroInteractions(proxyfier);
+        verifyNoInteractions(repository);
+        verifyNoInteractions(proxyfier);
     }
 
     @Test

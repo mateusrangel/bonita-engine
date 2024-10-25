@@ -284,7 +284,7 @@ public class JobServiceImplForJobLogTest {
 
         // Then
         Assert.assertEquals(1L, numberOfJobLogs);
-        verifyZeroInteractions(recorder);
+        verifyNoInteractions(recorder);
     }
 
     @Test(expected = SBonitaReadException.class)

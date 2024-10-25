@@ -15,7 +15,7 @@ package org.bonitasoft.engine.business.data.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import org.bonitasoft.engine.bdm.Entity;
 import org.bonitasoft.engine.business.data.BusinessDataRepository;
@@ -88,7 +88,7 @@ public class BusinessDataReloaderTest {
 
         //then
         assertThat(reloadedEntity).isEqualTo(entity);
-        verifyZeroInteractions(repository);
+        verifyNoInteractions(repository);
     }
 
     @Test

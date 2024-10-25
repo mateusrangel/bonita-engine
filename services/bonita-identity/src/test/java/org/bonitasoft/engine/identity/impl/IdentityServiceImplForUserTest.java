@@ -102,7 +102,7 @@ public class IdentityServiceImplForUserTest {
         when(persistenceService.selectOne(ArgumentMatchers.<SelectOneDescriptor<Long>> any())).thenReturn(1L);
         Assert.assertEquals(1L, identityServiceImpl.getNumberOfUsers());
 
-        verifyZeroInteractions(recorder);
+        verifyNoInteractions(recorder);
     }
 
     @Test(expected = SIdentityException.class)

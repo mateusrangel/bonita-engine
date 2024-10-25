@@ -202,7 +202,7 @@ public class ContractDataServiceImplTest {
 
         contractDataService.archiveAndDeleteUserTaskData(usertTaskId, time);
 
-        verifyZeroInteractions(archiveService);
+        verifyNoInteractions(archiveService);
     }
 
     @Test(expected = SObjectModificationException.class)
@@ -360,7 +360,7 @@ public class ContractDataServiceImplTest {
 
         contractDataService.archiveAndDeleteProcessData(usertProcessId, time);
 
-        verifyZeroInteractions(archiveService);
+        verifyNoInteractions(archiveService);
     }
 
     @Test(expected = SObjectModificationException.class)

@@ -16,7 +16,7 @@ package org.bonitasoft.engine.api.impl.resolver;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -95,7 +95,7 @@ public class ParameterBusinessArchiveArtifactManagerTest {
 
         // then:
         assertThat(deployed).isTrue();
-        verifyZeroInteractions(parameterService);
+        verifyNoInteractions(parameterService);
     }
 
     @Test

@@ -15,7 +15,7 @@ package org.bonitasoft.engine.execution;
 
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.util.Optional;
 
@@ -86,8 +86,8 @@ public class WaitingEventsInterrupterTest {
 
         waitingEventsInterrupter.interruptWaitingEvents(processDefinition, catchEventInstance, catchEventDefinition);
 
-        verifyZeroInteractions(eventInstanceService);
-        verifyZeroInteractions(schedulerService);
+        verifyNoInteractions(eventInstanceService);
+        verifyNoInteractions(schedulerService);
     }
 
 }

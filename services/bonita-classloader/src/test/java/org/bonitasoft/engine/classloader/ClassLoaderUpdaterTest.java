@@ -19,7 +19,7 @@ import static org.bonitasoft.engine.classloader.ClassLoaderIdentifier.identifier
 import static org.bonitasoft.engine.dependency.model.ScopeType.PROCESS;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.util.HashSet;
 import java.util.concurrent.Callable;
@@ -83,7 +83,7 @@ public class ClassLoaderUpdaterTest {
 
         callableGivenToTheTaskExecutor.getValue().call();
 
-        verifyZeroInteractions(sessionAccessor);
+        verifyNoInteractions(sessionAccessor);
     }
 
     @Test
