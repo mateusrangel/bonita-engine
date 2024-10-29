@@ -75,20 +75,20 @@ owaspHtmlSanitizerVersion = "20220608.1"
 # Test dependency versions
 junit4Version = "4.13.2"
 junit5Version = "5.11.3"
-awaitilityVersion = "4.0.3"
-assertjVersion = "3.17.2"
+awaitilityVersion = "4.2.2"
+assertjVersion = "3.26.3"
 xmlunitVersion = "1.6"
 mockitoVersion = "5.14.2"
-jsonUnitVersion = "2.19.0"
+jsonUnitVersion = "3.4.1"
 systemRulesVersion = "1.19.0"
-systemLambdaVersion = "1.2.0"
+systemLambdaVersion = "1.2.1"
 concurrentUnitVersion = "0.4.6"
 junitQuickCheck = "1.0"
 jettyVersion = "9.4.9.v20180320"
 jbossLoggingVersion = "3.1.3.GA"
 commonsExecVersion = "1.3"
-jmockitVersion = "1.44"
-mockServerJunitVersion = "5.14.0"
+jmockitVersion = "1.49"
+mockServerJunitVersion = "5.15.0"
 
 
 [libraries]
@@ -255,7 +255,7 @@ jettySecurity = { group = "org.eclipse.jetty", name = "jetty-security", version.
 jbossLogging = { group = "org.jboss.logging", name = "jboss-logging", version.ref = "jbossLoggingVersion" }
 commonsExec = { group = "org.apache.commons", name = "commons-exec", version.ref = "commonsExecVersion" }
 jmockit = { group = "org.jmockit", name = "jmockit", version.ref = "jmockitVersion" }
-mockServerJunit = { group = "org.mock-server", name = "mockserver-junit-rule-no-dependencies", version.ref = "mockServerJunitVersion" }
+mockServerJunit = { group = "org.mock-server", name = "mockserver-junit-jupiter", version.ref = "mockServerJunitVersion" }
 
 
 [bundles]
