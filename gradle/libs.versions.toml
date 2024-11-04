@@ -33,7 +33,7 @@ ehCacheVersion = "2.10.10.12.7"
 eclipseCompilerVersion = "3.39.0"
 jakartaActivationVersion = "1.2.2"
 quartzVersion = "2.3.2"
-micrometerVersion = "1.13.5"
+micrometerVersion = "1.13.6"
 # DB drivers:
 mysqlVersion = "8.4.0"
 msSqlServerVersion = "9.4.1.jre11"
@@ -50,27 +50,25 @@ guavaVersion = "33.3.1-jre"
 antlr4RuntimeVersion = "4.7.2"
 casClientCoreVersion = "4.0.4"
 jtidyVersion = "r938"
-jakartaJmsVersion = "3.0.0"
-activemqVersion = "5.16.6"
 squigglyFilterJacksonVersion = "1.3.18"
 
 # bonita-web specific dependencies:
-jsonSimpleVersion = "1.1"
-urlrewritefilterVersion = "4.0.3"
+jsonSimpleVersion = "1.1.1"
+urlrewritefilterVersion = "4.0.4"
 jakartaJstlVersion = "1.2.6"
 jakartaJstlApiVersion = "1.2.7"
 restletVersion = "2.3.12"
-xbeanClassloaderVersion = "3.7"
-jgettextVersion = "0.13"
-hamcrestVersion = "2.1"
-woodstoxCoreVersion = "6.4.0"
+xbeanClassloaderVersion = "4.26"
+jgettextVersion = "0.15.1"
+hamcrestVersion = "3.0"
+woodstoxCoreVersion = "7.1.0"
 # When updating Keycloak version, if necessary, make sure to update the code in
 # subscription/bpm/bonita-web-server-sp package org.bonitasoft.console.common.server.auth.impl
 keycloakVersion = "21.1.2"
-xmlsecVersion = "2.2.6"
+xmlsecVersion = "2.3.4"
 bouncyCastleVersion = "1.78.1"
 spnegoVersion = "1.1.1"
-owaspHtmlSanitizerVersion = "20220608.1"
+owaspHtmlSanitizerVersion = "20240325.1"
 
 # Test dependency versions
 junit4Version = "4.13.2"
@@ -84,10 +82,10 @@ systemRulesVersion = "1.19.0"
 systemLambdaVersion = "1.2.1"
 concurrentUnitVersion = "0.4.6"
 junitQuickCheck = "1.0"
-jettyVersion = "9.4.9.v20180320"
-jbossLoggingVersion = "3.1.3.GA"
-commonsExecVersion = "1.3"
-jmockitVersion = "1.49"
+jettyVersion = "9.4.56.v20240826"
+jbossLoggingVersion = "3.6.1.Final"
+commonsExecVersion = "1.4.0"
+jmockitVersion = "1.44"
 mockServerJunitVersion = "5.15.0"
 
 
@@ -200,9 +198,6 @@ logback = { group = "ch.qos.logback", name = "logback-classic", version.ref = "l
 
 casClientCore = { group = "org.apereo.cas.client", name = "cas-client-core", version.ref = "casClientCoreVersion" }
 jtidy = { group = "net.sf.jtidy", name = "jtidy", version.ref = "jtidyVersion" }
-
-jakartaJmsApi = { group = "jakarta.jms", name = "jakarta.jms-api", version.ref = "jakartaJmsVersion" }
-activemqClient = { group = "org.apache.activemq", name = "activemq-client", version.ref = "activemqVersion" }
 
 squigglyFilterJackson = { group = "com.github.bohnman", name = "squiggly-filter-jackson", version.ref = "squigglyFilterJacksonVersion" }
 
