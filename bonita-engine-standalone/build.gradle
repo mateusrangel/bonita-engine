@@ -22,11 +22,12 @@ dependencies {
     compileOnly libs.lombok
 
     testImplementation libs.assertj
-    testImplementation libs.junit4
     testImplementation libs.systemRules
-    testImplementation libs.postgresql
-    testImplementation libs.mysql
-    testImplementation libs.h2
+
+    // These 3 drivers are used for some specific tests:
+    testImplementation(libs.postgresql)
+    testImplementation(libs.mysql)
+    testImplementation(libs.h2)
 
 }
 

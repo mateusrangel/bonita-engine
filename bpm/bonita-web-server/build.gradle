@@ -28,6 +28,7 @@ dependencies {
     implementation(libs.restletJackson) {
         exclude(group: "org.codehaus.woodstox", module: "woodstox-core-asl")
         exclude(group: "org.codehaus.woodstox", module: "stax2-api")
+        exclude(group: "org.yaml", module: "snakeyaml")
     }
     implementation libs.woodstoxCore
     implementation libs.groovyCore
@@ -48,16 +49,13 @@ dependencies {
     testImplementation libs.logback
     testImplementation libs.springTest
     testImplementation libs.systemRules
-    testImplementation libs.mockitoJunitJupiter
+    testImplementation libs.mockitoCore
     testImplementation libs.hamcrest
-    testImplementation libs.junit4
-    testImplementation libs.junit5api
-    testRuntimeOnly libs.junitJupiterEngine
-    testRuntimeOnly libs.junitVintageEngine
+    testImplementation libs.mockitoJunitJupiter
 }
 
 configurations {
-    all {
+    configureEach {
         // Specify woodstox version to override the version pulled by jackson-dataformat-xml (transitive dep of restlet)
         resolutionStrategy.force libs.woodstoxCore
         // Specify Guava version to override the version pulled by owasp-java-html-sanitizer
@@ -91,17 +89,14 @@ tasks.named("build") {
     dependsOn tasks.named("buildZip")
 }
 
-tasks.named("test") {
-    dependsOn tasks.named("testsJar")
-    useJUnitPlatform {
-        includeEngines 'junit-jupiter', 'junit-vintage'
-    }
-}
-
 tasks.register('testsJar', Jar) {
     dependsOn testClasses
     archiveClassifier = 'tests'
     from(sourceSets.test.output)
+}
+
+test {
+    dependsOn tasks.named("testsJar")
 }
 
 artifacts {

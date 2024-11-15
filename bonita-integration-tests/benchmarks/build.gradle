@@ -3,14 +3,10 @@ plugins {
 }
 
 dependencies {
-    api libs.junit4
     api libs.assertj
     api libs.mockitoCore
     api project(':bonita-integration-tests:bonita-integration-tests-client')
     api project(':bpm:bonita-server')
-    runtimeOnly libs.mysql
-    runtimeOnly libs.msSqlServer
-    runtimeOnly libs.postgresql
     testRuntimeOnly libs.logback
 }
 

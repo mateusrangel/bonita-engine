@@ -4,6 +4,8 @@ dependencies {
     api project(':bpm:bonita-core:bonita-process-engine')
     api project(':bpm:bonita-synchro-repository:bonita-synchro-service-impl')
     api project(':services:bonita-commons')
+    annotationProcessor(libs.lombok)
+    compileOnly(libs.lombok)
     compileOnly libs.jakartaJmsApi
     compileOnly libs.activemqClient
 }

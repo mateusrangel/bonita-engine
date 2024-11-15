@@ -4,6 +4,8 @@ dependencies {
     api libs.junit4
     api(project(':platform:platform-resources'))
 
+    implementation libs.springTest
+
     // for http tests:
     compileOnly(libs.jettyServer)
     compileOnly(libs.jettyServlet)

@@ -16,10 +16,12 @@ package org.bonitasoft.engine.platform.model.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
+import java.util.List;
 import java.util.Map;
 
 import org.bonitasoft.engine.persistence.PersistentObject;
 import org.bonitasoft.engine.platform.model.SPlatform;
+import org.bonitasoft.engine.test.persistence.jdbc.JdbcRowMapper;
 import org.bonitasoft.engine.test.persistence.repository.PlatformRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -52,7 +54,8 @@ public class PlatformTest {
         repository.flush();
 
         PersistentObject platformFromQuery = repository.selectOneOnPlatform("getPlatform");
-        Map<String, Object> platformAsMap = jdbcTemplate.queryForMap("SELECT * FROM platform");
+        Map<String, Object> platformAsMap = jdbcTemplate.queryForObject("SELECT * FROM platform",
+                new JdbcRowMapper(List.of("ID", "CREATED"), List.of("MAINTENANCE_MESSAGE_ACTIVE")));
 
         assertThat(platformFromQuery).isEqualTo(platform);
         assertThat(platformAsMap).containsOnly(

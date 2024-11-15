@@ -23,7 +23,6 @@ dependencies {
     api project(':bpm:bonita-core:bonita-contract-data')
     api 'org.bonitasoft.engine:bonita-connector-model'
 
-    testImplementation libs.junit4
     testImplementation libs.assertj
     testImplementation libs.mockitoCore
     testImplementation libs.systemRules

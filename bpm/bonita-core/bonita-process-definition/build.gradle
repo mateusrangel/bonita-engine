@@ -12,7 +12,6 @@ dependencies {
     api project(':services:bonita-data-instance')
     api project(':services:bonita-classloader')
     api project(':services:bonita-builder')
-    testImplementation libs.junit4
     testImplementation libs.assertj
     testImplementation libs.mockitoCore
     testImplementation libs.logback

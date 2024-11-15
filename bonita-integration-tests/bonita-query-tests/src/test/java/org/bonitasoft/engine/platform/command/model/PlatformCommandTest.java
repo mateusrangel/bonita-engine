@@ -20,6 +20,7 @@ import static org.bonitasoft.engine.commons.Pair.pair;
 import java.util.Map;
 
 import org.bonitasoft.engine.persistence.PersistentObject;
+import org.bonitasoft.engine.test.persistence.jdbc.JdbcRowMapper;
 import org.bonitasoft.engine.test.persistence.repository.PlatformRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,7 +51,8 @@ public class PlatformCommandTest {
 
         PersistentObject platformCommandFromQuery = repository.selectOneOnPlatform("getPlatformCommandByName",
                 pair("name", "myPlatformCommand"));
-        Map<String, Object> platformCommandAsMap = jdbcTemplate.queryForMap("SELECT * FROM platformCommand");
+        Map<String, Object> platformCommandAsMap = jdbcTemplate.queryForObject("SELECT * FROM platformCommand",
+                new JdbcRowMapper("ID"));
 
         assertThat(platformCommandFromQuery).isEqualTo(platformCommand);
         assertThat(platformCommandAsMap).containsOnly(

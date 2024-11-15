@@ -7,7 +7,6 @@ dependencies {
     api project(':services:bonita-cache')
     api project(':services:bonita-builder')
     api project(':services:bonita-persistence')
-    testImplementation libs.junit4
     testImplementation libs.mockitoCore
     testImplementation libs.assertj
     testImplementation libs.systemRules

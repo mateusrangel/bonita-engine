@@ -7,7 +7,6 @@ dependencies {
     api project(':bpm:bonita-core:bonita-home-server')
     api project(':bpm:bonita-common')
 
-    testImplementation libs.junit4
     testImplementation libs.assertj
     testImplementation libs.mockitoCore
     testImplementation libs.logback

@@ -12,26 +12,18 @@ dependencies {
     api libs.springContext
     api libs.springBootAutoconfigure
     api libs.slf4jApi
-    testImplementation libs.junit4
-    testImplementation libs.junit5api
     testImplementation libs.assertj
     testImplementation libs.mockitoCore
     testImplementation libs.mockitoJunitJupiter
     testImplementation libs.systemRules
     testImplementation libs.systemLambda
     testImplementation libs.logback
-    testRuntimeOnly libs.junitJupiterEngine
-    testRuntimeOnly libs.junitVintageEngine
 
     annotationProcessor libs.lombok
     compileOnly libs.lombok
 }
 
 description = 'Bonita Engine Util Classes'
-
-test {
-    useJUnitPlatform { includeEngines 'junit-jupiter', 'junit-vintage' }
-}
 
 tasks.register("sourcesJar", Jar) {
     from sourceSets.main.allJava

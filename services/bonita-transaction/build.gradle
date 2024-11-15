@@ -6,7 +6,6 @@ dependencies {
     compileOnly libs.lombok
 
     testImplementation libs.mockitoCore
-    testImplementation libs.junit4
     testImplementation libs.assertj
     testImplementation libs.narayanaJta
     testImplementation libs.jbossLogging
