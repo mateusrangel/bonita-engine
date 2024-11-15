@@ -28,7 +28,7 @@ jakartaServletVersion = "4.0.4"
 # Keep this until all client projects have migrated to jakarta or it will break their builds !
 javaxServletVersion = "4.0.1"
 httpComponentsVersion = "4.5.14"
-xstreamVersion = "1.4.20"
+xstreamVersion = "1.4.21"
 ehCacheVersion = "2.10.10.12.7"
 eclipseCompilerVersion = "3.39.0"
 jakartaActivationVersion = "1.2.2"
