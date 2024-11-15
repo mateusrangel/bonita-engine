@@ -14,7 +14,11 @@
 package org.bonitasoft.engine.execution.work;
 
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import org.bonitasoft.engine.core.process.instance.api.BpmFailureService;
+import org.bonitasoft.engine.core.process.instance.api.exceptions.FailureContext;
+import org.bonitasoft.engine.core.process.instance.model.SFlowNodeInstance;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,15 +31,24 @@ public class SetInFailCallableTest {
     @Mock
     private FailedStateSetter failedStateSetter;
 
-    private final long FLOW_NODE_INSTANCE_ID = 15L;
+    @Mock
+    private SFlowNodeInstance flowNodeInstance;
+
+    @Mock
+    private BpmFailureService failureService;
+
+    @Mock
+    private FailureContext failureContext;
 
     public static final long PROCESS_DEFINITION_ID = 25L;
+    private static final long FLOW_NODE_INSTANCE_ID = 123L;
 
     private SetInFailCallable setInFailCallable;
 
     @Before
     public void setUp() throws Exception {
-        setInFailCallable = new SetInFailCallable(failedStateSetter, FLOW_NODE_INSTANCE_ID);
+        when(flowNodeInstance.getId()).thenReturn(FLOW_NODE_INSTANCE_ID);
+        setInFailCallable = new SetInFailCallable(failedStateSetter, flowNodeInstance, failureService, failureContext);
     }
 
     @Test

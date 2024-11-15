@@ -15,22 +15,32 @@ package org.bonitasoft.engine.execution.work;
 
 import java.util.concurrent.Callable;
 
+import org.bonitasoft.engine.core.process.instance.api.BpmFailureService;
+import org.bonitasoft.engine.core.process.instance.api.exceptions.FailureContext;
+import org.bonitasoft.engine.core.process.instance.model.SFlowNodeInstance;
+
 /**
  * @author Baptiste Mesta
  */
 public class SetInFailCallable implements Callable<Void> {
 
     private final FailedStateSetter failedStateSetter;
-    private final long flowNodeInstanceId;
+    private final SFlowNodeInstance flowNodeInstance;
+    private final BpmFailureService bpmFailureService;
+    private final FailureContext failureContext;
 
-    SetInFailCallable(FailedStateSetter failedStateSetter, final long flowNodeInstanceId) {
+    SetInFailCallable(FailedStateSetter failedStateSetter, final SFlowNodeInstance flowNodeInstance,
+            BpmFailureService bpmFailureService, FailureContext failureContext) {
         this.failedStateSetter = failedStateSetter;
-        this.flowNodeInstanceId = flowNodeInstanceId;
+        this.flowNodeInstance = flowNodeInstance;
+        this.bpmFailureService = bpmFailureService;
+        this.failureContext = failureContext;
     }
 
     @Override
     public Void call() throws Exception {
-        failedStateSetter.setAsFailed(flowNodeInstanceId);
+        failedStateSetter.setAsFailed(flowNodeInstance.getId());
+        bpmFailureService.createFlowNodeFailure(flowNodeInstance, failureContext.createFailure());
         return null;
     }
 

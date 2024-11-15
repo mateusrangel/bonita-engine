@@ -19,6 +19,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import org.bonitasoft.engine.commons.exceptions.SBonitaException;
+import org.bonitasoft.engine.core.process.instance.api.BpmFailureService;
+import org.bonitasoft.engine.core.process.instance.api.exceptions.FailureContext;
 import org.bonitasoft.engine.core.process.instance.api.exceptions.SFlowNodeNotFoundException;
 import org.bonitasoft.engine.core.process.instance.api.exceptions.SFlowNodeReadException;
 import org.bonitasoft.engine.core.process.instance.model.SFlowNodeInstance;
@@ -68,6 +70,7 @@ public class NotifyChildFinishedWork extends TenantAwareBonitaWork {
             Thread.currentThread().setContextClassLoader(processClassloader);
             ServiceAccessor serviceAccessor = getServiceAccessor(context);
             SFlowNodeInstance flowNodeInstance = retrieveAndVerifyFlowNodeInstance(serviceAccessor);
+            context.put("flowNodeInstance", flowNodeInstance);
             final ContainerRegistry containerRegistry = serviceAccessor.getContainerRegistry();
             containerRegistry.nodeReachedState(flowNodeInstance);
         } finally {
@@ -119,7 +122,16 @@ public class NotifyChildFinishedWork extends TenantAwareBonitaWork {
         FailedStateSetter failedStateSetter = new FailedStateSetter(waitingEventsInterrupter,
                 serviceAccessor.getActivityInstanceService(),
                 serviceAccessor.getFlowNodeStateManager());
-        userTransactionService.executeInTransaction(new SetInFailCallable(failedStateSetter, flowNodeInstanceId));
+        SFlowNodeInstance flowNodeInstance = (SFlowNodeInstance) context.get("flowNodeInstance");
+        userTransactionService.executeInTransaction(new SetInFailCallable(failedStateSetter, flowNodeInstance,
+                serviceAccessor.getBpmFailureService(), failureContext(e)));
+    }
+
+    private FailureContext failureContext(Throwable e) {
+        if (e instanceof FailureContext failureContext) {
+            return failureContext;
+        }
+        return () -> new BpmFailureService.Failure(FailureContext.UNKNOWN_SCOPE, FailureContext.EMPTY_CONTEXT, e);
     }
 
     @Override

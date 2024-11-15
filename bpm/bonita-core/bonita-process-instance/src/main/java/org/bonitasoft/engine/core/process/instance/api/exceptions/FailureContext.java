@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2019 Bonitasoft S.A.
+ * Copyright (C) 2024 Bonitasoft S.A.
  * Bonitasoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -13,33 +13,32 @@
  **/
 package org.bonitasoft.engine.core.process.instance.api.exceptions;
 
-import org.bonitasoft.engine.commons.exceptions.SBonitaException;
 import org.bonitasoft.engine.core.process.instance.api.BpmFailureService;
 
-/**
- * An unexpected error happened during the execution of the flow node
- * The flow node might be in an inconsistent state
- *
- * @author Celine Souchet
- */
-public class SFlowNodeExecutionException extends SBonitaException implements FailureContext {
+public interface FailureContext {
 
-    private static final long serialVersionUID = 5549874111741638842L;
+    static final String UNKNOWN_SCOPE = "UNKNOWN";
+    static final String EMPTY_CONTEXT = "";
 
-    public SFlowNodeExecutionException(final String message, final Throwable cause) {
-        super(message, cause);
+    /**
+     * Describe the scope of the failure with a human-readable failure category.
+     *
+     * @return The scope of the failure
+     */
+    default String getFailureScope() {
+        return UNKNOWN_SCOPE;
     }
 
-    public SFlowNodeExecutionException(final String message) {
-        super(message);
+    /**
+     * Additional context information about the failure. The returned string is formatted using
+     * the following pattern: "context1//context2//context3"
+     *
+     * @return The context of the failure
+     */
+    default String getFailureContext() {
+        return EMPTY_CONTEXT;
     }
 
-    public SFlowNodeExecutionException(final Throwable cause) {
-        super(cause);
-    }
+    BpmFailureService.Failure createFailure();
 
-    @Override
-    public BpmFailureService.Failure createFailure() {
-        return new BpmFailureService.Failure(getFailureScope(), getFailureContext(), this);
-    }
 }

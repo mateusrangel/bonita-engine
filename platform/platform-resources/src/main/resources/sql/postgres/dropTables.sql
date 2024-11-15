@@ -66,3 +66,5 @@ DROP TABLE IF EXISTS bar_resource;
 DROP TABLE IF EXISTS temporary_content;
 DROP TABLE IF EXISTS tenant_resource;
 DROP TABLE IF EXISTS icon;
+DROP TABLE IF EXISTS arch_bpm_failure;
+DROP TABLE IF EXISTS bpm_failure;
