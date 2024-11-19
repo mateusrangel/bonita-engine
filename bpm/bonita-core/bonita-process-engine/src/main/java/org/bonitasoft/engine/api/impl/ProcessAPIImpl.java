@@ -3909,22 +3909,26 @@ public class ProcessAPIImpl implements ProcessAPI {
                     .getNumberOfFlownodesInAllStates(
                             processInstanceId);
             for (final SFlowNodeInstanceStateCounter nodeCounter : flownodes) {
-                final String flownodeName = nodeCounter.getFlownodeName();
-                final Map<String, Long> flownodeCounters = getFlowNodeCounters(countersForProcessInstance,
-                        flownodeName);
-                flownodeCounters.put(nodeCounter.getStateName(), nodeCounter.getNumberOf());
-                countersForProcessInstance.put(flownodeName, flownodeCounters);
+                if (nodeCounter.getStateName() != null) {
+                    final String flownodeName = nodeCounter.getFlownodeName();
+                    final Map<String, Long> flownodeCounters = getFlowNodeCounters(countersForProcessInstance,
+                            flownodeName);
+                    flownodeCounters.put(nodeCounter.getStateName(), nodeCounter.getNumberOf());
+                    countersForProcessInstance.put(flownodeName, flownodeCounters);
+                }
             }
             // Archived flownodes:
             final List<SFlowNodeInstanceStateCounter> archivedFlownodes = serviceAccessor.getActivityInstanceService()
                     .getNumberOfArchivedFlownodesInAllStates(
                             processInstanceId);
             for (final SFlowNodeInstanceStateCounter nodeCounter : archivedFlownodes) {
-                final String flownodeName = nodeCounter.getFlownodeName();
-                final Map<String, Long> flownodeCounters = getFlowNodeCounters(countersForProcessInstance,
-                        flownodeName);
-                flownodeCounters.put(nodeCounter.getStateName(), nodeCounter.getNumberOf());
-                countersForProcessInstance.put(flownodeName, flownodeCounters);
+                if (nodeCounter.getStateName() != null) {
+                    final String flownodeName = nodeCounter.getFlownodeName();
+                    final Map<String, Long> flownodeCounters = getFlowNodeCounters(countersForProcessInstance,
+                            flownodeName);
+                    flownodeCounters.put(nodeCounter.getStateName(), nodeCounter.getNumberOf());
+                    countersForProcessInstance.put(flownodeName, flownodeCounters);
+                }
             }
         } catch (final SProcessInstanceNotFoundException e) {
             //cannot throw directly a ProcessInstanceNotFoundException to avoid API break
