@@ -34,32 +34,26 @@ public interface PersistenceService extends ReadPersistenceService {
     /**
      * Add a record into the table by given persistentObject.
      *
-     * @param entity
-     * @throws SPersistenceException
      * @since 6.0
      */
-    void insert(final PersistentObject entity) throws SPersistenceException;
+    <T extends PersistentObject> T insert(final T entity) throws SPersistenceException;
 
     /**
-     * @param entities
-     * @throws SPersistenceException
+     *
      */
-    void insertInBatch(final List<? extends PersistentObject> entities) throws SPersistenceException;
+    <T extends PersistentObject> List<T> insertInBatch(final List<T> entities) throws SPersistenceException;
 
     /**
      * Delete a record from the table by given persistentObject.
      *
-     * @param entity
-     * @throws SPersistenceException
      * @since 6.0
      */
-    void delete(final PersistentObject entity) throws SPersistenceException;
+    <T extends PersistentObject> void delete(final T entity) throws SPersistenceException;
 
     /**
      * Delete all records belong to the given entity class from the table.
      *
      * @param entityClass The class which extends persistentObject
-     * @throws SPersistenceException
      * @since 6.0
      */
     void deleteAll(final Class<? extends PersistentObject> entityClass) throws SPersistenceException;
@@ -75,11 +69,6 @@ public interface PersistenceService extends ReadPersistenceService {
 
     /**
      * Executes a query update.
-     *
-     * @param updateQueryName
-     * @param inputParameters
-     * @return
-     * @throws SPersistenceException
      */
     int update(String updateQueryName, Map<String, Object> inputParameters) throws SPersistenceException;
 
@@ -88,15 +77,12 @@ public interface PersistenceService extends ReadPersistenceService {
      *
      * @param entityClass Entity class corresponding to the table to empty
      * @param filters Filters
-     * @throws SPersistenceException
      * @since 6.1
      */
     void deleteByTenant(Class<? extends PersistentObject> entityClass, List<FilterOption> filters)
             throws SPersistenceException;
 
     /**
-     * @param desc
-     * @throws SPersistenceException
      */
     void update(final UpdateDescriptor desc) throws SPersistenceException;
 
@@ -107,7 +93,6 @@ public interface PersistenceService extends ReadPersistenceService {
      *
      * @param id entity's id
      * @param entityClass The class which extends persistentObject
-     * @throws SPersistenceException
      * @since 6.0
      */
     void delete(final long id, final Class<? extends PersistentObject> entityClass) throws SPersistenceException;
@@ -117,7 +102,6 @@ public interface PersistenceService extends ReadPersistenceService {
      *
      * @param ids A list contains entity ids
      * @param entityClass The class which extends persistentObject
-     * @throws SPersistenceException
      * @since 6.0
      */
     void delete(final List<Long> ids, final Class<? extends PersistentObject> entityClass) throws SPersistenceException;

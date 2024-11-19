@@ -13,8 +13,6 @@
  **/
 package org.bonitasoft.engine.core.process.instance.model;
 
-import java.time.Instant;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -23,7 +21,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.bonitasoft.engine.persistence.PlatformPersistentObject;
+import org.bonitasoft.engine.persistence.ArchivedPersistentObject;
+import org.bonitasoft.engine.persistence.PersistentObject;
 import org.hibernate.annotations.Type;
 
 @Data
@@ -31,8 +30,8 @@ import org.hibernate.annotations.Type;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "bpm_failure")
-public class SBpmFailure implements PlatformPersistentObject {
+@Table(name = "arch_bpm_failure")
+public class SABPMFailure implements ArchivedPersistentObject {
 
     @Id
     private long id;
@@ -44,7 +43,28 @@ public class SBpmFailure implements PlatformPersistentObject {
     private String errorMessage;
     @Type(type = "materialized_clob")
     private String stackTrace;
-    @Builder.Default
-    private long failureDate = Instant.now().toEpochMilli();
+    private long failureDate;
+    private long archiveDate;
+    private long sourceObjectId;
 
+    public SABPMFailure(final SBPMFailure bpmFailure) {
+        this.sourceObjectId = bpmFailure.getId();
+        this.processDefinitionId = bpmFailure.getProcessDefinitionId();
+        this.processInstanceId = bpmFailure.getProcessInstanceId();
+        this.flowNodeInstanceId = bpmFailure.getFlowNodeInstanceId();
+        this.scope = bpmFailure.getScope();
+        this.context = bpmFailure.getContext();
+        this.errorMessage = bpmFailure.getErrorMessage();
+        this.stackTrace = bpmFailure.getStackTrace();
+    }
+
+    @Override
+    public Class<? extends PersistentObject> getPersistentObjectInterface() {
+        return SBPMFailure.class;
+    }
+
+    @Override
+    public void setTenantId(long id) {
+        // Ignore tenant id
+    }
 }

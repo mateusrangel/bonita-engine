@@ -11,21 +11,27 @@
  * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301, USA.
  **/
-package org.bonitasoft.engine.core.process.instance.api;
+package org.bonitasoft.engine.commons.exceptions;
 
-import java.util.List;
+public interface ScopedException {
 
-import org.bonitasoft.engine.core.process.instance.model.SBpmFailure;
-import org.bonitasoft.engine.core.process.instance.model.SFlowNodeInstance;
-import org.bonitasoft.engine.persistence.SBonitaReadException;
-import org.bonitasoft.engine.services.SPersistenceException;
+    String UNKNOWN_SCOPE = "UNKNOWN";
+    String GENERAL_INFORMATION = "General information";
+    String OPERATION = "Operation";
+    String EVENT = "Event";
+    String ITERATION = "Iteration";
+    String CONNECTOR = "Connector";
+    String DATA = "Data initialization";
+    String ACTOR_MAPPING = "Actor mapping";
+    String OUTGOING_TRANSITION = "Outgoing transition";
 
-public interface BpmFailureService {
+    /**
+     * Describe the scope of the exception with a human-readable category.
+     *
+     * @return The scope of the exception
+     */
+    default String getScope() {
+        return UNKNOWN_SCOPE;
+    }
 
-    void createFlowNodeFailure(SFlowNodeInstance flowNodeInstance,
-            Failure failure) throws SPersistenceException;
-
-    List<SBpmFailure> getFlowNodeFailures(long flowNodeInstanceId, int maxResults) throws SBonitaReadException;
-
-    record Failure(String scope, String context, Throwable throwable){}
 }

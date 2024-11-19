@@ -16,8 +16,8 @@ package org.bonitasoft.engine.execution.work;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.bonitasoft.engine.core.process.instance.api.BpmFailureService;
-import org.bonitasoft.engine.core.process.instance.api.exceptions.FailureContext;
+import org.bonitasoft.engine.commons.exceptions.ScopedException;
+import org.bonitasoft.engine.core.process.instance.api.BPMFailureService;
 import org.bonitasoft.engine.core.process.instance.model.SFlowNodeInstance;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,20 +35,19 @@ public class SetInFailCallableTest {
     private SFlowNodeInstance flowNodeInstance;
 
     @Mock
-    private BpmFailureService failureService;
-
-    @Mock
-    private FailureContext failureContext;
+    private BPMFailureService failureService;
 
     public static final long PROCESS_DEFINITION_ID = 25L;
     private static final long FLOW_NODE_INSTANCE_ID = 123L;
 
     private SetInFailCallable setInFailCallable;
+    private BPMFailureService.Failure failure;
 
     @Before
     public void setUp() throws Exception {
         when(flowNodeInstance.getId()).thenReturn(FLOW_NODE_INSTANCE_ID);
-        setInFailCallable = new SetInFailCallable(failedStateSetter, flowNodeInstance, failureService, failureContext);
+        failure = new BPMFailureService.Failure(ScopedException.UNKNOWN_SCOPE, new RuntimeException());
+        setInFailCallable = new SetInFailCallable(failedStateSetter, flowNodeInstance, failureService, failure);
     }
 
     @Test
@@ -59,6 +58,16 @@ public class SetInFailCallableTest {
 
         //then
         verify(failedStateSetter).setAsFailed(FLOW_NODE_INSTANCE_ID);
+    }
+
+    @Test
+    public void call_should_create_failure() throws Exception {
+
+        //when
+        setInFailCallable.call();
+
+        //then
+        verify(failureService).createFlowNodeFailure(flowNodeInstance, failure);
     }
 
 }

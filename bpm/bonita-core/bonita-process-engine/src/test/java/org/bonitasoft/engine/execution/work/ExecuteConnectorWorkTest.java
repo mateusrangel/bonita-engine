@@ -106,7 +106,7 @@ public class ExecuteConnectorWorkTest {
         }
 
         @Override
-        protected void setContainerInFail(Map<String, Object> context) throws SBonitaException {
+        protected void setContainerInFail(Map<String, Object> context, Throwable t) throws SBonitaException {
         }
 
         @Override

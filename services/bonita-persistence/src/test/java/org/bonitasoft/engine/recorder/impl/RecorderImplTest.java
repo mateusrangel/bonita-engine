@@ -13,8 +13,10 @@
  **/
 package org.bonitasoft.engine.recorder.impl;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.UUID;
@@ -28,6 +30,7 @@ import org.bonitasoft.engine.recorder.model.UpdateRecord;
 import org.bonitasoft.engine.services.PersistenceService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.AdditionalAnswers;
 import org.mockito.ArgumentMatcher;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -48,6 +51,7 @@ public class RecorderImplTest {
 
     @Test
     public void should_fire_event_when_recording_an_insert() throws Exception {
+        when(persistenceService.insert(any())).thenAnswer(AdditionalAnswers.returnsFirstArg());
         MyPersistentObject entity = entity();
         recorder.recordInsert(insertRecord(entity), "theEvent");
 

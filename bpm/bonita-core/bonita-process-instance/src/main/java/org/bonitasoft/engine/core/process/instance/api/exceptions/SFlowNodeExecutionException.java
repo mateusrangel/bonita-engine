@@ -14,7 +14,6 @@
 package org.bonitasoft.engine.core.process.instance.api.exceptions;
 
 import org.bonitasoft.engine.commons.exceptions.SBonitaException;
-import org.bonitasoft.engine.core.process.instance.api.BpmFailureService;
 
 /**
  * An unexpected error happened during the execution of the flow node
@@ -22,9 +21,17 @@ import org.bonitasoft.engine.core.process.instance.api.BpmFailureService;
  *
  * @author Celine Souchet
  */
-public class SFlowNodeExecutionException extends SBonitaException implements FailureContext {
+public class SFlowNodeExecutionException extends SBonitaException {
 
     private static final long serialVersionUID = 5549874111741638842L;
+
+    public SFlowNodeExecutionException(final String message, final String scope, final Throwable cause) {
+        super(message, scope, cause);
+    }
+
+    public SFlowNodeExecutionException(final String message, final String scope) {
+        super(message, scope);
+    }
 
     public SFlowNodeExecutionException(final String message, final Throwable cause) {
         super(message, cause);
@@ -38,8 +45,4 @@ public class SFlowNodeExecutionException extends SBonitaException implements Fai
         super(cause);
     }
 
-    @Override
-    public BpmFailureService.Failure createFailure() {
-        return new BpmFailureService.Failure(getFailureScope(), getFailureContext(), this);
-    }
 }

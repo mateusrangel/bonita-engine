@@ -24,6 +24,7 @@ import org.bonitasoft.engine.bpm.process.ProcessDefinition;
 import org.bonitasoft.engine.bpm.process.ProcessDeploymentInfo;
 import org.bonitasoft.engine.bpm.process.ProcessInstance;
 import org.bonitasoft.engine.bpm.process.impl.ProcessDefinitionBuilder;
+import org.bonitasoft.engine.commons.exceptions.ScopedException;
 import org.bonitasoft.engine.expression.ExpressionBuilder;
 import org.bonitasoft.engine.operation.LeftOperandBuilder;
 import org.bonitasoft.engine.operation.OperatorType;
@@ -73,8 +74,13 @@ public class FlowNodeFailureIT extends TestWithUser {
         var failures = serviceAccessor.getTransactionService()
                 .executeInTransaction(() -> failureService.getFlowNodeFailures(failFlowNodeInstance.getId(), 5));
         assertThat(failures).hasSize(1);
-        assertThat(failures.get(0).getErrorMessage())
-                .isEqualTo("java.lang.RuntimeException: Failed !");
+        var failure = failures.get(0);
+        assertThat(failure.getScope())
+                .isEqualTo(ScopedException.OPERATION);
+        assertThat(failure.getContext())
+                .isEqualTo("expression::my-failing-script");
+        assertThat(failure.getErrorMessage())
+                .isEqualTo("RuntimeException: Failed !");
         disableAndDeleteProcess(processDefinition);
     }
 

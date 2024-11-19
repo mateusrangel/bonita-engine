@@ -651,7 +651,7 @@
     <bean class="org.bonitasoft.engine.sequence.SequenceMapping">
         <constructor-arg name="classNames">
             <set>
-                <value>org.bonitasoft.engine.core.process.instance.model.SBpmFailure</value>
+                <value>org.bonitasoft.engine.core.process.instance.model.SBPMFailure</value>
             </set>
         </constructor-arg>
         <constructor-arg name="sequenceId" value="6" />
@@ -660,7 +660,7 @@
     <bean class="org.bonitasoft.engine.sequence.SequenceMapping">
         <constructor-arg name="classNames">
             <set>
-                <value>org.bonitasoft.engine.core.process.instance.model.SABpmFailure</value>
+                <value>org.bonitasoft.engine.core.process.instance.model.SABPMFailure</value>
             </set>
         </constructor-arg>
         <constructor-arg name="sequenceId" value="7" />
@@ -1034,8 +1034,8 @@
                 <value>org.bonitasoft.engine.core.process.instance.model.archive.business.data.SAProcessMultiRefBusinessDataInstance</value>
                 <value>org.bonitasoft.engine.queriablelogger.model.SQueriableLog</value>
                 <value>org.bonitasoft.engine.queriablelogger.model.SQueriableLogParameter</value>
-                <value>org.bonitasoft.engine.core.process.instance.model.SBpmFailure</value>
-                <value>org.bonitasoft.engine.core.process.instance.model.SABpmFailure</value>
+                <value>org.bonitasoft.engine.core.process.instance.model.SBPMFailure</value>
+                <value>org.bonitasoft.engine.core.process.instance.model.SABPMFailure</value>
             </set>
         </property>
     </bean>

@@ -22,6 +22,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.bonitasoft.engine.bpm.process.ProcessInstanceState;
 import org.bonitasoft.engine.commons.exceptions.SBonitaException;
+import org.bonitasoft.engine.commons.exceptions.ScopedException;
 import org.bonitasoft.engine.core.expression.control.api.ExpressionResolverService;
 import org.bonitasoft.engine.core.expression.control.model.SExpressionContext;
 import org.bonitasoft.engine.core.process.definition.ProcessDefinitionService;
@@ -162,7 +163,7 @@ public class InitializingActivityWithBoundaryEventsState extends OnEnterConnecto
                 final SCallActivityDefinition callActivity = (SCallActivityDefinition) processContainer
                         .getFlowNode(flowNodeInstance.getFlowNodeDefinitionId());
                 if (callActivity == null) {
-                    throw new SActivityStateExecutionException("unable to find call activity definition with name "
+                    throw new SActivityStateExecutionException("Unable to find call activity definition with name "
                             + flowNodeInstance.getName() + " in process definition " + processDefinition.getId());
                 }
 
@@ -217,7 +218,7 @@ public class InitializingActivityWithBoundaryEventsState extends OnEnterConnecto
                     });
                 }
             } catch (final SBonitaException e) {
-                throw new SActivityStateExecutionException(e);
+                throw new SActivityStateExecutionException("Unable to handle call activity", ScopedException.DATA, e);
             }
         }
     }

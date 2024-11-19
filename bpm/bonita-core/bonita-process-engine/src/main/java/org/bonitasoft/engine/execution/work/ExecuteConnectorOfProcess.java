@@ -42,7 +42,11 @@ import org.bonitasoft.engine.core.process.instance.model.SProcessInstance;
 import org.bonitasoft.engine.core.process.instance.model.SStateCategory;
 import org.bonitasoft.engine.core.process.instance.model.event.SThrowEventInstance;
 import org.bonitasoft.engine.data.instance.api.DataInstanceContainer;
-import org.bonitasoft.engine.execution.*;
+import org.bonitasoft.engine.execution.Filter;
+import org.bonitasoft.engine.execution.FlowNodeIdFilter;
+import org.bonitasoft.engine.execution.FlowNodeSelector;
+import org.bonitasoft.engine.execution.ProcessExecutor;
+import org.bonitasoft.engine.execution.StartFlowNodeFilter;
 import org.bonitasoft.engine.execution.event.EventsHandler;
 import org.bonitasoft.engine.persistence.SBonitaReadException;
 import org.bonitasoft.engine.service.ServiceAccessor;
@@ -62,7 +66,7 @@ public class ExecuteConnectorOfProcess extends ExecuteConnectorWork {
 
     final Filter<SFlowNodeDefinition> filterFlowNodeDefinitions;
 
-    private long subProcessDefinitionId;
+    private final long subProcessDefinitionId;
 
     ExecuteConnectorOfProcess(final long processDefinitionId, final long connectorInstanceId,
             final String connectorDefinitionName,
@@ -114,7 +118,7 @@ public class ExecuteConnectorOfProcess extends ExecuteConnectorWork {
     }
 
     @Override
-    protected void setContainerInFail(final Map<String, Object> context) throws SBonitaException {
+    protected void setContainerInFail(final Map<String, Object> context, Throwable t) throws SBonitaException {
         final ProcessInstanceService processInstanceService = getServiceAccessor(context).getProcessInstanceService();
         final SProcessInstance intTxProcessInstance = processInstanceService.getProcessInstance(processInstanceId);
         processInstanceService.setState(intTxProcessInstance, ProcessInstanceState.ERROR);

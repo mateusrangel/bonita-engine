@@ -19,8 +19,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import org.bonitasoft.engine.commons.exceptions.SBonitaException;
-import org.bonitasoft.engine.core.process.instance.api.BpmFailureService;
-import org.bonitasoft.engine.core.process.instance.api.exceptions.FailureContext;
+import org.bonitasoft.engine.commons.exceptions.ScopedException;
+import org.bonitasoft.engine.core.process.instance.api.BPMFailureService;
 import org.bonitasoft.engine.core.process.instance.api.exceptions.SFlowNodeNotFoundException;
 import org.bonitasoft.engine.core.process.instance.api.exceptions.SFlowNodeReadException;
 import org.bonitasoft.engine.core.process.instance.model.SFlowNodeInstance;
@@ -124,14 +124,14 @@ public class NotifyChildFinishedWork extends TenantAwareBonitaWork {
                 serviceAccessor.getFlowNodeStateManager());
         SFlowNodeInstance flowNodeInstance = (SFlowNodeInstance) context.get("flowNodeInstance");
         userTransactionService.executeInTransaction(new SetInFailCallable(failedStateSetter, flowNodeInstance,
-                serviceAccessor.getBpmFailureService(), failureContext(e)));
+                serviceAccessor.getBpmFailureService(), createFailure(e)));
     }
 
-    private FailureContext failureContext(Throwable e) {
-        if (e instanceof FailureContext failureContext) {
-            return failureContext;
+    private BPMFailureService.Failure createFailure(Throwable e) {
+        if (e instanceof ScopedException scopedException) {
+            return new BPMFailureService.Failure(scopedException.getScope(), e);
         }
-        return () -> new BpmFailureService.Failure(FailureContext.UNKNOWN_SCOPE, FailureContext.EMPTY_CONTEXT, e);
+        return new BPMFailureService.Failure(ScopedException.UNKNOWN_SCOPE, e);
     }
 
     @Override
