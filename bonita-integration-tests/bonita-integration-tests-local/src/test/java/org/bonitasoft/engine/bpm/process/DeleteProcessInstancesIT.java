@@ -20,9 +20,14 @@ import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import static org.awaitility.Awaitility.await;
 import static org.bonitasoft.engine.data.instance.api.DataInstanceContainer.ACTIVITY_INSTANCE;
 import static org.bonitasoft.engine.data.instance.api.DataInstanceContainer.PROCESS_INSTANCE;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import org.bonitasoft.engine.bpm.bar.BarResource;
 import org.bonitasoft.engine.bpm.bar.BusinessArchiveBuilder;
@@ -33,7 +38,10 @@ import org.bonitasoft.engine.bpm.contract.FileInputValue;
 import org.bonitasoft.engine.bpm.contract.Type;
 import org.bonitasoft.engine.bpm.document.DocumentValue;
 import org.bonitasoft.engine.bpm.process.impl.ProcessDefinitionBuilder;
+import org.bonitasoft.engine.commons.exceptions.SObjectNotFoundException;
 import org.bonitasoft.engine.core.contract.data.SContractDataNotFoundException;
+import org.bonitasoft.engine.core.document.api.DocumentService;
+import org.bonitasoft.engine.core.document.model.SLightDocument;
 import org.bonitasoft.engine.core.process.instance.model.SFlowNodeInstance;
 import org.bonitasoft.engine.core.process.instance.model.archive.SAConnectorInstance;
 import org.bonitasoft.engine.core.process.instance.model.archive.SAFlowNodeInstance;
@@ -44,8 +52,10 @@ import org.bonitasoft.engine.expression.InvalidExpressionException;
 import org.bonitasoft.engine.identity.User;
 import org.bonitasoft.engine.persistence.QueryOptions;
 import org.bonitasoft.engine.persistence.SBonitaReadException;
+import org.bonitasoft.engine.service.ServiceAccessor;
 import org.bonitasoft.engine.test.BuildTestUtil;
 import org.bonitasoft.engine.test.CommonAPILocalIT;
+import org.bonitasoft.engine.transaction.UserTransactionService;
 import org.junit.Test;
 
 /**
@@ -95,7 +105,7 @@ public class DeleteProcessInstancesIT extends CommonAPILocalIT {
             for (Long userTaskInstance : userTaskInstances) {
                 try {
                     getServiceAccessor().getContractDataService().getArchivedUserTaskDataValue(userTaskInstance,
-                            inputName());
+                            "simpleInputTask");
                     fail("should have deleted archived contract data on activity instance");
                 } catch (SContractDataNotFoundException e) {
                     //ok
@@ -149,33 +159,48 @@ public class DeleteProcessInstancesIT extends CommonAPILocalIT {
         ProcessDefinition sub1 = createSubProcessDefinition1();
         ProcessDefinition sub2 = createSubProcessDefinitionWithUserTask(user);
 
-        long id = getProcessAPI().startProcessWithInputs(mainProcess.getId(),
+        long processInstanceId = getProcessAPI().startProcessWithInputs(mainProcess.getId(),
                 Map.ofEntries(entry("simpleInput1", "singleInputValue"),
                         entry("myFile", new FileInputValue("testFile", "testFile".getBytes()))))
                 .getId();
-        waitForUserTask(id, "userTask1");
+        waitForUserTask(processInstanceId, "userTask1");
         waitForUserTask("taskOfSubProcess");
         waitForUserTask("taskOfSubProcess");
+
+        final SLightDocument document = getDocument(processInstanceId);
+        assertThat(document).isNotNull();
+
         Thread.sleep(200);
 
-        getProcessAPI().deleteProcessInstance(id);
+        getProcessAPI().deleteProcessInstance(processInstanceId);
 
         assertSoftly((soft) -> {
             try {
                 soft.assertThat(getAllFlowNodes()).isEmpty();
                 soft.assertThat(getAllArchFlowNodes()).isEmpty();
                 soft.assertThat(getAllProcessInstances()).isEmpty();
-
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         });
+        assertThrows(SObjectNotFoundException.class, () -> getDocumentContent(document.getId()));
 
         disableAndDeleteProcess(asList(mainProcess, sub1, sub2));
     }
 
-    protected String inputName() {
-        return "simpleInputTask";
+    private SLightDocument getDocument(long processInstanceId) throws Exception {
+        final ServiceAccessor serviceAccessor = getServiceAccessor();
+        final DocumentService documentService = serviceAccessor.getDocumentService();
+        final UserTransactionService userTransactionService = serviceAccessor.getUserTransactionService();
+        final Long documentId = userTransactionService.executeInTransaction(
+                () -> documentService.getMappedDocument(processInstanceId, "myDoc").getDocumentId());
+        return getDocumentContent(documentId);
+    }
+
+    private SLightDocument getDocumentContent(long documentId) throws Exception {
+        final ServiceAccessor serviceAccessor = getServiceAccessor();
+        return serviceAccessor.getUserTransactionService().executeInTransaction(
+                () -> serviceAccessor.getDocumentService().getDocument(documentId));
     }
 
     protected List<SAProcessInstance> getAllProcessInstances() throws Exception {

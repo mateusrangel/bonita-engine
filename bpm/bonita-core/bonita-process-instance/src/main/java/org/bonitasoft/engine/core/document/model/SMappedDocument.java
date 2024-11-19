@@ -54,36 +54,4 @@ public class SMappedDocument extends AbstractSMappedDocument {
                 .build();
     }
 
-    public AbstractSDocument getDocument() {
-        return document;
-    }
-
-    public void setDocument(SLightDocument document) {
-        this.document = document;
-    }
-
-    public long getAuthor() {
-        return document.getAuthor();
-    }
-
-    public long getCreationDate() {
-        return document.getCreationDate();
-    }
-
-    public String getMimeType() {
-        return document.getMimeType();
-    }
-
-    public String getFileName() {
-        return document.getFileName();
-    }
-
-    public boolean hasContent() {
-        return document.hasContent();
-    }
-
-    public String getUrl() {
-        return document.getUrl();
-    }
-
 }
