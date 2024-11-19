@@ -1,6 +1,6 @@
 [versions]
 # The groovy version must be in synch with the bonita-project-parent POM (bonita-project repository):
-groovyVersion = "3.0.22"
+groovyVersion = "3.0.23"
 springVersion = "5.3.39"
 springSessionVersion = "2.7.4"
 springBootVersion = "2.7.18"
@@ -11,7 +11,7 @@ commonsIOVersion = "2.17.0"
 commonsFileUploadVersion = "1.5"
 commonsBeanutilsVersion = "1.9.4"
 commonsCollectionsVersion = "4.4"
-tomcatVersion = "9.0.96"
+tomcatVersion = "9.0.97"
 commonsCLIVersion = "1.9.0"
 commonsTextVersion = "1.12.0"
 semver4jVersion = '3.1.0'
@@ -33,11 +33,11 @@ ehCacheVersion = "2.10.10.12.7"
 eclipseCompilerVersion = "3.39.0"
 jakartaActivationVersion = "1.2.2"
 quartzVersion = "2.3.2"
-micrometerVersion = "1.13.6"
+micrometerVersion = "1.14.1"
 # DB drivers:
 mysqlVersion = "8.4.0"
 msSqlServerVersion = "9.4.1.jre11"
-oracleVersion = "19.24.0.0"
+oracleVersion = "19.25.0.0"
 postgresqlVersion = "42.7.4"
 
 narayanaVersion = "5.10.6.Final"
@@ -192,7 +192,7 @@ msSqlServer = { group = "com.microsoft.sqlserver", name = "mssql-jdbc", version.
 oracle = { group = "com.oracle.database.jdbc", name = "ojdbc8", version.ref = "oracleVersion" }
 postgresql = { group = "org.postgresql", name = "postgresql", version.ref = "postgresqlVersion" }
 
-lombok = "org.projectlombok:lombok:1.18.34"
+lombok = "org.projectlombok:lombok:1.18.36"
 
 logback = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logbackVersion" }
 
