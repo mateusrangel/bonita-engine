@@ -56,6 +56,7 @@ public class SABPMFailure implements ArchivedPersistentObject {
         this.context = bpmFailure.getContext();
         this.errorMessage = bpmFailure.getErrorMessage();
         this.stackTrace = bpmFailure.getStackTrace();
+        this.failureDate = bpmFailure.getFailureDate();
     }
 
     @Override

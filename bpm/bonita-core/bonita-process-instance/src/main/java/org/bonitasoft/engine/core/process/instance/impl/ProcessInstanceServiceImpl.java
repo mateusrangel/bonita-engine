@@ -51,6 +51,7 @@ import org.bonitasoft.engine.core.process.definition.model.SProcessDefinition;
 import org.bonitasoft.engine.core.process.definition.model.SSubProcessDefinition;
 import org.bonitasoft.engine.core.process.definition.model.event.SEventDefinition;
 import org.bonitasoft.engine.core.process.instance.api.ActivityInstanceService;
+import org.bonitasoft.engine.core.process.instance.api.BPMFailureService;
 import org.bonitasoft.engine.core.process.instance.api.ProcessInstanceService;
 import org.bonitasoft.engine.core.process.instance.api.RefBusinessDataService;
 import org.bonitasoft.engine.core.process.instance.api.event.EventInstanceService;
@@ -141,17 +142,25 @@ public class ProcessInstanceServiceImpl implements ProcessInstanceService {
     private final SCommentService commentService;
 
     private final RefBusinessDataService refBusinessDataService;
+
     private final ContractDataService contractDataService;
 
-    public ProcessInstanceServiceImpl(final Recorder recorder, final ReadPersistenceService persistenceRead,
+    private final BPMFailureService bpmFailureService;
+
+    public ProcessInstanceServiceImpl(final Recorder recorder,
+            final ReadPersistenceService persistenceRead,
             final ActivityInstanceService activityService,
             final EventInstanceService bpmEventInstanceService,
-            final DataInstanceService dataInstanceService, final ArchiveService archiveService,
+            final DataInstanceService dataInstanceService,
+            final ArchiveService archiveService,
             final ProcessDefinitionService processDefinitionService,
-            final ConnectorInstanceService connectorInstanceService, final ClassLoaderService classLoaderService,
+            final ConnectorInstanceService connectorInstanceService,
+            final ClassLoaderService classLoaderService,
             final DocumentService documentService,
-            final SCommentService commentService, final RefBusinessDataService refBusinessDataService,
-            ContractDataService contractDataService) {
+            final SCommentService commentService,
+            final RefBusinessDataService refBusinessDataService,
+            final ContractDataService contractDataService,
+            final BPMFailureService bpmFailureService) {
         this.recorder = recorder;
         this.persistenceRead = persistenceRead;
         this.activityService = activityService;
@@ -165,6 +174,7 @@ public class ProcessInstanceServiceImpl implements ProcessInstanceService {
         this.bpmEventInstanceService = bpmEventInstanceService;
         this.dataInstanceService = dataInstanceService;
         this.archiveService = archiveService;
+        this.bpmFailureService = bpmFailureService;
     }
 
     @Override
@@ -290,6 +300,7 @@ public class ProcessInstanceServiceImpl implements ProcessInstanceService {
                 dataInstanceService.deleteLocalArchivedDataInstances(flowNodesSourceObjectIds2k,
                         DataInstanceContainer.ACTIVITY_INSTANCE.toString());
                 contractDataService.deleteArchivedUserTaskData(flowNodesSourceObjectIds2k);
+                bpmFailureService.deleteArchivedFlowNodeFailures(flowNodesSourceObjectIds2k);
                 activityService.deleteArchivedFlowNodeInstances(flowNodesSourceObjectIds2k);
             }
         }
@@ -461,9 +472,10 @@ public class ProcessInstanceServiceImpl implements ProcessInstanceService {
         if (isReceiveTask(flowNodeInstance) || isEventWithTrigger(flowNodeInstance, processDefinition)) {
             bpmEventInstanceService.deleteWaitingEvents(flowNodeInstance);
         }
-        if (flowNodeInstance instanceof SActivityInstance) {
-            deleteActivityInstanceElements((SActivityInstance) flowNodeInstance, processDefinition);
+        if (flowNodeInstance instanceof SActivityInstance activityInstance) {
+            deleteActivityInstanceElements(activityInstance, processDefinition);
         }
+        bpmFailureService.deleteFlowNodeFailures(flowNodeInstance.getId());
     }
 
     private boolean isEventWithTrigger(SFlowNodeInstance flowNodeInstance, SProcessDefinition processDefinition) {

@@ -9,4 +9,17 @@
         ORDER BY f.failureDate DESC
     </query>
 
+    <query name="deleteByIdsSBPMFailure">
+        DELETE
+        FROM org.bonitasoft.engine.core.process.instance.model.SBPMFailure AS f
+        WHERE f.id IN (:ids)
+    </query>
+
+    <query name="deleteArchivedBPMFailuresByFlowNodeInstanceIds">
+        DELETE
+        FROM org.bonitasoft.engine.core.process.instance.model.SABPMFailure AS f
+        WHERE f.flowNodeInstanceId IN (:flowNodeInstanceIds)
+    </query>
+
+
 </hibernate-mapping>

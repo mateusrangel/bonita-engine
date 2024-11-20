@@ -20,11 +20,15 @@ import java.util.TreeMap;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.bonitasoft.engine.archive.ArchiveInsertRecord;
+import org.bonitasoft.engine.archive.ArchiveService;
 import org.bonitasoft.engine.commons.exceptions.ExceptionContext;
+import org.bonitasoft.engine.commons.exceptions.SBonitaException;
 import org.bonitasoft.engine.commons.exceptions.SExceptionContext;
 import org.bonitasoft.engine.connector.ConnectorValidationException;
 import org.bonitasoft.engine.core.operation.exception.SOperationExecutionException;
 import org.bonitasoft.engine.core.process.instance.api.BPMFailureService;
+import org.bonitasoft.engine.core.process.instance.model.SABPMFailure;
 import org.bonitasoft.engine.core.process.instance.model.SBPMFailure;
 import org.bonitasoft.engine.core.process.instance.model.SFlowNodeInstance;
 import org.bonitasoft.engine.expression.exception.SExpressionEvaluationException;
@@ -43,9 +47,11 @@ public class BPMFailureServiceImpl implements BPMFailureService {
     private static final String CONTEXT_PATH_SEPARATOR = "//";
 
     private final PersistenceService persistenceService;
+    private final ArchiveService archiveService;
 
-    public BPMFailureServiceImpl(PersistenceService persistenceService) {
+    public BPMFailureServiceImpl(PersistenceService persistenceService, ArchiveService archiveService) {
         this.persistenceService = persistenceService;
+        this.archiveService = archiveService;
     }
 
     @Override
@@ -70,6 +76,35 @@ public class BPMFailureServiceImpl implements BPMFailureService {
         final Map<String, Object> parameters = Map.ofEntries(Map.entry("flowNodeInstanceId", flowNodeInstanceId));
         return persistenceService.selectList(new SelectListDescriptor<>("getFlowNodeFailures", parameters,
                 SBPMFailure.class, queryOptions));
+    }
+
+    @Override
+    public void archiveFlowNodeFailures(long flowNodeInstanceId, long archiveDate) throws SBonitaException {
+        log.debug("Archiving failures of flow node instance {}", flowNodeInstanceId);
+        archiveService.recordInserts(archiveDate, getFlowNodeFailures(flowNodeInstanceId, Integer.MAX_VALUE)
+                .stream()
+                .map(SABPMFailure::new)
+                .map(ArchiveInsertRecord::new)
+                .toArray(ArchiveInsertRecord[]::new));
+    }
+
+    @Override
+    public void deleteFlowNodeFailures(long flowNodeInstanceId) throws SBonitaException {
+        log.debug("Deleting failures of flow node instance {}", flowNodeInstanceId);
+        persistenceService.delete(getFlowNodeFailures(flowNodeInstanceId, Integer.MAX_VALUE)
+                .stream()
+                .map(SBPMFailure::getId)
+                .toList(),
+                SBPMFailure.class);
+    }
+
+    @Override
+    public void deleteArchivedFlowNodeFailures(List<Long> flowNodeInstanceIds) throws SBonitaException {
+        if (!flowNodeInstanceIds.isEmpty()) {
+            log.debug("Deleting archived failures of flow node instances {}", flowNodeInstanceIds);
+            archiveService.deleteFromQuery("deleteArchivedBPMFailuresByFlowNodeInstanceIds",
+                    Map.ofEntries(Map.entry("flowNodeInstanceIds", flowNodeInstanceIds)));
+        }
     }
 
     private static String buildContext(Throwable e) {

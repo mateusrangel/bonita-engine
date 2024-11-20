@@ -16,19 +16,23 @@ package org.bonitasoft.engine.core.process.instance.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.bonitasoft.engine.archive.ArchiveInsertRecord;
+import org.bonitasoft.engine.archive.ArchiveService;
 import org.bonitasoft.engine.bpm.connector.ConnectorEvent;
 import org.bonitasoft.engine.commons.exceptions.SBonitaRuntimeException;
 import org.bonitasoft.engine.commons.exceptions.SExceptionContext;
 import org.bonitasoft.engine.connector.ConnectorValidationException;
 import org.bonitasoft.engine.core.operation.exception.SOperationExecutionException;
 import org.bonitasoft.engine.core.process.instance.api.BPMFailureService;
+import org.bonitasoft.engine.core.process.instance.model.SABPMFailure;
 import org.bonitasoft.engine.core.process.instance.model.SBPMFailure;
 import org.bonitasoft.engine.core.process.instance.model.SFlowNodeInstance;
 import org.bonitasoft.engine.expression.exception.SExpressionEvaluationException;
@@ -51,12 +55,14 @@ class BPMFailureServiceImplTest {
 
     @Mock
     private PersistenceService persistenceService;
+    @Mock
+    private ArchiveService archiveService;
 
     private BPMFailureServiceImpl service;
 
     @BeforeEach
     void setup() throws Exception {
-        service = new BPMFailureServiceImpl(persistenceService);
+        service = spy(new BPMFailureServiceImpl(persistenceService, archiveService));
         when(persistenceService.insert(any(SBPMFailure.class))).thenAnswer(AdditionalAnswers.returnsFirstArg());
     }
 
@@ -228,5 +234,61 @@ class BPMFailureServiceImplTest {
         assertThat(descriptor.getReturnType()).isEqualTo(SBPMFailure.class);
         assertThat(descriptor.getStartIndex()).isZero();
         assertThat(descriptor.getPageSize()).isEqualTo(10);
+    }
+
+    @Test
+    void archiveFlowNodeFailures() throws Exception {
+        var failureDate = Instant.now().toEpochMilli();
+        doReturn(List.of(SBPMFailure.builder()
+                .failureDate(failureDate)
+                .flowNodeInstanceId(1L)
+                .processDefinitionId(1L)
+                .processInstanceId(1L)
+                .scope("scope")
+                .context("context")
+                .errorMessage("errorMessage")
+                .stackTrace("stackTrace")
+                .build())).when(service).getFlowNodeFailures(1L, Integer.MAX_VALUE);
+        long archiveDate = Instant.now().toEpochMilli();
+
+        service.archiveFlowNodeFailures(1L, archiveDate);
+
+        var captor = ArgumentCaptor.forClass(ArchiveInsertRecord.class);
+        verify(archiveService).recordInserts(eq(archiveDate), captor.capture());
+
+        var archiveInsertRecord = captor.getValue();
+        var entity = archiveInsertRecord.getEntity();
+        assertThat(entity).isInstanceOf(SABPMFailure.class);
+        var archiveBPMFailure = (SABPMFailure) entity;
+        assertThat(archiveBPMFailure.getFailureDate()).isEqualTo(failureDate);
+        assertThat(archiveBPMFailure.getFlowNodeInstanceId()).isEqualTo(1L);
+        assertThat(archiveBPMFailure.getProcessDefinitionId()).isEqualTo(1L);
+        assertThat(archiveBPMFailure.getProcessInstanceId()).isEqualTo(1L);
+    }
+
+    @Test
+    void deleteFlowNodeFailures() throws Exception {
+        doReturn(List.of(SBPMFailure.builder()
+                .id(1L)
+                .build(),
+                SBPMFailure.builder()
+                        .id(2L)
+                        .build()))
+                .when(service).getFlowNodeFailures(1L, Integer.MAX_VALUE);
+
+        service.deleteFlowNodeFailures(1L);
+
+        ArgumentCaptor<List<Long>> captor = ArgumentCaptor.forClass(List.class);
+        verify(persistenceService).delete(captor.capture(), eq(SBPMFailure.class));
+
+        assertThat(captor.getValue()).contains(1L, 2L);
+    }
+
+    @Test
+    void deleteArchivedFlowNodeFailures() throws Exception {
+        service.deleteArchivedFlowNodeFailures(List.of(1L, 2L));
+
+        verify(archiveService).deleteFromQuery("deleteArchivedBPMFailuresByFlowNodeInstanceIds",
+                Map.ofEntries(Map.entry("flowNodeInstanceIds", List.of(1L, 2L))));
     }
 }
