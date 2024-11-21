@@ -107,6 +107,15 @@ public class BPMFailureServiceImpl implements BPMFailureService {
         }
     }
 
+    @Override
+    public List<SABPMFailure> getArchivedFlowNodeFailures(long flowNodeInstanceId, int maxResults)
+            throws SBonitaReadException {
+        final QueryOptions queryOptions = new QueryOptions(0, maxResults);
+        final Map<String, Object> parameters = Map.ofEntries(Map.entry("flowNodeInstanceId", flowNodeInstanceId));
+        return persistenceService.selectList(new SelectListDescriptor<>("getArchivedFlowNodeFailures", parameters,
+                SABPMFailure.class, queryOptions));
+    }
+
     private static String buildContext(Throwable e) {
         Map<SExceptionContext, Serializable> ctx = new TreeMap<>();
         if (e instanceof ExceptionContext exceptionContext) {

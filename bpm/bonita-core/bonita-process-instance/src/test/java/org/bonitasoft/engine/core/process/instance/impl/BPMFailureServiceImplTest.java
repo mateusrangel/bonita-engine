@@ -291,4 +291,19 @@ class BPMFailureServiceImplTest {
         verify(archiveService).deleteFromQuery("deleteArchivedBPMFailuresByFlowNodeInstanceIds",
                 Map.ofEntries(Map.entry("flowNodeInstanceIds", List.of(1L, 2L))));
     }
+
+    @Test
+    void getArchivedFlowNodeFailures() throws Exception {
+        service.getArchivedFlowNodeFailures(1L, 10);
+
+        ArgumentCaptor<SelectListDescriptor<SABPMFailure>> captor = ArgumentCaptor.forClass(SelectListDescriptor.class);
+        verify(persistenceService).selectList(captor.capture());
+
+        var descriptor = captor.getValue();
+        assertThat(descriptor.getQueryName()).isEqualTo("getArchivedFlowNodeFailures");
+        assertThat(descriptor.getInputParameter("flowNodeInstanceId")).isEqualTo(1L);
+        assertThat(descriptor.getReturnType()).isEqualTo(SABPMFailure.class);
+        assertThat(descriptor.getStartIndex()).isZero();
+        assertThat(descriptor.getPageSize()).isEqualTo(10);
+    }
 }

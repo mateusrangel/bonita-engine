@@ -21,5 +21,11 @@
         WHERE f.flowNodeInstanceId IN (:flowNodeInstanceIds)
     </query>
 
+    <query name="getArchivedFlowNodeFailures">
+        SELECT f
+        FROM org.bonitasoft.engine.core.process.instance.model.SABPMFailure AS f
+        WHERE f.flowNodeInstanceId = :flowNodeInstanceId
+        ORDER BY f.failureDate DESC
+    </query>
 
 </hibernate-mapping>

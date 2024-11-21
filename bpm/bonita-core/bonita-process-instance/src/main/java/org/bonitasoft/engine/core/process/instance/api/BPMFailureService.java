@@ -16,6 +16,7 @@ package org.bonitasoft.engine.core.process.instance.api;
 import java.util.List;
 
 import org.bonitasoft.engine.commons.exceptions.SBonitaException;
+import org.bonitasoft.engine.core.process.instance.model.SABPMFailure;
 import org.bonitasoft.engine.core.process.instance.model.SBPMFailure;
 import org.bonitasoft.engine.core.process.instance.model.SFlowNodeInstance;
 import org.bonitasoft.engine.persistence.SBonitaReadException;
@@ -33,6 +34,8 @@ public interface BPMFailureService {
     void deleteFlowNodeFailures(long flowNodeInstanceId) throws SBonitaException;
 
     void deleteArchivedFlowNodeFailures(List<Long> flowNodeInstanceIds) throws SBonitaException;
+
+    List<SABPMFailure> getArchivedFlowNodeFailures(long flowNodeInstanceId, int maxResults) throws SBonitaReadException;
 
     record Failure(String scope, Throwable throwable){}
 }
