@@ -15,12 +15,15 @@ package org.bonitasoft.engine.bdm.validator.rule;
 
 import static java.util.Collections.singletonMap;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.bonitasoft.engine.api.result.StatusCode;
 import org.bonitasoft.engine.api.result.StatusContext;
 import org.bonitasoft.engine.bdm.model.UniqueConstraint;
 import org.bonitasoft.engine.bdm.validator.SQLNameValidator;
+import org.bonitasoft.engine.bdm.validator.SQLNameValidator.Grammar;
 import org.bonitasoft.engine.bdm.validator.ValidationStatus;
 
 public class UniqueConstraintValidationRule extends ValidationRule<UniqueConstraint, ValidationStatus> {
@@ -46,6 +49,14 @@ public class UniqueConstraintValidationRule extends ValidationRule<UniqueConstra
             status.addError(StatusCode.INVALID_SQL_IDENTIFIER_NAME,
                     String.format("%s is not a valid SQL identifier", name),
                     singletonMap(StatusContext.INVALID_NAME_KEY, name));
+        } else {
+            var discouragingGrammars = sqlNameValidator.isKeywordDiscouragedBy(name);
+            if (!discouragingGrammars.isEmpty()) {
+                String msg = String.format("%1$s is discouraged as SQL identifier. It is a keyword in %2$s.",
+                        name, discouragingGrammars.stream().map(Grammar::toString).collect(Collectors.joining(", ")));
+                status.addWarning(StatusCode.DISCOURAGED_SQL_IDENTIFIER_NAME, msg,
+                        Collections.singletonMap(StatusContext.BDM_ARTIFACT_NAME_KEY, name));
+            }
         }
 
         List<String> fieldNames = uc.getFieldNames();

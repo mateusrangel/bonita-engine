@@ -15,7 +15,12 @@ package org.bonitasoft.engine.bdm.validator;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 
@@ -24,12 +29,65 @@ import java.util.Set;
  */
 public class SQLNameValidator {
 
+    public static enum Grammar {
+
+        SQL, H2, POSTGRES, ORACLE, MYSQL, SQLSERVER;
+
+        @Override
+        public String toString() {
+            switch (this) {
+                case SQL:
+                    return "SQL grammar";
+                case H2:
+                    return "H2";
+                case POSTGRES:
+                    return "PostgreSQL";
+                case ORACLE:
+                    return "Oracle";
+                case MYSQL:
+                    return "MySQL";
+                case SQLSERVER:
+                    return "Microsoft SQL Server";
+                default:
+                    return name();
+            }
+        }
+    }
+
     private final int maxLength;
 
-    static Set<String> sqlKeywords;
+    private static class KeywordsHolder {
 
-    static {
-        sqlKeywords = new HashSet<>();
+        static Set<String> blockedDbKeywords = new HashSet<>();
+
+        static Map<String, List<Grammar>> discouragedKeywords = new HashMap<>();
+
+        static {
+            // initialize keywords
+            try (InputStream resourceAsStream = SQLNameValidator.class.getResourceAsStream("/blocked_db_keywords");
+                    Scanner scanner = new Scanner(resourceAsStream)) {
+                while (scanner.hasNext()) {
+                    final String word = scanner.nextLine();
+                    blockedDbKeywords.add(word.trim());
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            Grammar[] grammars = Grammar.values();
+            for (Grammar gram : grammars) {
+                var fileName = "/" + gram.name().toLowerCase() + "_permissive_keywords";
+                try (InputStream resourceAsStream = SQLNameValidator.class.getResourceAsStream(fileName);
+                        Scanner scanner = new Scanner(resourceAsStream)) {
+                    while (scanner.hasNext()) {
+                        final String word = scanner.nextLine();
+                        discouragedKeywords.putIfAbsent(word, new ArrayList<Grammar>(grammars.length));
+                        discouragedKeywords.get(word).add(gram);
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
     }
 
     public SQLNameValidator() {
@@ -38,21 +96,6 @@ public class SQLNameValidator {
 
     public SQLNameValidator(final int maxLength) {
         this.maxLength = maxLength;
-        if (sqlKeywords.isEmpty()) {
-            initializeSQLKeywords();
-        }
-    }
-
-    private void initializeSQLKeywords() {
-        try (InputStream resourceAsStream = SQLNameValidator.class.getResourceAsStream("/sql_keywords");
-                Scanner scanner = new Scanner(resourceAsStream)) {
-            while (scanner.hasNext()) {
-                final String word = scanner.nextLine();
-                sqlKeywords.add(word.trim());
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public boolean isValid(final String name) {
@@ -60,7 +103,18 @@ public class SQLNameValidator {
     }
 
     public boolean isSQLKeyword(final String name) {
-        return sqlKeywords.contains(name.toUpperCase());
+        return KeywordsHolder.blockedDbKeywords.contains(name.toUpperCase());
+    }
+
+    /**
+     * Check whether this name is a keyword discouraged by SQL or any specific DB vendor.
+     *
+     * @param name name to check
+     * @return the grammars discouraging it (empty when not discouraged)
+     */
+    public List<Grammar> isKeywordDiscouragedBy(final String name) {
+        return Collections.unmodifiableList(
+                KeywordsHolder.discouragedKeywords.getOrDefault(name.toUpperCase(), Collections.emptyList()));
     }
 
 }
