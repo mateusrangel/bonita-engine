@@ -100,9 +100,6 @@ public interface PersistenceService extends ReadPersistenceService {
      */
     void update(final UpdateDescriptor desc) throws SPersistenceException;
 
-    /**
-     * @throws SPersistenceException
-     */
     void flushStatements() throws SPersistenceException;
 
     /**

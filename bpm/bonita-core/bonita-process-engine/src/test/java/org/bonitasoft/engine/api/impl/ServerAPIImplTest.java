@@ -36,24 +36,15 @@ import org.bonitasoft.engine.api.internal.ServerWrappedException;
 import org.bonitasoft.engine.classloader.ClassLoaderService;
 import org.bonitasoft.engine.core.login.LoginService;
 import org.bonitasoft.engine.core.platform.login.PlatformLoginService;
-import org.bonitasoft.engine.exception.APIImplementationNotFoundException;
-import org.bonitasoft.engine.exception.BonitaHomeConfigurationException;
-import org.bonitasoft.engine.exception.BonitaHomeNotSetException;
-import org.bonitasoft.engine.exception.BonitaRuntimeException;
-import org.bonitasoft.engine.exception.TenantStatusException;
+import org.bonitasoft.engine.exception.*;
 import org.bonitasoft.engine.platform.PlatformManager;
 import org.bonitasoft.engine.platform.PlatformState;
 import org.bonitasoft.engine.platform.session.PlatformSessionService;
 import org.bonitasoft.engine.scheduler.SchedulerService;
 import org.bonitasoft.engine.service.APIAccessResolver;
-import org.bonitasoft.engine.service.PlatformServiceAccessor;
-import org.bonitasoft.engine.service.TenantServiceAccessor;
+import org.bonitasoft.engine.service.ServiceAccessor;
 import org.bonitasoft.engine.service.impl.ServiceAccessorFactory;
-import org.bonitasoft.engine.session.APISession;
-import org.bonitasoft.engine.session.InvalidSessionException;
-import org.bonitasoft.engine.session.PlatformSession;
-import org.bonitasoft.engine.session.Session;
-import org.bonitasoft.engine.session.SessionService;
+import org.bonitasoft.engine.session.*;
 import org.bonitasoft.engine.session.impl.APISessionImpl;
 import org.bonitasoft.engine.session.impl.PlatformSessionImpl;
 import org.bonitasoft.engine.sessionaccessor.SessionAccessor;
@@ -88,9 +79,7 @@ public class ServerAPIImplTest {
     @Mock
     private ServiceAccessorFactory serviceAccessorFactory;
     @Mock
-    private PlatformServiceAccessor platformServiceAccessor;
-    @Mock
-    private TenantServiceAccessor tenantServiceAccessor;
+    private ServiceAccessor serviceAccessor;
     @Mock
     private LoginService tenantLoginService;
     @Mock
@@ -126,16 +115,15 @@ public class ServerAPIImplTest {
         doReturn(true).when(platformApi).isNodeStarted();
         when(userTransactionService.executeInTransaction(any()))
                 .thenAnswer(invocation -> ((Callable<?>) invocation.getArgument(0)).call());
-        doReturn(platformServiceAccessor).when(serviceAccessorFactory).createPlatformServiceAccessor();
+        doReturn(serviceAccessor).when(serviceAccessorFactory).createServiceAccessor();
         doReturn(sessionAccessor).when(serviceAccessorFactory).createSessionAccessor();
-        doReturn(schedulerService).when(platformServiceAccessor).getSchedulerService();
-        doReturn(platformLoginService).when(platformServiceAccessor).getPlatformLoginService();
-        doReturn(platformSessionService).when(platformServiceAccessor).getPlatformSessionService();
-        doReturn(tenantServiceAccessor).when(platformServiceAccessor).getTenantServiceAccessor();
-        doReturn(platformManager).when(platformServiceAccessor).getPlatformManager();
-        doReturn(tenantLoginService).when(tenantServiceAccessor).getLoginService();
-        doReturn(sessionService).when(tenantServiceAccessor).getSessionService();
-        doReturn(classLoaderService).when(tenantServiceAccessor).getClassLoaderService();
+        doReturn(schedulerService).when(serviceAccessor).getSchedulerService();
+        doReturn(platformLoginService).when(serviceAccessor).getPlatformLoginService();
+        doReturn(platformSessionService).when(serviceAccessor).getPlatformSessionService();
+        doReturn(platformManager).when(serviceAccessor).getPlatformManager();
+        doReturn(tenantLoginService).when(serviceAccessor).getLoginService();
+        doReturn(sessionService).when(serviceAccessor).getSessionService();
+        doReturn(classLoaderService).when(serviceAccessor).getClassLoaderService();
 
         doReturn(true).when(tenantLoginService).isValid(TENANT_SESSION_ID);
         doReturn(true).when(platformLoginService).isValid(PLATFORM_SESSION_ID);

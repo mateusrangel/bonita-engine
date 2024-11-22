@@ -88,7 +88,7 @@ public class UserDatastoreTest {
         Mockito.doReturn(new SearchResultImpl<>(0, Collections.<User> emptyList())).when(identityAPI)
                 .searchUsers(Mockito.any(SearchOptions.class));
         try {
-            datastore.search(0, 1, "search", Collections.emptyMap(), sort);
+            datastore.search(0, 1, "search", sort, Collections.emptyMap());
         } catch (Exception e) {
             Assert.fail("Search should be able to handle multiple sort");
         }
@@ -97,7 +97,7 @@ public class UserDatastoreTest {
     @Test
     public void should_updateUser_call_engine_api() throws Exception {
         //given
-        doReturn(new UserImpl(12L, "john", "bpm")).when(identityAPI).updateUser(eq(12L), any(UserUpdater.class));
+        doReturn(new UserImpl(12L, "john")).when(identityAPI).updateUser(eq(12L), any(UserUpdater.class));
         //when
         Map<String, String> attributes = new HashMap<>();
         attributes.put("userName", "jack");
@@ -112,7 +112,7 @@ public class UserDatastoreTest {
     @Test
     public void should_updateUser_with_icon_call_engine_api_with_content_from_FS() throws Exception {
         //given
-        doReturn(new UserImpl(12L, "john", "bpm")).when(identityAPI).updateUser(eq(12L), any(UserUpdater.class));
+        doReturn(new UserImpl(12L, "john")).when(identityAPI).updateUser(eq(12L), any(UserUpdater.class));
         IconDescriptor iconDescriptor = new IconDescriptor("iconName", "content".getBytes());
         doReturn(iconDescriptor).when(bonitaHomeFolderAccessor).getIconFromFileSystem(eq("temp_icon_on_fs"));
         //when

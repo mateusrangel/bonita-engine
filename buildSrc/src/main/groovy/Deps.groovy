@@ -1,7 +1,9 @@
 class Deps {
 
+    public static String bonitaArtifactsModelVersion = "1.0.1-SNAPSHOT"
     public static String springVersion = "5.3.39"
-    public static String springBootVersion = "2.6.15"
+    public static String springBootVersion = "2.7.18"
+    public static String springSessionVersion = "2.7.4"
     public static String commonsIOVersion = "2.17.0"
     //fileupload 1.4 does not work on web-side.
     public static String commonscodec = "1.15"
@@ -11,6 +13,7 @@ class Deps {
     public static String commonsLangVersion = "3.11"
     public static String commonsDbcp2Version = "2.5.0"
     public static String commonsCLIVersion = "1.4"
+    public static String semver4jVersion = '3.1.0'
     public static String slf4jVersion = "1.7.30"
     public static String h2Version = "1.4.199"
     public static String hibernateVersion = "5.4.32.Final"
@@ -21,7 +24,7 @@ class Deps {
     // Keep this until all client projects have migrated to jakarta or it will break their builds !
     public static String javaxServletVersion = "4.0.1"
     // The groovy version must be in synch with the runtime-bom artifact
-    public static String groovyVersion = "3.0.10"
+    public static String groovyVersion = "3.0.19"
     public static String javassistVersion = "3.27.0-GA" //version used by hibernate 5.4.32.Final
     public static String httpComponentsVersion = "4.5.13"
     public static String xstreamVersion = "1.4.21"
@@ -47,6 +50,8 @@ class Deps {
     public static String hazelcastVersion = "5.3.5"
     //Last version compatible with hibernate 5
     public static String hazelcastHibernateVersion = "2.1.1"
+    // javax.persistence-api used by hibernate
+    public static String javaxPersistenceApiVersion = "2.2"
 
     public static String guavaVersion = "32.1.2-jre"
     public static String antlr4RuntimeVersion = "4.7.2"
@@ -61,6 +66,8 @@ class Deps {
     public static String jgettextVersion = "0.13"
     public static String hamcrestVersion = "2.1"
     public static String woodstoxCoreVersion = "6.4.0"
+    // When updating Keycloak version, if necessary, make sure to update the code in
+    // subscription/bpm/bonita-web-server-sp package org.bonitasoft.console.common.server.auth.impl
     public static String keycloakVersion = "21.1.2"
     public static String xmlsecVersion = "2.2.6"
     public static String bouncyCastleVersion = "1.78.1"

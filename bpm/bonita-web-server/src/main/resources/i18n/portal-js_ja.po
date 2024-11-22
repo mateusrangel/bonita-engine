@@ -11,7 +11,7 @@ msgstr ""
 "X-Crowdin-File-ID: 61810\n"
 "Language-Team: Japanese\n"
 "Language: ja_JP\n"
-"PO-Revision-Date: 2023-10-30 02:29\n"
+"PO-Revision-Date: 2024-01-01 00:00\n"
 
 msgid "1 case has been deleted"
 msgstr "1 案件が削除されました"
@@ -104,6 +104,9 @@ msgstr "フォームの送信中にエラーが発生しました。"
 msgid "An error occurred while submitting the form.<br/>The task may not be available anymore."
 msgstr "フォームの送信中にエラーが発生しました。 <br/>このタスクはもう利用できません。"
 
+msgid "An error occurred with the requested operation."
+msgstr "要求された操作でエラーが発生しました。"
+
 msgid "Application XML file"
 msgstr "アプリケーションのXMLファイル"
 
@@ -147,10 +150,6 @@ msgstr "BDMはアップロードされていません。\n"
 
 msgid "BDM successfully updated."
 msgstr "BDMは正常に更新されました。"
-
-msgid "BPM Services must be paused. Go to \"BPM Services\" menu option."
-msgstr "BPMサービスを一時停止する必要があります。 \n"
-"「BPMサービス」メニューオプションに移動します。"
 
 msgid "Back"
 msgstr "戻る"
@@ -226,6 +225,18 @@ msgstr ".xml ファイルを選択するにはここをクリック"
 
 msgid "Click here to choose your .zip file"
 msgstr ".zip  ファイルを選択しクリックしてください。"
+
+msgid "Click on Cancel to remain on this page and try to execute the operation again once you logged back in (e.g. in another tab)."
+msgstr "「キャンセル」をクリックすると、このページが表示されたままとなり、ログインし直した後（別のタブなどで）、再度操作を実行することができます。"
+
+msgid "Click on Cancel to remain on this page and wait for the maintenance to end."
+msgstr "キャンセルをクリックしてこのページに留まり、メンテナンスが終了するのを待ちます。"
+
+msgid "Click on OK to be redirected and log back in."
+msgstr "OKをクリックするとリダイレクトされ、再度ログインします。"
+
+msgid "Click on OK to be redirected to the maintenance page."
+msgstr "OKをクリックすると、メンテナンス ページにリダイレクトされます。"
 
 msgid "Close"
 msgstr "閉じる"
@@ -316,9 +327,6 @@ msgstr "無効にする"
 
 msgid "Display name"
 msgstr "表示名"
-
-msgid "Don't forget to start BPM Services again."
-msgstr "BPMサービスを再開することを忘れないでください。"
 
 msgid "Done tasks"
 msgstr "完了したタスク"
@@ -497,8 +505,8 @@ msgstr "インストール中 "
 msgid "Installing Business Data Model"
 msgstr "ビジネス データ モデルのインストール "
 
-msgid "Installing or updating the BDM implies to be logged in as Technical User, and to shut down all BPM services."
-msgstr "BDM のインストールまたは更新はテクニカルユーザーとしてログインし、すべての BPM サービスをシャットダウンすることを意味します。"
+msgid "Installing or updating the BDM implies to be logged in as Technical User, and to activate the maintenance mode."
+msgstr "BDM をインストールまたはアップデートするには、テクニカルユーザーとしてログインし、メンテナンスモードを有効にする必要があります。"
 
 msgid "Items per page"
 msgstr "ページあたりの表示件数"
@@ -538,6 +546,9 @@ msgstr "MMM Do LT "
 
 msgid "Make sure all artifacts enabled on the platform are compatible with the new BDM."
 msgstr "プラットフォームで有効にされているすべてのアーティファクトが新しいBDMと互換性があることを確認してください。 "
+
+msgid "Make sure to deactivate the maintenance mode."
+msgstr "メンテナンスモードを無効にしてください。"
 
 msgid "Make this task available to other team members again"
 msgstr "このタスクは他のチーム メンバーでも行えるようにする"
@@ -650,6 +661,9 @@ msgstr "普通"
 msgid "Not installed"
 msgstr "インストールされていません。"
 
+msgid "OK"
+msgstr "OK"
+
 msgid "One or more tasks are not available anymore. The list is now up to date."
 msgstr "1つ以上のタスクは、もうご使用いただけません。タスク一覧が新しくなっています。"
 
@@ -658,6 +672,9 @@ msgstr "1 ページ メニュー"
 
 msgid "Only I can do this task"
 msgstr "私だけがこのタスクを実行できる"
+
+msgid "Only available when the platform is under maintenance. Go to the \"Platform maintenance\" page to activate the maintenance mode."
+msgstr "プラットフォームがメンテナンス中の場合のみ利用可能です。「プラットフォームのメンテナンス」ページでメンテナンスモードを有効にしてください。"
 
 msgid "Only one Business Data Model (BDM) can be active at a time."
 msgstr "一度にアクティブにできるビジネスデータモデル（BDM）は1つだけです。"
@@ -802,6 +819,9 @@ msgstr "ページを選択します"
 
 msgid "Select users..."
 msgstr "ユーザーを選択..."
+
+msgid "Server is under maintenance."
+msgstr "サーバーはメンテナンス中です。"
 
 msgid "Set as Home page"
 msgstr "ホーム ページとして設定します"
@@ -1139,6 +1159,9 @@ msgstr "それをメニューで参照する前に、ページを追加する必
 
 msgid "Your personal task list is empty. You can take a task from the ​<a href=\"#\" ng-click=\"changeFilter(TASK_FILTERS.TODO)\">To do</a> list."
 msgstr "マイタスク リストは空です。​<a href=\"#\" ng-click=\"changeFilter(TASK_FILTERS.TODO)\">To do</a> リストからタスクを選ぶことができます。"
+
+msgid "Your session is no longer active."
+msgstr "セッションは既にアクティブではありません。"
 
 msgid "Zip code"
 msgstr "郵便番号"

@@ -17,6 +17,7 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -30,12 +31,7 @@ import java.util.regex.Pattern;
 import org.assertj.core.api.Assertions;
 import org.bonitasoft.engine.actor.mapping.model.SActor;
 import org.bonitasoft.engine.actor.mapping.model.SActorMember;
-import org.bonitasoft.engine.api.ApiAccessType;
-import org.bonitasoft.engine.api.IdentityAPI;
-import org.bonitasoft.engine.api.LoginAPI;
-import org.bonitasoft.engine.api.PlatformAPI;
-import org.bonitasoft.engine.api.PlatformAPIAccessor;
-import org.bonitasoft.engine.api.TenantAPIAccessor;
+import org.bonitasoft.engine.api.*;
 import org.bonitasoft.engine.bpm.bar.BarResource;
 import org.bonitasoft.engine.bpm.bar.BusinessArchive;
 import org.bonitasoft.engine.bpm.bar.BusinessArchiveBuilder;
@@ -59,14 +55,13 @@ import org.bonitasoft.engine.exception.BonitaException;
 import org.bonitasoft.engine.exception.SearchException;
 import org.bonitasoft.engine.expression.ExpressionBuilder;
 import org.bonitasoft.engine.identity.User;
-import org.bonitasoft.engine.io.IOUtil;
 import org.bonitasoft.engine.operation.OperationBuilder;
 import org.bonitasoft.engine.persistence.OrderByType;
 import org.bonitasoft.engine.persistence.QueryOptions;
 import org.bonitasoft.engine.platform.Platform;
 import org.bonitasoft.engine.search.SearchOptionsBuilder;
 import org.bonitasoft.engine.search.SearchResult;
-import org.bonitasoft.engine.service.TenantServiceAccessor;
+import org.bonitasoft.engine.service.ServiceAccessor;
 import org.bonitasoft.engine.session.APISession;
 import org.bonitasoft.engine.session.InvalidSessionException;
 import org.bonitasoft.engine.session.PlatformSession;
@@ -117,9 +112,9 @@ public class BPMLocalIT extends CommonAPILocalIT {
 
     @Test
     public void checkProcessCommentAreArchived() throws Exception {
-        final TenantServiceAccessor tenantAccessor = getTenantAccessor();
-        final SCommentService commentService = tenantAccessor.getCommentService();
-        final UserTransactionService transactionService = tenantAccessor.getUserTransactionService();
+        final ServiceAccessor serviceAccessor = getServiceAccessor();
+        final SCommentService commentService = serviceAccessor.getCommentService();
+        final UserTransactionService transactionService = serviceAccessor.getUserTransactionService();
         final ProcessDefinitionBuilder processDef = new ProcessDefinitionBuilder()
                 .createNewInstance("processToTestComment", "1.0");
         processDef.addStartEvent("start");
@@ -156,9 +151,9 @@ public class BPMLocalIT extends CommonAPILocalIT {
 
     @Test
     public void checkPendingMappingAreDeleted() throws Exception {
-        final TenantServiceAccessor tenantAccessor = getTenantAccessor();
-        final ActivityInstanceService activityInstanceService = tenantAccessor.getActivityInstanceService();
-        final UserTransactionService transactionService = tenantAccessor.getUserTransactionService();
+        final ServiceAccessor serviceAccessor = getServiceAccessor();
+        final ActivityInstanceService activityInstanceService = serviceAccessor.getActivityInstanceService();
+        final UserTransactionService transactionService = serviceAccessor.getUserTransactionService();
         final ProcessDefinitionBuilder processDef = new ProcessDefinitionBuilder()
                 .createNewInstance("processToTestComment", "1.0");
         processDef.addShortTextData("kikoo", new ExpressionBuilder().createConstantStringExpression("lol"));
@@ -192,9 +187,9 @@ public class BPMLocalIT extends CommonAPILocalIT {
 
     @Test
     public void checkDependenciesAreDeletedWhenProcessIsDeleted() throws Exception {
-        final TenantServiceAccessor tenantAccessor = getTenantAccessor();
-        final DependencyService dependencyService = tenantAccessor.getDependencyService();
-        final UserTransactionService transactionService = tenantAccessor.getUserTransactionService();
+        final ServiceAccessor serviceAccessor = getServiceAccessor();
+        final DependencyService dependencyService = serviceAccessor.getDependencyService();
+        final UserTransactionService transactionService = serviceAccessor.getUserTransactionService();
         final ProcessDefinitionBuilder processDef = new ProcessDefinitionBuilder()
                 .createNewInstance("processToTestTransitions", "1.0");
         processDef.addStartEvent("start");
@@ -230,9 +225,9 @@ public class BPMLocalIT extends CommonAPILocalIT {
 
     @Test
     public void checkMoreThan20DependenciesAreDeletedWhenProcessIsDeleted() throws Exception {
-        final TenantServiceAccessor tenantAccessor = getTenantAccessor();
-        final DependencyService dependencyService = tenantAccessor.getDependencyService();
-        final UserTransactionService transactionService = tenantAccessor.getUserTransactionService();
+        final ServiceAccessor serviceAccessor = getServiceAccessor();
+        final DependencyService dependencyService = serviceAccessor.getDependencyService();
+        final UserTransactionService transactionService = serviceAccessor.getUserTransactionService();
         final ProcessDefinitionBuilder processDef = new ProcessDefinitionBuilder()
                 .createNewInstance("processToTestTransitions", "1.0");
         processDef.addStartEvent("start").addUserTask("step1", ACTOR_NAME).addEndEvent("end");
@@ -269,8 +264,8 @@ public class BPMLocalIT extends CommonAPILocalIT {
 
     @Test
     public void deletingProcessDeletesActors() throws Exception {
-        final TenantServiceAccessor tenantAccessor = getTenantAccessor();
-        final UserTransactionService transactionService = tenantAccessor.getUserTransactionService();
+        final ServiceAccessor serviceAccessor = getServiceAccessor();
+        final UserTransactionService transactionService = serviceAccessor.getUserTransactionService();
         final String userTaskName = "actNaturally";
         final ProcessDefinition definition = deployAndEnableProcessWithOneHumanTask("deletingProcessDeletesActors",
                 "CandidateForOscarReward", userTaskName);
@@ -283,7 +278,7 @@ public class BPMLocalIT extends CommonAPILocalIT {
         setSessionInfo(getSession()); // the session was cleaned by api call. This must be improved
         final List<SActor> actors = transactionService.executeInTransaction(() -> {
             final QueryOptions queryOptions = new QueryOptions(0, 1, SActor.class, "id", OrderByType.ASC);
-            return getTenantAccessor().getActorMappingService().getActors(definition.getId(), queryOptions);
+            return getServiceAccessor().getActorMappingService().getActors(definition.getId(), queryOptions);
         });
 
         // Check there is no actor left:
@@ -292,8 +287,8 @@ public class BPMLocalIT extends CommonAPILocalIT {
 
     @Test
     public void deletingProcessDeletesActorMappings() throws Exception {
-        final TenantServiceAccessor tenantAccessor = getTenantAccessor();
-        final UserTransactionService transactionService = tenantAccessor.getUserTransactionService();
+        final ServiceAccessor serviceAccessor = getServiceAccessor();
+        final UserTransactionService transactionService = serviceAccessor.getUserTransactionService();
         final String userTaskName = "actNaturally";
         final ProcessDefinition definition = deployAndEnableProcessWithOneHumanTask(
                 "deletingProcessDeletesActorMappings", "CandidateForOscarReward",
@@ -307,7 +302,7 @@ public class BPMLocalIT extends CommonAPILocalIT {
         setSessionInfo(getSession()); // the session was cleaned by api call. This must be improved
         final List<SActorMember> actorMembers = transactionService
                 .executeInTransaction(
-                        () -> getTenantAccessor().getActorMappingService().getActorMembersOfUser(john.getId(), 0, 1));
+                        () -> getServiceAccessor().getActorMappingService().getActorMembersOfUser(john.getId(), 0, 1));
 
         // Check there is no actor left:
         assertEquals(0, actorMembers.size());
@@ -315,7 +310,7 @@ public class BPMLocalIT extends CommonAPILocalIT {
 
     private ProcessDefinition deployAndEnableProcessWithOneHumanTask(final String processName, final String actorName,
             final String userTaskName)
-            throws BonitaException {
+            throws Exception {
         final ProcessDefinitionBuilder processBuilder = new ProcessDefinitionBuilder();
         processBuilder.createNewInstance(processName, "1.0");
         processBuilder.addActor(actorName).addDescription(actorName + " description");
@@ -480,7 +475,7 @@ public class BPMLocalIT extends CommonAPILocalIT {
         if (version == null) {
             // when running tests in eclipse get it from the pom.xml
             final File file = new File("pom.xml");
-            final String pomContent = IOUtil.read(file);
+            final String pomContent = Files.readString(file.toPath());
             final Pattern pattern = Pattern.compile("<version>(.*)</version>");
             final Matcher matcher = pattern.matcher(pomContent);
             matcher.find();

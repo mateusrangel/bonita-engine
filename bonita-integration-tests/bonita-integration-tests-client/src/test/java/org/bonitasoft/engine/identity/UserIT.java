@@ -26,14 +26,10 @@ import java.util.stream.Collectors;
 import org.bonitasoft.engine.TestWithTechnicalUser;
 import org.bonitasoft.engine.api.PlatformAPI;
 import org.bonitasoft.engine.api.PlatformAPIAccessor;
-import org.bonitasoft.engine.exception.AlreadyExistsException;
-import org.bonitasoft.engine.exception.BonitaException;
-import org.bonitasoft.engine.exception.CreationException;
-import org.bonitasoft.engine.exception.DeletionException;
-import org.bonitasoft.engine.exception.NotFoundException;
-import org.bonitasoft.engine.exception.SearchException;
-import org.bonitasoft.engine.exception.UpdateException;
+import org.bonitasoft.engine.api.TenantAPIAccessor;
+import org.bonitasoft.engine.exception.*;
 import org.bonitasoft.engine.identity.impl.IconImpl;
+import org.bonitasoft.engine.platform.LoginException;
 import org.bonitasoft.engine.platform.NodeNotStartedException;
 import org.bonitasoft.engine.search.Order;
 import org.bonitasoft.engine.search.SearchOptionsBuilder;
@@ -102,7 +98,6 @@ public class UserIT extends TestWithTechnicalUser {
         final User userCreated = getIdentityAPI().createUser("bonitasoft", "123456");
         assertNotNull(userCreated);
         assertEquals("bonitasoft", userCreated.getUserName());
-        assertNotSame("123456", userCreated.getPassword());
         final User user = getIdentityAPI().getUserByUserName("bonitasoft");
         assertNotNull(user);
         getIdentityAPI().deleteUser("bonitasoft");
@@ -125,11 +120,9 @@ public class UserIT extends TestWithTechnicalUser {
         final User userCreated = getIdentityAPI().createUser("bonitasoft", "123456");
         assertNotNull(userCreated);
         assertEquals("bonitasoft", userCreated.getUserName());
-        assertNotSame("123456", userCreated.getPassword());
         final User user = getIdentityAPI().getUserByUserName("bonitasoft");
         assertNotNull(user);
         assertEquals("bonitasoft", userCreated.getUserName());
-        assertNotSame("123456", userCreated.getPassword());
         try {
             getIdentityAPI().createUser("bonitasoft", "123456");
         } finally {
@@ -213,7 +206,6 @@ public class UserIT extends TestWithTechnicalUser {
         getIdentityAPI().createUser("bonita", "password");
         final User user = getIdentityAPI().getUserByUserName("bonita");
         assertEquals("bonita", user.getUserName());
-        assertNotSame("password", user.getPassword());
 
         getIdentityAPI().deleteUser("bonita");
     }
@@ -236,7 +228,6 @@ public class UserIT extends TestWithTechnicalUser {
         final User user = getIdentityAPI().getUser(userCreated.getId());
         assertNotNull(user);
         assertEquals("zhang", user.getUserName());
-        assertNotSame("engine", user.getPassword());
 
         getIdentityAPI().deleteUser("zhang");
     }
@@ -276,10 +267,8 @@ public class UserIT extends TestWithTechnicalUser {
         assertEquals(2, users.size());
 
         assertEquals("zhang", users.get(userCreated1.getId()).getUserName());
-        assertNotSame("engine", users.get(userCreated1.getId()).getPassword());
 
         assertEquals("jmege", users.get(userCreated2.getId()).getUserName());
-        assertNotSame("engine", users.get(userCreated2.getId()).getPassword());
 
         deleteUsers(userCreated1, userCreated2);
     }
@@ -297,7 +286,6 @@ public class UserIT extends TestWithTechnicalUser {
         assertEquals(1, users.size());
 
         assertEquals("zhang", users.get(userCreated1.getId()).getUserName());
-        assertEquals("engine", users.get(userCreated1.getId()).getPassword());
 
         deleteUsers(userCreated1, userCreated2);
     }
@@ -428,7 +416,6 @@ public class UserIT extends TestWithTechnicalUser {
         assertEquals("New job title", updatedUser.getJobTitle());
         assertEquals("Modified Last name", updatedUser.getLastName());
         assertEquals(12354L, updatedUser.getManagerUserId());
-        assertNotSame("Ch4n63D_P455W0RD", updatedUser.getPassword());
         assertEquals("titre", updatedUser.getTitle());
     }
 
@@ -1011,7 +998,6 @@ public class UserIT extends TestWithTechnicalUser {
         final User userCreated = getIdentityAPI().createUser("bonitasoft", "123456");
         assertNotNull(userCreated);
         assertEquals("bonitasoft", userCreated.getUserName());
-        assertNotSame("123456", userCreated.getPassword());
         final User user = getIdentityAPI().getUserByUserName("bonitasoft");
         assertNotNull(user);
         assertNotNull(user.getCreatedBy());
@@ -1110,13 +1096,7 @@ public class UserIT extends TestWithTechnicalUser {
     }
 
     private String completeWithZeros(final String prefix) {
-
-        final StringBuilder stb = new StringBuilder(prefix);
-        for (int i = 0; i < 255 - prefix.length(); i++) {
-            stb.append("0");
-        }
-
-        return stb.toString();
+        return prefix + "0".repeat(Math.max(0, 255 - prefix.length()));
     }
 
     @Test
@@ -1242,6 +1222,13 @@ public class UserIT extends TestWithTechnicalUser {
         assertThat(updateUser.getIconId()).isNull();
         //cleanup
         getIdentityAPI().deleteUser("userWithIcon");
+    }
+
+    @Test(expected = LoginException.class)
+    public void loginFailsUsingWrongUser() throws BonitaException {
+        final String userName = "hannu";
+        final String password = "install";
+        TenantAPIAccessor.getLoginAPI().login(userName, password);
     }
 
 }

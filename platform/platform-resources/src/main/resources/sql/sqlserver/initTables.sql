@@ -6,9 +6,7 @@ INSERT INTO sequence VALUES (-1, 3, 1)
 GO
 INSERT INTO sequence VALUES (-1, 4, 1)
 GO
-INSERT INTO sequence VALUES (-1, 30, 1)
-GO
-INSERT INTO sequence VALUES (-1, 31, 1)
+INSERT INTO sequence VALUES (-1, 5, 1)
 GO
 INSERT INTO sequence VALUES(1, 10, 1)
     GO

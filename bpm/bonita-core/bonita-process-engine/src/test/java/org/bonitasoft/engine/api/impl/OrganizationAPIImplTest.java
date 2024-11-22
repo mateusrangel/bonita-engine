@@ -20,7 +20,6 @@ import static org.mockito.Mockito.verify;
 import java.util.Collections;
 
 import org.bonitasoft.engine.actor.mapping.ActorMappingService;
-import org.bonitasoft.engine.api.impl.resolver.BusinessArchiveArtifactsManager;
 import org.bonitasoft.engine.core.process.comment.api.SCommentService;
 import org.bonitasoft.engine.core.process.definition.ProcessDefinitionService;
 import org.bonitasoft.engine.core.process.instance.api.ActivityInstanceService;
@@ -29,7 +28,7 @@ import org.bonitasoft.engine.external.identity.mapping.ExternalIdentityMappingSe
 import org.bonitasoft.engine.identity.IdentityService;
 import org.bonitasoft.engine.identity.model.SCustomUserInfoDefinition;
 import org.bonitasoft.engine.profile.ProfileService;
-import org.bonitasoft.engine.service.TenantServiceAccessor;
+import org.bonitasoft.engine.service.ServiceAccessor;
 import org.bonitasoft.engine.supervisor.mapping.SupervisorMappingService;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,7 +46,7 @@ public class OrganizationAPIImplTest {
     private static final long CUSTOM_USER_INFO_DEF_ID2 = 12;
 
     @Mock
-    private TenantServiceAccessor serviceAccessor;
+    private ServiceAccessor serviceAccessor;
 
     @Mock
     private ProcessInstanceService processInstanceService;
@@ -77,9 +76,6 @@ public class OrganizationAPIImplTest {
     private ProcessDefinitionService processDefinitionService;
 
     @Mock
-    private BusinessArchiveArtifactsManager businessArchiveArtifactsManager;
-
-    @Mock
     private SCustomUserInfoDefinition userInfoDef1;
 
     @Mock
@@ -107,11 +103,11 @@ public class OrganizationAPIImplTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void deleOrganization_call_services_to_delete_all_organizationInfo() throws Exception {
+    public void deleteOrganization_call_services_to_delete_all_organizationInfo() throws Exception {
         // given
         given(identityService.getCustomUserInfoDefinitions(0, PAGE_SIZE)).willReturn(
                 Collections.singletonList(userInfoDef1),
-                Collections.singletonList(userInfoDef2), Collections.<SCustomUserInfoDefinition> emptyList());
+                Collections.singletonList(userInfoDef2), Collections.emptyList());
 
         // when
         organizationAPIImpl.deleteOrganization();

@@ -13,16 +13,19 @@
  **/
 package org.bonitasoft.web.rest.server.api.bdm;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
+import org.apache.commons.io.IOUtils;
 import org.bonitasoft.console.common.server.utils.BonitaHomeFolderAccessor;
-import org.bonitasoft.console.common.server.utils.UnauthorizedFolderException;
 import org.bonitasoft.engine.api.TenantAdministrationAPI;
 import org.bonitasoft.engine.business.data.BusinessDataRepositoryDeploymentException;
 import org.bonitasoft.engine.business.data.InvalidBusinessDataModelException;
+import org.bonitasoft.engine.exception.BonitaException;
+import org.bonitasoft.engine.exception.TenantStatusException;
 import org.bonitasoft.engine.exception.UnavailableLockException;
-import org.bonitasoft.engine.io.IOUtil;
+import org.bonitasoft.engine.io.FileContent;
+import org.bonitasoft.engine.session.InvalidSessionException;
 import org.bonitasoft.web.rest.model.bdm.BusinessDataModelItem;
 import org.bonitasoft.web.rest.server.api.resource.CommonResource;
 import org.bonitasoft.web.rest.server.api.tenant.TenantResourceItem;
@@ -47,7 +50,11 @@ public class BusinessDataModelResource extends CommonResource {
         this.tenantAdministrationAPI = tenantAdministrationAPI;
     }
 
+    /**
+     * @deprecated as of 9.0.0. The BDM should only be updated at startup.
+     */
     @Post("json")
+    @Deprecated(since = "9.0.0")
     public TenantResourceItem addBDM(final BusinessDataModelItem businessDataModelItem) {
         if (!isTenantPaused()) {
             setStatus(Status.CLIENT_ERROR_FORBIDDEN, new APIException(
@@ -55,10 +62,11 @@ public class BusinessDataModelResource extends CommonResource {
             return null;
         }
         try {
-            final byte[] businessDataModelContent = getBusinessDataModelContent(businessDataModelItem);
+            final FileContent businessDataModel = getBusinessDataModel(businessDataModelItem);
+            final byte[] businessDataModelContent = getBusinessDataModelContent(businessDataModel.getInputStream());
             tenantAdministrationAPI.updateBusinessDataModel(businessDataModelContent);
             return new TenantResourceItem(tenantAdministrationAPI.getBusinessDataModelResource(),
-                    businessDataModelItem.getFileUpload());
+                    businessDataModel.getFileName());
         } catch (APIForbiddenException e) {
             setStatus(Status.CLIENT_ERROR_FORBIDDEN, e);
             return null;
@@ -67,6 +75,8 @@ public class BusinessDataModelResource extends CommonResource {
             return null;
         } catch (final BusinessDataRepositoryDeploymentException e) {
             throw new APIException("An error has occurred when deploying Business Data Model.", e);
+        } catch (final TenantStatusException | InvalidSessionException e) {
+            throw e; //handled by REST API Authorization filter
         } catch (Exception e) {
             Throwable cause = e.getCause();
             if (cause instanceof UnavailableLockException) {
@@ -77,6 +87,8 @@ public class BusinessDataModelResource extends CommonResource {
             } else {
                 throw e;
             }
+        } finally {
+            bonitaHomeFolderAccessor.removeUploadedTempContent(businessDataModelItem.getFileUpload());
         }
     }
 
@@ -84,6 +96,8 @@ public class BusinessDataModelResource extends CommonResource {
     public TenantResourceItem getBDM() {
         try {
             return new TenantResourceItem(tenantAdministrationAPI.getBusinessDataModelResource());
+        } catch (final TenantStatusException | InvalidSessionException e) {
+            throw e; //handled by REST API Authorization filter
         } catch (final Exception e) {
             throw new APIException(e);
         }
@@ -93,18 +107,20 @@ public class BusinessDataModelResource extends CommonResource {
         return tenantAdministrationAPI.isPaused();
     }
 
-    private byte[] getBusinessDataModelContent(final BusinessDataModelItem item) {
+    private FileContent getBusinessDataModel(final BusinessDataModelItem item) {
         try {
-            return IOUtil.getAllContentFrom(new File(getCompleteTempFilePath(item.getFileUpload())));
-        } catch (final UnauthorizedFolderException e) {
-            throw new APIForbiddenException(e.getMessage());
-        } catch (final IOException e) {
+            return bonitaHomeFolderAccessor.retrieveUploadedTempContent(item.getFileUpload());
+        } catch (final BonitaException e) {
             throw new APIException("Can't read business data model file", e);
         }
     }
 
-    public String getCompleteTempFilePath(final String path) throws IOException {
-        return bonitaHomeFolderAccessor.getCompleteTenantTempFilePath(path);
+    private byte[] getBusinessDataModelContent(InputStream inputStream) {
+        try (inputStream) {
+            return IOUtils.toByteArray(inputStream);
+        } catch (IOException e) {
+            throw new APIException("Can't read business data model file", e);
+        }
     }
 
 }

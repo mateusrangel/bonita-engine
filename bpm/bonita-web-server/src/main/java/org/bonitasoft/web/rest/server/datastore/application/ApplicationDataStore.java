@@ -16,6 +16,7 @@ package org.bonitasoft.web.rest.server.datastore.application;
 import java.util.List;
 import java.util.Map;
 
+import org.bonitasoft.console.common.server.utils.BonitaHomeFolderAccessor;
 import org.bonitasoft.engine.api.ApplicationAPI;
 import org.bonitasoft.engine.api.PageAPI;
 import org.bonitasoft.engine.business.application.Application;
@@ -23,6 +24,7 @@ import org.bonitasoft.engine.business.application.ApplicationCreator;
 import org.bonitasoft.engine.business.application.ApplicationNotFoundException;
 import org.bonitasoft.engine.business.application.ApplicationPage;
 import org.bonitasoft.engine.business.application.ApplicationUpdater;
+import org.bonitasoft.engine.exception.BonitaException;
 import org.bonitasoft.engine.exception.SearchException;
 import org.bonitasoft.engine.page.Page;
 import org.bonitasoft.engine.search.SearchResult;
@@ -70,7 +72,7 @@ public class ApplicationDataStore extends CommonDatastore<ApplicationItem, Appli
             for (final APIID id : ids) {
                 applicationAPI.deleteApplication(id.toLong());
             }
-        } catch (final Exception e) {
+        } catch (final BonitaException e) {
             if (e.getCause() instanceof ApplicationNotFoundException) {
                 throw new APIItemNotFoundException(ApplicationDefinition.TOKEN);
             } else {
@@ -84,12 +86,16 @@ public class ApplicationDataStore extends CommonDatastore<ApplicationItem, Appli
         try {
             final Application application = applicationAPI.getApplication(id.toLong());
             return converter.toApplicationItem(application);
-        } catch (final Exception e) {
+        } catch (final BonitaException e) {
             throw new APIException(e);
         }
     }
 
+    /**
+     * @deprecated as of 9.0.0, Applications should be created at startup.
+     */
     @Override
+    @Deprecated(since = "9.0.0")
     public ApplicationItem add(final ApplicationItem item) {
 
         try {
@@ -102,18 +108,22 @@ public class ApplicationDataStore extends CommonDatastore<ApplicationItem, Appli
                     homePageDef.getId(), "home");
             applicationAPI.setApplicationHomePage(application.getId(), appHomePage.getId());
             return converter.toApplicationItem(application);
-        } catch (final Exception e) {
+        } catch (final BonitaException e) {
             throw new APIException(e);
         }
     }
 
+    /**
+     * @deprecated as of 9.0.0, Applications should be updated at startup.
+     */
     @Override
+    @Deprecated(since = "9.0.0")
     public ApplicationItem update(final APIID id, final Map<String, String> attributes) {
         try {
             final ApplicationUpdater applicationUpdater = converter.toApplicationUpdater(attributes);
             final Application application = applicationAPI.updateApplication(id.toLong(), applicationUpdater);
             return converter.toApplicationItem(application);
-        } catch (final Exception e) {
+        } catch (final BonitaException e) {
             throw new APIException(e);
         }
     }
@@ -157,7 +167,7 @@ public class ApplicationDataStore extends CommonDatastore<ApplicationItem, Appli
 
     @Override
     protected ApplicationItem convertEngineToConsoleItem(final Application item) {
-        return new ApplicationItemConverter().toApplicationItem(item);
+        return new ApplicationItemConverter(new BonitaHomeFolderAccessor()).toApplicationItem(item);
     }
 
 }

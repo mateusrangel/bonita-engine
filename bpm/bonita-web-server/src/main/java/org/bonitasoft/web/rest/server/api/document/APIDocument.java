@@ -13,16 +13,17 @@
  **/
 package org.bonitasoft.web.rest.server.api.document;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.bonitasoft.console.common.server.utils.BonitaHomeFolderAccessor;
-import org.bonitasoft.console.common.server.utils.UnauthorizedFolderException;
 import org.bonitasoft.engine.api.ProcessAPI;
 import org.bonitasoft.engine.api.TenantAPIAccessor;
 import org.bonitasoft.engine.bpm.document.ArchivedDocumentsSearchDescriptor;
 import org.bonitasoft.engine.bpm.document.Document;
+import org.bonitasoft.engine.exception.BonitaException;
 import org.bonitasoft.engine.search.SearchOptionsBuilder;
 import org.bonitasoft.engine.search.SearchResult;
 import org.bonitasoft.engine.session.APISession;
@@ -33,7 +34,6 @@ import org.bonitasoft.web.rest.server.api.document.api.impl.DocumentDatastore;
 import org.bonitasoft.web.rest.server.framework.search.ItemSearchResult;
 import org.bonitasoft.web.rest.server.framework.utils.SearchOptionsBuilderUtil;
 import org.bonitasoft.web.toolkit.client.common.exception.api.APIException;
-import org.bonitasoft.web.toolkit.client.common.exception.api.APIForbiddenException;
 import org.bonitasoft.web.toolkit.client.data.APIID;
 import org.bonitasoft.web.toolkit.client.data.item.Definitions;
 import org.bonitasoft.web.toolkit.client.data.item.ItemDefinition;
@@ -61,7 +61,7 @@ public class APIDocument extends ConsoleAPI<DocumentItem> {
             final ProcessAPI processAPI = TenantAPIAccessor.getProcessAPI(apiSession);
             final Document document = processAPI.getDocument(id.toLong());
             item = getDataStore().mapToDocumentItem(document);
-        } catch (final Exception e) {
+        } catch (final BonitaException e) {
             throw new APIException(e);
         }
 
@@ -125,7 +125,7 @@ public class APIDocument extends ConsoleAPI<DocumentItem> {
                     items.add(getDataStore().mapToDocumentItem(document));
                 }
             }
-        } catch (final Exception e) {
+        } catch (final BonitaException | IllegalArgumentException e) {
             throw new APIException(e);
         }
         return new ItemSearchResult<>(page, resultsByPage, nbOfDocument, items);
@@ -153,9 +153,7 @@ public class APIDocument extends ConsoleAPI<DocumentItem> {
             } else {
                 throw new APIException("Error while attaching a new document. Request with bad param value.");
             }
-        } catch (final UnauthorizedFolderException e) {
-            throw new APIForbiddenException(e.getMessage());
-        } catch (final Exception e) {
+        } catch (final BonitaException | IOException e) {
             throw new APIException(e);
         }
     }

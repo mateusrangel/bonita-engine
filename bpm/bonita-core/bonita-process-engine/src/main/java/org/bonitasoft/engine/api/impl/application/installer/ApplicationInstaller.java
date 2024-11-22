@@ -22,18 +22,25 @@ import static org.bonitasoft.engine.api.result.StatusCode.*;
 import static org.bonitasoft.engine.api.result.StatusContext.*;
 import static org.bonitasoft.engine.bpm.process.ActivationState.DISABLED;
 import static org.bonitasoft.engine.bpm.process.ConfigurationState.RESOLVED;
+import static org.bonitasoft.engine.business.application.ApplicationImportPolicy.FAIL_ON_DUPLICATES;
 
 import java.io.*;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
+import javax.xml.bind.JAXBException;
+
+import lombok.Builder;
+import lombok.Data;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bonitasoft.engine.api.ImportError;
 import org.bonitasoft.engine.api.ImportStatus;
 import org.bonitasoft.engine.api.impl.ProcessDeploymentAPIDelegate;
+import org.bonitasoft.engine.api.impl.ProcessManagementAPIImplDelegate;
 import org.bonitasoft.engine.api.impl.organization.OrganizationAPIDelegate;
 import org.bonitasoft.engine.api.impl.page.PageAPIDelegate;
 import org.bonitasoft.engine.api.impl.resolver.BusinessArchiveArtifactsManager;
@@ -46,33 +53,49 @@ import org.bonitasoft.engine.bpm.bar.BusinessArchiveFactory;
 import org.bonitasoft.engine.bpm.bar.InvalidBusinessArchiveFormatException;
 import org.bonitasoft.engine.bpm.process.*;
 import org.bonitasoft.engine.business.application.ApplicationImportPolicy;
+import org.bonitasoft.engine.business.application.exporter.ApplicationNodeContainerConverter;
 import org.bonitasoft.engine.business.application.importer.ApplicationImporter;
 import org.bonitasoft.engine.business.application.importer.StrategySelector;
+import org.bonitasoft.engine.business.application.xml.ApplicationNode;
 import org.bonitasoft.engine.business.data.*;
+import org.bonitasoft.engine.commons.exceptions.SBonitaException;
 import org.bonitasoft.engine.exception.*;
 import org.bonitasoft.engine.identity.ImportPolicy;
 import org.bonitasoft.engine.identity.OrganizationImportException;
 import org.bonitasoft.engine.io.FileOperations;
 import org.bonitasoft.engine.page.Page;
 import org.bonitasoft.engine.page.PageCreator;
-import org.bonitasoft.engine.service.TenantServiceAccessor;
-import org.bonitasoft.engine.service.TenantServiceSingleton;
-import org.bonitasoft.engine.service.impl.ServiceAccessorFactory;
+import org.bonitasoft.engine.page.PageSearchDescriptor;
+import org.bonitasoft.engine.page.PageUpdater;
+import org.bonitasoft.engine.platform.PlatformService;
+import org.bonitasoft.engine.platform.exception.SPlatformUpdateException;
+import org.bonitasoft.engine.platform.model.STenant;
+import org.bonitasoft.engine.platform.model.builder.SPlatformUpdateBuilder;
+import org.bonitasoft.engine.platform.model.builder.impl.SPlatformUpdateBuilderImpl;
+import org.bonitasoft.engine.recorder.model.EntityUpdateDescriptor;
+import org.bonitasoft.engine.search.SearchOptionsBuilder;
+import org.bonitasoft.engine.service.InstallationFailedException;
+import org.bonitasoft.engine.service.InstallationService;
+import org.bonitasoft.engine.service.ServiceAccessor;
+import org.bonitasoft.engine.service.ServiceAccessorSingleton;
 import org.bonitasoft.engine.session.SessionService;
 import org.bonitasoft.engine.session.model.SSession;
 import org.bonitasoft.engine.sessionaccessor.SessionAccessor;
 import org.bonitasoft.engine.tenant.TenantStateManager;
 import org.bonitasoft.engine.transaction.UserTransactionService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.bonitasoft.platform.exception.PlatformException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
 import org.springframework.stereotype.Component;
+import org.xml.sax.SAXException;
 
 /**
  * Main entry point to deploy an {@link ApplicationArchive}.
  *
  * @author Baptiste Mesta.
+ * @author Danila Mazour
+ * @author Haroun El Alami
  */
 
 @Slf4j
@@ -85,6 +108,7 @@ public class ApplicationInstaller {
     private static final String PAGE_DESCRIPTION_PROPERTY = "description";
     private static final String PAGE_CONTENT_TYPE_PROPERTY = "contentType";
 
+    private final InstallationService installationService;
     private final BusinessDataModelRepository bdmRepository;
     private final UserTransactionService transactionService;
     private final TenantStateManager tenantStateManager;
@@ -93,21 +117,15 @@ public class ApplicationInstaller {
     private final BusinessArchiveArtifactsManager businessArchiveArtifactsManager;
     private final ApplicationImporter applicationImporter;
     private final Long tenantId;
+    private final ApplicationNodeContainerConverter appXmlConverter = new ApplicationNodeContainerConverter();
 
-    @VisibleForTesting
-    static final String WARNING_MISSING_PAGE_MESSAGE = "If your are using pages from Bonita Admin or User applications, "
-            +
-            "ensure to set the Bonita runtime property " +
-            "'bonita.runtime.custom-application.install-provided-pages=true' " +
-            "or the environment variable 'INSTALL_PROVIDED_PAGES=true " +
-            "(if you are in docker context) in order to install those pages";
-
-    @Autowired
-    public ApplicationInstaller(@Qualifier("businessDataModelRepository") BusinessDataModelRepository bdmRepository,
+    public ApplicationInstaller(InstallationService installationService,
+            @Qualifier("businessDataModelRepository") BusinessDataModelRepository bdmRepository,
             UserTransactionService transactionService, @Value("${tenantId}") Long tenantId,
             SessionAccessor sessionAccessor, SessionService sessionService, TenantStateManager tenantStateManager,
             @Qualifier("dependencyResolver") BusinessArchiveArtifactsManager businessArchiveArtifactsManager,
             ApplicationImporter applicationImporter) {
+        this.installationService = installationService;
         this.bdmRepository = bdmRepository;
         this.transactionService = transactionService;
         this.tenantId = tenantId;
@@ -136,31 +154,177 @@ public class ApplicationInstaller {
             log.info("Starting Application Archive installation...");
             installBusinessDataModel(applicationArchive);
             inSession(() -> inTransaction(() -> {
-                installArtifacts(applicationArchive, executionResult);
+                var newlyInstalledProcessIds = installArtifacts(applicationArchive, executionResult);
+                enableResolvedProcesses(newlyInstalledProcessIds, executionResult);
+                updateApplicationVersion(applicationArchive.getVersion());
                 return null;
             }));
-            log.info("The Application Archive has been installed successfully in {} ms.",
-                    (System.currentTimeMillis() - startPoint));
-            logInstallationResult(executionResult);
+            log.info("The Application Archive (version {}) has been installed successfully in {} ms.",
+                    applicationArchive.getVersion(), (System.currentTimeMillis() - startPoint));
         } catch (Exception e) {
-            logInstallationResult(executionResult);
             throw new ApplicationInstallationException("The Application Archive install operation has been aborted", e);
+        } finally {
+            logInstallationResult(executionResult);
         }
         if (executionResult.hasErrors()) {
             throw new ApplicationInstallationException("The Application Archive install operation has been aborted");
         }
     }
 
-    protected void installArtifacts(ApplicationArchive applicationArchive, ExecutionResult executionResult)
+    protected List<Long> installArtifacts(ApplicationArchive applicationArchive, ExecutionResult executionResult)
             throws Exception {
         installOrganization(applicationArchive, executionResult);
-        installRestApiExtensions(applicationArchive, executionResult);
-        installPages(applicationArchive, executionResult);
-        installLayouts(applicationArchive, executionResult);
-        installThemes(applicationArchive, executionResult);
-        installLivingApplications(applicationArchive, executionResult);
-        List<Long> processDefinitionIds = installProcesses(applicationArchive, executionResult);
-        enableResolvedProcesses(processDefinitionIds, executionResult);
+        installOrUpdateRestApiExtensions(applicationArchive, executionResult);
+        installOrUpdatePages(applicationArchive, executionResult);
+        installOrUpdateLayouts(applicationArchive, executionResult);
+        installOrUpdateThemes(applicationArchive, executionResult);
+        installLivingApplications(applicationArchive, executionResult, FAIL_ON_DUPLICATES);
+        var installedProcessIds = installProcesses(applicationArchive, executionResult);
+        applicationArchive.getConfigurationFile().ifPresent(configFile -> installConfiguration(configFile,
+                executionResult));
+        return installedProcessIds;
+    }
+
+    public void update(ApplicationArchive applicationArchive) throws ApplicationInstallationException {
+        if (applicationArchive.isEmpty()) {
+            throw new ApplicationInstallationException("The Application Archive contains no valid artifact to install");
+        }
+        final ExecutionResult executionResult = new ExecutionResult();
+        try {
+            final long startPoint = System.currentTimeMillis();
+            log.info("Starting Application Archive installation...");
+            installBusinessDataModel(applicationArchive);
+            inSession(() -> inTransaction(() -> {
+                List<Long> newlyInstalledProcessIds = updateArtifacts(applicationArchive, executionResult);
+                disableOldProcesses(newlyInstalledProcessIds, executionResult);
+                enableResolvedProcesses(newlyInstalledProcessIds, executionResult);
+                updateApplicationVersion(applicationArchive.getVersion());
+                return null;
+            }));
+            log.info("The Application Archive has been installed successfully in {} ms.",
+                    (System.currentTimeMillis() - startPoint));
+        } catch (Exception e) {
+            throw new ApplicationInstallationException("The Application Archive update operation has been aborted", e);
+        } finally {
+            logInstallationResult(executionResult);
+        }
+        if (executionResult.hasErrors()) {
+            throw new ApplicationInstallationException("The Application Archive update operation has been aborted");
+        }
+    }
+
+    @VisibleForTesting
+    public void resumeTenantInSession() throws Exception {
+        inSession(() -> {
+            try {
+                if (Objects.equals(STenant.PAUSED, tenantStateManager.getStatus())) {
+                    tenantStateManager.resume();
+                    transactionService.executeInTransaction(() -> {
+                        businessArchiveArtifactsManager.resolveDependenciesForAllProcesses(getServiceAccessor());
+                        return null;
+                    });
+                }
+            } catch (Exception e) {
+                throw new UpdateException(e);
+            }
+            return null;
+        });
+    }
+
+    @VisibleForTesting
+    public void pauseTenantInSession() throws Exception {
+        inSession(() -> {
+            try {
+                String status = tenantStateManager.getStatus();
+                if (STenant.ACTIVATED.equals(status)) {
+                    tenantStateManager.pause();
+                } else if (!STenant.PAUSED.equals(status)) {
+                    throw new UpdateException(
+                            "The default tenant is in state " + status + " and cannot be paused. Aborting.");
+                }
+            } catch (Exception e) {
+                throw new UpdateException(e);
+            }
+            return null;
+        });
+    }
+
+    protected List<Long> updateArtifacts(ApplicationArchive applicationArchive, ExecutionResult executionResult)
+            throws Exception {
+        updateOrganization(applicationArchive, executionResult);
+
+        installOrUpdateRestApiExtensions(applicationArchive, executionResult);
+        installOrUpdatePages(applicationArchive, executionResult);
+        installOrUpdateLayouts(applicationArchive, executionResult);
+        installOrUpdateThemes(applicationArchive, executionResult);
+        installLivingApplications(applicationArchive, executionResult, ApplicationImportPolicy.REPLACE_DUPLICATES);
+
+        List<Long> newlyInstalledProcessIds = installProcesses(applicationArchive, executionResult);
+        applicationArchive.getConfigurationFile().ifPresent(configFile -> installConfiguration(configFile,
+                executionResult));
+        return newlyInstalledProcessIds;
+    }
+
+    @VisibleForTesting
+    public void updateApplicationVersion(String version) throws PlatformException {
+        try {
+            PlatformService platformService = getServiceAccessor().getPlatformService();
+            platformService.updatePlatform(getPlatformUpdateBuilder()
+                    .setApplicationVersion(version).done());
+        } catch (SPlatformUpdateException e) {
+            throw new PlatformException("Error when updating Platform application version", e);
+        }
+    }
+
+    protected SPlatformUpdateBuilder getPlatformUpdateBuilder() {
+        return SPlatformUpdateBuilderImpl.builder()
+                .descriptor(new EntityUpdateDescriptor())
+                .build();
+    }
+
+    @VisibleForTesting
+    void disableProcess(long processDefinitionId) throws SBonitaException {
+        getProcessManagementAPIDelegate().disableProcess(processDefinitionId);
+    }
+
+    @VisibleForTesting
+    List<Long> getDeployedProcessIds() throws SearchException {
+        SearchOptionsBuilder optsBuilder = new SearchOptionsBuilder(0, Integer.MAX_VALUE);
+        return getProcessDeploymentAPIDelegate()
+                .searchProcessDeploymentInfos(optsBuilder.done()).getResult()
+                .stream().map(ProcessDeploymentInfo::getProcessId).collect(Collectors.toList());
+    }
+
+    @VisibleForTesting
+    Optional<Long> getDeployedProcessId(String name, String version) {
+        try {
+            return Optional.of(getProcessDeploymentAPIDelegate().getProcessDefinitionId(name, version));
+        } catch (ProcessDefinitionNotFoundException e) {
+            return Optional.empty();
+        }
+    }
+
+    public void disableOldProcesses(List<Long> installedProcessIds, ExecutionResult executionResult)
+            throws SearchException, SBonitaException, ProcessDefinitionNotFoundException {
+        List<Long> deployedProcessIds = getDeployedProcessIds();
+        // remove installed process ids
+        deployedProcessIds.removeAll(installedProcessIds);
+        // disable all processes
+        for (Long processId : deployedProcessIds) {
+            // get process Info
+            ProcessDeploymentInfo info = getProcessDeploymentInfo(processId);
+            if (info.getActivationState() == ActivationState.ENABLED) {
+                disableProcess(processId);
+                executionResult.addStatus(infoStatus(PROCESS_DEPLOYMENT_DISABLEMENT_OK,
+                        format("Process %s (%s) has been disabled successfully",
+                                info.getDisplayName(), info.getVersion())));
+            }
+        }
+    }
+
+    @VisibleForTesting
+    ProcessDeploymentInfo getProcessDeploymentInfo(Long processId) throws ProcessDefinitionNotFoundException {
+        return getProcessDeploymentAPIDelegate().getProcessDeploymentInfo(processId);
     }
 
     public void enableResolvedProcesses(List<Long> processDefinitionIds, ExecutionResult executionResult)
@@ -219,53 +383,74 @@ public class ApplicationInstaller {
         }
     }
 
-    public void installOrganization(ApplicationArchive applicationArchive, ExecutionResult executionResult)
-            throws OrganizationImportException {
+    @VisibleForTesting
+    List<String> importOrganization(File organization, ImportPolicy failOnDuplicates)
+            throws OrganizationImportException, IOException {
+        return getOrganizationImporter().importOrganizationWithWarnings(
+                Files.readString(organization.toPath()),
+                failOnDuplicates);
+    }
+
+    protected void installOrganization(ApplicationArchive applicationArchive, ExecutionResult executionResult)
+            throws Exception {
         final List<String> warnings;
+        if (applicationArchive.getOrganization() == null) {
+            executionResult.addStatus(Status.infoStatus(ORGANIZATION_IMPORT_WARNING,
+                    "No organization found. Use the technical user to configure the organization."));
+            return;
+        }
         try {
-            warnings = getOrganizationImporter().importOrganizationWithWarnings(
-                    Files.readString(applicationArchive.getOrganization().toPath()),
-                    ImportPolicy.FAIL_ON_DUPLICATES);
+            warnings = importOrganization(applicationArchive.getOrganization(), ImportPolicy.FAIL_ON_DUPLICATES);
         } catch (IOException e) {
             throw new OrganizationImportException(e);
         }
         for (String warning : warnings) {
             executionResult.addStatus(warningStatus(ORGANIZATION_IMPORT_WARNING, warning));
         }
-        executionResult.addStatus(okStatus());
     }
 
-    @VisibleForTesting
-    public void installBusinessDataModel(ApplicationArchive applicationArchive) throws Exception {
-        if (applicationArchive.getBdm() != null) {
-            inSession(() -> {
-                pauseTenant();
-                return null;
-            });
-            final String bdmVersion = inSession(() -> inTransaction(() -> updateBusinessDataModel(applicationArchive)));
-            log.info("BDM successfully installed (version({})", bdmVersion);
-            inSession(() -> {
-                resumeTenant();
-                return null;
-            });
+    protected void updateOrganization(ApplicationArchive applicationArchive, ExecutionResult executionResult)
+            throws Exception {
+        final List<String> warnings;
+        if (applicationArchive.getOrganization() == null) {
+            log.info("There is no organization file in the archive. Ignoring the organization update step.");
+            return;
         }
-    }
-
-    @VisibleForTesting
-    void resumeTenant() throws UpdateException {
         try {
-            tenantStateManager.resume();
-            transactionService.executeInTransaction(() -> {
-                businessArchiveArtifactsManager.resolveDependenciesForAllProcesses(getTenantAccessor());
-                return null;
-            });
-        } catch (Exception e) {
-            throw new UpdateException(e);
+            warnings = importOrganization(applicationArchive.getOrganization(), ImportPolicy.IGNORE_DUPLICATES);
+        } catch (IOException e) {
+            throw new OrganizationImportException(e);
+        }
+        for (String warning : warnings) {
+            executionResult.addStatus(warningStatus(ORGANIZATION_IMPORT_WARNING, warning));
         }
     }
 
-    @VisibleForTesting
-    String updateBusinessDataModel(ApplicationArchive applicationArchive)
+    protected void installBusinessDataModel(ApplicationArchive applicationArchive) throws Exception {
+        if (applicationArchive.getBdm() != null) {
+            var alreadyDeployed = sameBdmContentDeployed(applicationArchive.getBdm());
+            if (alreadyDeployed) {
+                log.info("Installed and current BDM are equivalent. No BDM update required.");
+                return;
+            }
+            log.info("BDM must be installed or updated...");
+            pauseTenantInSession();
+            final String bdmVersion = inSession(
+                    () -> inTransaction(() -> updateBusinessDataModel(applicationArchive)));
+            log.info("BDM successfully installed (version({})", bdmVersion);
+            resumeTenantInSession();
+        }
+    }
+
+    boolean sameBdmContentDeployed(File bdmArchive) throws Exception {
+        return inSession(() -> inTransaction(() -> {
+            log.info("Comparing BDM to install with current BDM...");
+            return bdmRepository
+                    .isDeployed(Files.readAllBytes(bdmArchive.toPath()));
+        }));
+    }
+
+    protected String updateBusinessDataModel(ApplicationArchive applicationArchive)
             throws InvalidBusinessDataModelException, BusinessDataRepositoryDeploymentException {
         String bdmVersion;
         try {
@@ -285,7 +470,7 @@ public class ApplicationInstaller {
         return bdmVersion;
     }
 
-    public void uninstallBusinessDataModel() throws BusinessDataRepositoryDeploymentException {
+    protected void uninstallBusinessDataModel() throws BusinessDataRepositoryDeploymentException {
         log.info("Uninstalling the currently deployed BDM");
         try {
             tenantStateManager.executeTenantManagementOperation("BDM Uninstallation", () -> {
@@ -300,14 +485,14 @@ public class ApplicationInstaller {
         }
     }
 
-    public String installBusinessDataModel(final byte[] zip)
+    protected String installBusinessDataModel(final byte[] zip)
             throws InvalidBusinessDataModelException, BusinessDataRepositoryDeploymentException {
         log.info("Starting the installation of the BDM.");
         try {
-            String bdm_version = tenantStateManager.executeTenantManagementOperation("BDM Installation",
+            String bdmVersion = tenantStateManager.executeTenantManagementOperation("BDM Installation",
                     () -> bdmRepository.install(zip, SessionService.SYSTEM_ID));
             log.info("Installation of the BDM completed.");
-            return bdm_version;
+            return bdmVersion;
         } catch (final SBusinessDataRepositoryDeploymentException e) {
             throw new BusinessDataRepositoryDeploymentException(e);
         } catch (final InvalidBusinessDataModelException e) {
@@ -317,25 +502,18 @@ public class ApplicationInstaller {
         }
     }
 
-    @VisibleForTesting
-    void pauseTenant() throws UpdateException {
-        try {
-            tenantStateManager.pause();
-        } catch (Exception e) {
-            throw new UpdateException(e);
-        }
-    }
-
-    public void installLivingApplications(ApplicationArchive applicationArchive, ExecutionResult executionResult)
+    protected void installLivingApplications(ApplicationArchive applicationArchive, ExecutionResult executionResult,
+            ApplicationImportPolicy policy)
             throws AlreadyExistsException, ImportException, ApplicationInstallationException {
         try {
+            boolean atLeastOneBlockingProblem = false;
             for (File livingApplicationFile : applicationArchive.getApplications()) {
                 log.info("Installing Living Application from file '{}'", livingApplicationFile.getName());
-                final List<ImportStatus> importStatusList = importApplications(
-                        Files.readAllBytes(livingApplicationFile.toPath()));
-                boolean atLeastOneBlockingProblem = false;
-                AtomicBoolean displaySpecificErrorMessage = new AtomicBoolean(false);
-                for (ImportStatus status : importStatusList) {
+                var appContainer = appXmlConverter
+                        .unmarshallFromXML(Files.readAllBytes(livingApplicationFile.toPath()));
+                for (var application : appContainer.getApplications()) {
+                    var status = importApplication(application,
+                            getIconContent(application, applicationArchive), policy);
                     final Map<String, Serializable> context = new HashMap<>();
                     context.put(LIVING_APPLICATION_TOKEN_KEY, status.getName());
                     context.put(LIVING_APPLICATION_IMPORT_STATUS_KEY, status.getStatus());
@@ -344,10 +522,6 @@ public class ApplicationInstaller {
                         errors.forEach(error -> {
                             Status errorStatus = buildErrorStatus(error, livingApplicationFile.getName());
                             executionResult.addStatus(errorStatus);
-                            if (!displaySpecificErrorMessage.get()
-                                    && errorStatus.getCode() == LIVING_APP_REFERENCES_UNKNOWN_PAGE) {
-                                displaySpecificErrorMessage.set(true);
-                            }
                         });
 
                         atLeastOneBlockingProblem = true;
@@ -355,22 +529,45 @@ public class ApplicationInstaller {
                     }
 
                     executionResult.addStatus(
-                            infoStatus(LIVING_APP_DEPLOYMENT, format("Application '%s' has been %s", status.getName(),
-                                    status.getStatus().name().toLowerCase()), context));
-
-                }
-                if (atLeastOneBlockingProblem) {
-                    if (displaySpecificErrorMessage.get()) {
-                        executionResult.addStatus(
-                                warningStatus(LIVING_APP_REFERENCES_UNKNOWN_PAGE, WARNING_MISSING_PAGE_MESSAGE, null));
-                    }
-                    throw new ApplicationInstallationException(
-                            "At least one application failed to be installed. Canceling installation.");
+                            infoStatus(LIVING_APP_DEPLOYMENT,
+                                    format("Application '%s' has been %s", status.getName(),
+                                            status.getStatus().name().toLowerCase()),
+                                    context));
                 }
             }
-        } catch (IOException e) {
+
+            if (atLeastOneBlockingProblem) {
+                throw new ApplicationInstallationException(
+                        "At least one application failed to be installed. Canceling installation.");
+            }
+        } catch (IOException | JAXBException | SAXException e) {
             throw new ImportException(e);
         }
+    }
+
+    private IconContent getIconContent(ApplicationNode application, ApplicationArchive applicationArchive) {
+        var iconPath = application.getIconPath();
+        if (iconPath != null && !iconPath.isBlank()) {
+            var icon = applicationArchive.getApplicationIcons().stream()
+                    .filter(iconFile -> Objects.equals(iconPath, iconFile.getName()))
+                    .findFirst()
+                    .map(File::toPath)
+                    .orElse(null);
+            try {
+                if (icon != null) {
+                    log.info("Application icon {} found for {}", icon.getFileName().toString(),
+                            application.getDisplayName());
+                    var bytes = Files.readAllBytes(icon);
+                    return IconContent.builder()
+                            .bytes(bytes)
+                            .mimeType(URLConnection.guessContentTypeFromName(icon.getFileName().toString()))
+                            .build();
+                }
+            } catch (IOException e) {
+                log.warn("Failed to read icon {}", icon, e);
+            }
+        }
+        return IconContent.builder().build();
     }
 
     private Status buildErrorStatus(ImportError importError, @NonNull String applicationName) {
@@ -404,35 +601,38 @@ public class ApplicationInstaller {
                 context);
     }
 
-    List<ImportStatus> importApplications(final byte[] xmlContent)
+    ImportStatus importApplication(final ApplicationNode application, IconContent iconContent,
+            ApplicationImportPolicy policy)
             throws ImportException, AlreadyExistsException {
-        return applicationImporter.importApplications(xmlContent, null, null,
-                SessionService.SYSTEM_ID,
-                new StrategySelector().selectStrategy(ApplicationImportPolicy.FAIL_ON_DUPLICATES));
+        return applicationImporter.importApplication(application, true, SessionService.SYSTEM_ID,
+                iconContent.getBytes(), iconContent.getMimeType(),
+                true,
+                new StrategySelector().selectStrategy(policy));
     }
 
-    public void installPages(ApplicationArchive applicationArchive, ExecutionResult executionResult)
+    protected void installOrUpdatePages(ApplicationArchive applicationArchive, ExecutionResult executionResult)
             throws IOException, BonitaException {
         for (File pageFile : applicationArchive.getPages()) {
             installUnitPage(pageFile, "page", executionResult);
         }
     }
 
-    public void installLayouts(ApplicationArchive applicationArchive, ExecutionResult executionResult)
+    protected void installOrUpdateLayouts(ApplicationArchive applicationArchive, ExecutionResult executionResult)
             throws IOException, BonitaException {
         for (File layoutFile : applicationArchive.getLayouts()) {
             installUnitPage(layoutFile, "layout", executionResult);
         }
     }
 
-    public void installThemes(ApplicationArchive applicationArchive, ExecutionResult executionResult)
+    protected void installOrUpdateThemes(ApplicationArchive applicationArchive, ExecutionResult executionResult)
             throws IOException, BonitaException {
         for (File pageFile : applicationArchive.getThemes()) {
             installUnitPage(pageFile, "theme", executionResult);
         }
     }
 
-    public void installRestApiExtensions(ApplicationArchive applicationArchive, ExecutionResult executionResult)
+    protected void installOrUpdateRestApiExtensions(ApplicationArchive applicationArchive,
+            ExecutionResult executionResult)
             throws IOException, BonitaException {
         for (File pageFile : applicationArchive.getRestAPIExtensions()) {
             installUnitPage(pageFile, "REST API extension", executionResult);
@@ -442,19 +642,41 @@ public class ApplicationInstaller {
     /**
      * From the Engine perspective, all custom pages, layouts, themes, custom Rest APIs are of type <code>Page</code>
      */
-    public void installUnitPage(File pageFile, String precisePageType, ExecutionResult executionResult)
+    protected void installUnitPage(File pageFile, String precisePageType, ExecutionResult executionResult)
             throws IOException, BonitaException {
         var pageProperties = loadPageProperties(pageFile);
         var pageToken = pageProperties.getProperty(PAGE_TOKEN_PROPERTY);
         final Map<String, Serializable> context = new HashMap<>();
         context.put(PAGE_NAME_KEY, pageToken);
+        Page existingPage = getPageIfExist(pageToken);
+        if (existingPage == null) {
+            final Page page = createPage(pageFile, pageProperties);
+            log.info("Creating new {} '{}'", precisePageType, getPageName(page));
+            executionResult.addStatus(infoStatus(PAGE_DEPLOYMENT_CREATE_NEW,
+                    format("New %s '%s' has been installed", precisePageType, getPageName(page)),
+                    context));
+        } else {
+            updatePageContent(pageFile, existingPage.getId());
+        }
+    }
 
-        final Page page = createPage(pageFile, pageProperties);
-        log.info("Creating new {} '{}'", precisePageType, getPageName(page));
+    @VisibleForTesting
+    void updatePageContent(File pageFile, long pageId) throws UpdateException, IOException, AlreadyExistsException {
+        getPageAPIDelegate().updatePageContent(pageId, Files.readAllBytes(pageFile.toPath()), SessionService.SYSTEM_ID);
+        // update content name
+        final PageUpdater pageUpdater = new PageUpdater();
+        pageUpdater.setContentName(pageFile.getName());
+        getPageAPIDelegate().updatePage(pageId, pageUpdater, SessionService.SYSTEM_ID);
+    }
 
-        executionResult.addStatus(infoStatus(PAGE_DEPLOYMENT_CREATE_NEW,
-                format("New %s '%s' has been installed", precisePageType, getPageName(page)),
-                context));
+    @VisibleForTesting
+    Page getPageIfExist(String pageToken) throws SearchException {
+        List<Page> pageResearch = getPageAPIDelegate().searchPages(new SearchOptionsBuilder(0, 1)
+                .filter(PageSearchDescriptor.NAME, pageToken).done()).getResult();
+        if (!pageResearch.isEmpty()) {
+            return pageResearch.get(0);
+        }
+        return null;
     }
 
     Page createPage(File pageFile, Properties pageProperties) throws CreationException {
@@ -500,18 +722,68 @@ public class ApplicationInstaller {
         return properties;
     }
 
-    public List<Long> installProcesses(ApplicationArchive applicationArchive, ExecutionResult executionResult)
+    protected List<Long> installProcesses(ApplicationArchive applicationArchive, ExecutionResult executionResult)
             throws InvalidBusinessArchiveFormatException, IOException, ProcessDeployException {
         List<Long> processDefinitionIds = new ArrayList<>();
         for (File processFile : applicationArchive.getProcesses()) {
             try (var is = new FileInputStream(processFile)) {
                 final BusinessArchive businessArchive = BusinessArchiveFactory
                         .readBusinessArchive(is);
-                processDefinitionIds.add(deployProcess(businessArchive, executionResult));
+                String name = businessArchive.getProcessDefinition().getName();
+                String version = businessArchive.getProcessDefinition().getVersion();
+
+                final Map<String, Serializable> context = new HashMap<>();
+                context.put(PROCESS_NAME_KEY, name);
+                context.put(PROCESS_VERSION_KEY, version);
+
+                Optional<Long> deployedProcessId = getDeployedProcessId(name, version);
+                if (deployedProcessId.isPresent()) {
+                    // skip install
+                    processDefinitionIds.add(deployedProcessId.get());
+                    executionResult.addStatus(infoStatus(PROCESS_DEPLOYMENT_SKIP_INSTALL,
+                            format("Process %s (%s) already exists in the database. Skipping installation.", name,
+                                    version),
+                            context));
+                } else {
+                    processDefinitionIds.add(deployProcess(businessArchive, executionResult));
+                }
             }
         }
         return processDefinitionIds;
+    }
 
+    /**
+     * Must be called in a transaction with active session
+     *
+     * @param configurationFileArchive
+     * @param executionResult
+     * @throws ApplicationInstallationException
+     */
+    void installConfiguration(File configurationFileArchive,
+            ExecutionResult executionResult)
+            throws ApplicationInstallationException {
+        try (var is = Files.newInputStream(configurationFileArchive.toPath())) {
+            log.info("Installing application configuration from file");
+            installationService.install(null, is.readAllBytes());
+            executionResult.addStatus(Status.infoStatus(Status.okStatus().getCode(),
+                    "Configuration file has been imported"));
+        } catch (IOException | InstallationFailedException e) {
+            throw new ApplicationInstallationException("The Application Archive install operation has been aborted", e);
+        }
+    }
+
+    /**
+     * Update configuration with the given bconf file
+     *
+     * @param configurationFileArchive A bconf file
+     * @param executionResult
+     * @throws Exception
+     */
+    public void updateConfiguration(File configurationFileArchive, ExecutionResult executionResult) throws Exception {
+        inSession(() -> inTransaction(() -> {
+            installConfiguration(configurationFileArchive, executionResult);
+            return null;
+        }));
     }
 
     protected Long deployProcess(BusinessArchive businessArchive, ExecutionResult executionResult)
@@ -544,10 +816,15 @@ public class ApplicationInstaller {
     }
 
     @VisibleForTesting
+    ProcessManagementAPIImplDelegate getProcessManagementAPIDelegate() {
+        return ProcessManagementAPIImplDelegate.getInstance();
+    }
+
+    @VisibleForTesting
     public <T> T inSession(Callable<T> callable) throws Exception {
         final SSession session = sessionService.createSession(tenantId, SessionService.SYSTEM);
         final long sessionId = session.getId();
-        log.info("Created new session with id {}", sessionId);
+        log.trace("New session created with id {}", sessionId);
         try {
             sessionAccessor.setSessionInfo(sessionId, tenantId);
             return callable.call();
@@ -557,7 +834,7 @@ public class ApplicationInstaller {
         }
     }
 
-    public <T> T inTransaction(Callable<T> callable) throws ApplicationInstallationException {
+    protected <T> T inTransaction(Callable<T> callable) throws ApplicationInstallationException {
         try {
             return transactionService.executeInTransaction(callable);
         } catch (Exception e) {
@@ -565,21 +842,39 @@ public class ApplicationInstaller {
         }
     }
 
-    private TenantServiceAccessor getTenantAccessor() {
-        try {
-            ServiceAccessorFactory.getInstance().createSessionAccessor();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        return TenantServiceSingleton.getInstance();
+    private ServiceAccessor getServiceAccessor() {
+        return ServiceAccessorSingleton.getInstance();
     }
 
-    @VisibleForTesting
     void logInstallationResult(ExecutionResult result) {
         log.info("Result of the installation of the application:");
         for (Status s : result.getAllStatus()) {
-            log.info("[{}] - {} - {} - {}", s.getLevel(), s.getCode(), s.getMessage(),
-                    s.getContext().toString());
+            var message = s.getContext() != null && !s.getContext().isEmpty()
+                    ? String.format("%s - %s - %s", s.getCode(), s.getMessage(),
+                            s.getContext().toString())
+                    : String.format("%s - %s", s.getCode(), s.getMessage());
+            switch (s.getLevel()) {
+                case ERROR:
+                    log.error(message);
+                    break;
+                case WARNING:
+                    log.warn(message);
+                    break;
+                case INFO:
+                case OK:
+                default:
+                    log.info(message);
+                    break;
+            }
         }
     }
+
+    @Builder
+    @Data
+    static class IconContent {
+
+        private byte[] bytes;
+        private String mimeType;
+    }
+
 }

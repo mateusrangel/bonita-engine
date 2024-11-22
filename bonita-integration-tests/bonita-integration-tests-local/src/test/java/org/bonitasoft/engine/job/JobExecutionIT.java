@@ -27,14 +27,12 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import org.bonitasoft.engine.connectors.VariableStorage;
-import org.bonitasoft.engine.exception.BonitaRuntimeException;
 import org.bonitasoft.engine.persistence.FilterOption;
 import org.bonitasoft.engine.persistence.QueryOptions;
 import org.bonitasoft.engine.scheduler.JobService;
 import org.bonitasoft.engine.scheduler.model.SJobDescriptor;
 import org.bonitasoft.engine.scheduler.model.SJobLog;
-import org.bonitasoft.engine.service.TenantServiceAccessor;
-import org.bonitasoft.engine.service.TenantServiceSingleton;
+import org.bonitasoft.engine.service.ServiceAccessor;
 import org.bonitasoft.engine.test.CommonAPILocalIT;
 import org.bonitasoft.engine.test.WaitUntil;
 import org.bonitasoft.engine.transaction.UserTransactionService;
@@ -44,7 +42,6 @@ import org.junit.Test;
 
 // because of waituntil but its the only class where we use failed jobs... so i don't want to add a handler and so on
 // only for jobs
-@SuppressWarnings("deprecation")
 public class JobExecutionIT extends CommonAPILocalIT {
 
     private static final String THROWS_EXCEPTION_JOB = "ThrowsExceptionJob";
@@ -70,7 +67,7 @@ public class JobExecutionIT extends CommonAPILocalIT {
     @Test
     public void getFailedJobs_should_return_zero_when_there_are_no_failed_jobs() {
         final List<FailedJob> failedJobs = getProcessAPI().getFailedJobs(0, 100);
-        assertThat(failedJobs).hasSize(0);
+        assertThat(failedJobs).isEmpty();
     }
 
     @Test
@@ -78,12 +75,11 @@ public class JobExecutionIT extends CommonAPILocalIT {
             throws Exception {
         //given
         getCommandAPI().register("except", "Throws Exception when scheduling a job", AddJobCommand.class.getName());
-        final Map<String, Serializable> parameters = new HashMap<>();
         try {
-            getCommandAPI().execute("except", parameters);
+            getCommandAPI().execute("except", emptyMap());
             final FailedJob failedJob = waitForFailedJob();
             assertThat(failedJob.getJobName()).isEqualTo(THROWS_EXCEPTION_JOB);
-            assertThat(failedJob.getRetryNumber()).isEqualTo(0);
+            assertThat(failedJob.getNumberOfFailures()).isEqualTo(1);
             assertThat(failedJob.getDescription()).isEqualTo("Throw an exception when 'throwException'=true");
 
             final List<SJobDescriptor> jobDescriptors = waitForJobDescriptorsToHaveSize(1);
@@ -112,9 +108,9 @@ public class JobExecutionIT extends CommonAPILocalIT {
 
         await().until(() -> {
             setSessionInfo(getSession()); // the session was cleaned by api call. This must be improved
-            final TenantServiceAccessor tenantAccessor = getTenantAccessor();
-            final UserTransactionService transactionService = tenantAccessor.getUserTransactionService();
-            final JobService jobService = tenantAccessor.getJobService();
+            final ServiceAccessor serviceAccessor = getServiceAccessor();
+            final UserTransactionService transactionService = serviceAccessor.getUserTransactionService();
+            final JobService jobService = serviceAccessor.getJobService();
             return transactionService.executeInTransaction(() -> jobService.searchJobLogs(options));
         }, hasSize(nbOfExpectedJobLogs));
     }
@@ -126,9 +122,9 @@ public class JobExecutionIT extends CommonAPILocalIT {
 
         return await().until(() -> {
             setSessionInfo(getSession()); // the session was cleaned by api call. This must be improved
-            final TenantServiceAccessor tenantAccessor = getTenantAccessor();
-            final UserTransactionService transactionService = tenantAccessor.getUserTransactionService();
-            final JobService jobService = tenantAccessor.getJobService();
+            final ServiceAccessor serviceAccessor = getServiceAccessor();
+            final UserTransactionService transactionService = serviceAccessor.getUserTransactionService();
+            final JobService jobService = serviceAccessor.getJobService();
             return transactionService.executeInTransaction(() -> jobService.searchJobDescriptors(queryOptions));
         }, hasSize(nbOfExpectedJobDescriptors));
     }
@@ -165,7 +161,7 @@ public class JobExecutionIT extends CommonAPILocalIT {
 
     private void deleteJobLogsAndDescriptors(final long jobDescriptorId) throws Exception {
         setSessionInfo(getSession()); // the session was cleaned by api call. This must be improved
-        final TenantServiceAccessor serviceAccessor = getTenantAccessor();
+        final ServiceAccessor serviceAccessor = getServiceAccessor();
         final UserTransactionService transactionService = serviceAccessor.getUserTransactionService();
         final JobService jobService = serviceAccessor.getJobService();
         transactionService.executeInTransaction((Callable) () -> {
@@ -185,7 +181,7 @@ public class JobExecutionIT extends CommonAPILocalIT {
         }.waitUntil();
         final FailedJob failedJob = getFailingJob();
         assertThat(failedJob).isNotNull();
-        assertThat(failedJob.getRetryNumber()).isEqualTo(0);
+        assertThat(failedJob.getNumberOfFailures()).isPositive();
         return failedJob;
     }
 
@@ -204,7 +200,7 @@ public class JobExecutionIT extends CommonAPILocalIT {
 
     private FailedJob getFailedJob() {
         final FailedJob failedJob = getFailingJob();
-        if (failedJob != null && failedJob.getRetryNumber() == 0) {
+        if (failedJob != null && failedJob.getNumberOfFailures() > 0) {
             return failedJob;
         }
         return null;
@@ -219,15 +215,6 @@ public class JobExecutionIT extends CommonAPILocalIT {
             }
         }
         return searchJob;
-    }
-
-    @Override
-    protected TenantServiceAccessor getTenantAccessor() {
-        try {
-            return TenantServiceSingleton.getInstance();
-        } catch (final Exception e) {
-            throw new BonitaRuntimeException(e);
-        }
     }
 
 }

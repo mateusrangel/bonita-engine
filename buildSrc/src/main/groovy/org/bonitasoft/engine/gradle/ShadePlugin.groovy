@@ -19,13 +19,12 @@ class ShadePlugin implements Plugin<Project> {
         def extension = project.extensions.create("shade", ShadeExtension)
 
         project.jar {
-            classifier = 'original'
+            archiveClassifier = 'original'
         }
 
         project.afterEvaluate {
-
             project.shadowJar {
-                classifier = "" // we replace the original jar by the shadow jar	
+                archiveClassifier = "" // we replace the original jar by the shadow jar
                 dependencies {
                     include({
                         if (!project.ext.has("shadedDependencies")) {
@@ -78,11 +77,11 @@ class ShadePlugin implements Plugin<Project> {
                         it.sourceSets.main.allJava
                     }
                 }
-                classifier = 'sources'
+                archiveClassifier = 'sources'
             }
             project.tasks.register("javadocJar", Jar) {
                 from project.javadoc
-                classifier = 'javadoc'
+                archiveClassifier = 'javadoc'
             }
 
             project.publishing.publications {
@@ -121,9 +120,7 @@ class ShadePlugin implements Plugin<Project> {
                 }
             }
         }
-
     }
-
 
     private boolean shouldBeIncludedInShade(Project project, ResolvedDependency currentDependency, ShadeExtension extension, Set<Project> allProjectsAlreadyShaded) {
         Set<Project> projectsToShade = getShadedProjects(project, extension, allProjectsAlreadyShaded)
@@ -137,10 +134,9 @@ class ShadePlugin implements Plugin<Project> {
         return projectsToShade.contains(projectDep)
     }
 
-    /*
+    /**
      *  get the list of projects to shade
      */
-
     private Set<Project> getShadedProjects(Project project, ShadeExtension extension, Set<Project> allProjectsAlreadyShaded) {
         if (!project.ext.has("projectsToShade")) {
             project.ext.projectsToShade = getAllProjectsToShade(project, extension, allProjectsAlreadyShaded)
@@ -158,11 +154,9 @@ class ShadePlugin implements Plugin<Project> {
         }
     }
 
-    /*
+    /**
      *  get the list of project that are already shaded by other shade
-     *  e.g. bonita-common-util is already shaded by bonita-common
      */
-
     private Set<Project> getProjectsAlreadyShaded(Project rootProject, ShadeExtension extension) {
         if (!rootProject.ext.has("projectsAlreadyShaded")) { // add property "projectsAlreadyShaded" to act like a cache
             rootProject.ext.projectsAlreadyShaded = getAllProjectsAlreadyShaded(rootProject, extension)
@@ -187,7 +181,7 @@ class ShadePlugin implements Plugin<Project> {
     }
 
     private boolean isAShadeProject(Project it) {
-		 it.plugins.find { it instanceof ShadePlugin }
+        it.plugins.find { it instanceof ShadePlugin }
     }
 
     private Set<Project> getAllProjectsToShade(Project project, ShadeExtension extension, Set<Project> allProjectsAlreadyShaded) {

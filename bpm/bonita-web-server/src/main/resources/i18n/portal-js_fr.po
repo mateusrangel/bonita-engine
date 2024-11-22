@@ -11,7 +11,7 @@ msgstr ""
 "X-Crowdin-File-ID: 61810\n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
-"PO-Revision-Date: 2023-10-13 01:28\n"
+"PO-Revision-Date: 2024-01-01 00:00\n"
 
 msgid "1 case has been deleted"
 msgstr "1 cas a été supprimé"
@@ -104,6 +104,9 @@ msgstr "Une erreur s'est produite lors de la soumission du formulaire."
 msgid "An error occurred while submitting the form.<br/>The task may not be available anymore."
 msgstr "Une erreur s’est produite lors de l’envoi du formulaire. <br/> Il se peut que la tâche ne soit plus disponible."
 
+msgid "An error occurred with the requested operation."
+msgstr "Une erreur s'est produite lors de l'opération demandée"
+
 msgid "Application XML file"
 msgstr "Fichier XML de l'application"
 
@@ -145,9 +148,6 @@ msgstr "Le Business Data Model n’a pas été mis à jour. Le système n’éta
 
 msgid "BDM successfully updated."
 msgstr "Le Modèle de Données Métier a été mis à jour avec succès."
-
-msgid "BPM Services must be paused. Go to \"BPM Services\" menu option."
-msgstr "Les services BPM doivent être suspendus. Aller dans menu « BPM Services »."
 
 msgid "Back"
 msgstr "Retour"
@@ -223,6 +223,18 @@ msgstr "Cliquez ici pour choisir le fichier .xml"
 
 msgid "Click here to choose your .zip file"
 msgstr "Cliquez ici pour choisir le fichier .zip"
+
+msgid "Click on Cancel to remain on this page and try to execute the operation again once you logged back in (e.g. in another tab)."
+msgstr "Cliquez sur Annuler pour rester sur cette page et essayer d'exécuter à nouveau l'opération après vous être reconnecté (e.g. dans un autre onglet)."
+
+msgid "Click on Cancel to remain on this page and wait for the maintenance to end."
+msgstr "Cliquez sur Annuler pour rester sur cette page et attendre la fin des opérations de maintenance."
+
+msgid "Click on OK to be redirected and log back in."
+msgstr "Cliquez sur OK pour être redirigé et vous reconnecter."
+
+msgid "Click on OK to be redirected to the maintenance page."
+msgstr "Cliquez sur OK pour être redirigé vers la page de maintenance."
 
 msgid "Close"
 msgstr "Fermer"
@@ -313,9 +325,6 @@ msgstr "Désactiver"
 
 msgid "Display name"
 msgstr "Nom métier"
-
-msgid "Don't forget to start BPM Services again."
-msgstr "N’oubliez pas de redémarrer les Services BPM."
 
 msgid "Done tasks"
 msgstr "Tâches terminées"
@@ -494,8 +503,8 @@ msgstr "En cours d'installation"
 msgid "Installing Business Data Model"
 msgstr "Installation du Modèle de Données Métier (BDM)"
 
-msgid "Installing or updating the BDM implies to be logged in as Technical User, and to shut down all BPM services."
-msgstr "Installer ou mettre à jour le BDM nécessite d'être authentifié en tant qu'Utilisateur Technique et d'avoir mis en pause les services BPM."
+msgid "Installing or updating the BDM implies to be logged in as Technical User, and to activate the maintenance mode."
+msgstr "Installer ou mettre à jour le BDM nécessite d'être authentifié en tant qu'Utilisateur Technique et d'avoir activé le mode maintenance."
 
 msgid "Items per page"
 msgstr "Eléments par page"
@@ -535,6 +544,9 @@ msgstr "DD MMM LT"
 
 msgid "Make sure all artifacts enabled on the platform are compatible with the new BDM."
 msgstr "Assurez-vous que tous les artefacts activés sur la plate-forme sont compatibles avec le nouveau BDM."
+
+msgid "Make sure to deactivate the maintenance mode."
+msgstr "Assurez-vous de désactiver le mode maintenance."
 
 msgid "Make this task available to other team members again"
 msgstr "Libérer - rendre cette tâche à nouveau disponible pour les autres membres de l’équipe"
@@ -647,6 +659,9 @@ msgstr "Normale"
 msgid "Not installed"
 msgstr "Non installé"
 
+msgid "OK"
+msgstr "OK"
+
 msgid "One or more tasks are not available anymore. The list is now up to date."
 msgstr "Une ou plusieurs tâches ne sont plus disponibles. La liste est maintenant à jour."
 
@@ -655,6 +670,9 @@ msgstr "Lien vers une page"
 
 msgid "Only I can do this task"
 msgstr "Je suis le seul en mesure de faire cette tâche"
+
+msgid "Only available when the platform is under maintenance. Go to the \"Platform maintenance\" page to activate the maintenance mode."
+msgstr "Uniquement disponible lorsque la plateforme est en maintenance. Allez sur la page \"Maintenance de la plate-forme\" pour activer le mode maintenance."
 
 msgid "Only one Business Data Model (BDM) can be active at a time."
 msgstr "Il ne peut y avoir qu'un seul Modèle de Données Métier (BDM) actif à la fois."
@@ -799,6 +817,9 @@ msgstr "Sélectionnez la page"
 
 msgid "Select users..."
 msgstr "Sélectionnez des utilisateurs ..."
+
+msgid "Server is under maintenance."
+msgstr "Une maintenance est en cours sur le serveur."
 
 msgid "Set as Home page"
 msgstr "Définir en tant que page d'accueil"
@@ -1135,6 +1156,9 @@ msgstr "Vous devez ajouter une page avant de pouvoir la référencer dans un men
 
 msgid "Your personal task list is empty. You can take a task from the ​<a href=\"#\" ng-click=\"changeFilter(TASK_FILTERS.TODO)\">To do</a> list."
 msgstr "Votre liste de tâches personnelles est vide. Vous pouvez prendre une tâche dans la liste <a href=\"#\" ng-click=\"changeFilter(TASK_FILTERS.TODO)\">A faire</a>."
+
+msgid "Your session is no longer active."
+msgstr "Votre session n'est plus active."
 
 msgid "Zip code"
 msgstr "Code postal"

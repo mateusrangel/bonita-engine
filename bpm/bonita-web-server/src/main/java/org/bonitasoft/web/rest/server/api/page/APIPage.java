@@ -19,6 +19,7 @@ import java.util.Map;
 import org.bonitasoft.console.common.server.preferences.constants.WebBonitaConstantsUtils;
 import org.bonitasoft.engine.api.PageAPI;
 import org.bonitasoft.engine.api.TenantAPIAccessor;
+import org.bonitasoft.engine.exception.BonitaException;
 import org.bonitasoft.web.rest.model.portal.page.PageDefinition;
 import org.bonitasoft.web.rest.model.portal.page.PageItem;
 import org.bonitasoft.web.rest.server.api.ConsoleAPI;
@@ -58,12 +59,20 @@ public class APIPage extends ConsoleAPI<PageItem>
         return getPageDatastore().get(id);
     }
 
+    /**
+     * @deprecated as of 9.0.0, a page should be created at startup.
+     */
     @Override
+    @Deprecated(since = "9.0.0")
     public PageItem add(final PageItem item) {
         return getPageDatastore().add(item);
     }
 
+    /**
+     * @deprecated as of 9.0.0, a page should be updated at startup.
+     */
     @Override
+    @Deprecated(since = "9.0.0")
     public PageItem update(final APIID id, final Map<String, String> attributes) {
         return getPageDatastore().update(id, attributes);
     }
@@ -105,7 +114,7 @@ public class APIPage extends ConsoleAPI<PageItem>
         PageAPI pageAPI;
         try {
             pageAPI = TenantAPIAccessor.getCustomPageAPI(getEngineSession());
-        } catch (final Exception e) {
+        } catch (final BonitaException e) {
             throw new APIException(e);
         }
         final WebBonitaConstantsUtils constants = WebBonitaConstantsUtils.getTenantInstance();

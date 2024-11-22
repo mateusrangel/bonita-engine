@@ -81,8 +81,8 @@ public class LocalTimerEventIT extends CommonAPILocalIT {
 
     private boolean containsTimerJob(final String jobName) throws Exception {
         setSessionInfo(getSession());
-        final SchedulerService schedulerService = getPlatformAccessor().getSchedulerService();
-        final TransactionService transactionService = getPlatformAccessor().getTransactionService();
+        final SchedulerService schedulerService = getServiceAccessor().getSchedulerService();
+        final TransactionService transactionService = getServiceAccessor().getTransactionService();
         return transactionService.executeInTransaction(() -> {
             final List<String> jobs = schedulerService.getJobs();
             for (final String serverJobName : jobs) {
@@ -104,7 +104,7 @@ public class LocalTimerEventIT extends CommonAPILocalIT {
 
     private ProcessDefinition deployProcessWithTimerIntermediateCatchEvent(final TimerType timerType,
             final Expression timerValue, final String stepName)
-            throws BonitaException {
+            throws Exception {
         final ProcessDefinitionBuilder processDefinitionBuilder = new ProcessDefinitionBuilder()
                 .createNewInstance("My Process with start event", "1.0");
         processDefinitionBuilder.addIntermediateCatchEvent("intermediateCatchEvent")

@@ -44,7 +44,7 @@ public class PlatformVersionChecker {
 
     private final PlatformService platformService;
     private final BroadcastService broadcastService;
-    private TransactionService transactionService;
+    private final TransactionService transactionService;
 
     private String errorMessage;
 
@@ -141,7 +141,7 @@ public class PlatformVersionChecker {
 
         @Override
         public String call() throws Exception {
-            return ServiceAccessorFactory.getInstance().createPlatformServiceAccessor()
+            return ServiceAccessorFactory.getInstance().createServiceAccessor()
                     .getPlatformService().getSPlatformProperties().getPlatformVersion();
         }
     }

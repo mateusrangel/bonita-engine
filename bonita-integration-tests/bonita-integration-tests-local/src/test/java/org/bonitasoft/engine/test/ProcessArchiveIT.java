@@ -13,14 +13,13 @@
  **/
 package org.bonitasoft.engine.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.bonitasoft.engine.bpm.comment.Comment;
+import org.bonitasoft.engine.bpm.comment.SearchCommentsDescriptor;
 import org.bonitasoft.engine.bpm.data.DataInstance;
 import org.bonitasoft.engine.bpm.flownode.ActivityInstance;
 import org.bonitasoft.engine.bpm.flownode.ArchivedActivityInstance;
@@ -39,7 +38,8 @@ import org.bonitasoft.engine.identity.User;
 import org.bonitasoft.engine.operation.LeftOperandBuilder;
 import org.bonitasoft.engine.operation.OperatorType;
 import org.bonitasoft.engine.persistence.QueryOptions;
-import org.bonitasoft.engine.service.TenantServiceAccessor;
+import org.bonitasoft.engine.search.SearchOptionsBuilder;
+import org.bonitasoft.engine.service.ServiceAccessor;
 import org.bonitasoft.engine.transaction.UserTransactionService;
 import org.junit.After;
 import org.junit.Before;
@@ -64,10 +64,10 @@ public class ProcessArchiveIT extends CommonAPILocalIT {
     @Test()
     public void deleteProcessDefinitionDeleteArchivedInstancesWithDataAndComments() throws Exception {
         setSessionInfo(getSession()); // the session was cleaned by api call. This must be improved
-        final TenantServiceAccessor tenantAccessor = getTenantAccessor();
-        final SCommentService commentService = tenantAccessor.getCommentService();
-        final UserTransactionService userTransactionService = tenantAccessor.getUserTransactionService();
-        final DataInstanceService dataInstanceService = tenantAccessor.getDataInstanceService();
+        final ServiceAccessor serviceAccessor = getServiceAccessor();
+        final SCommentService commentService = serviceAccessor.getCommentService();
+        final UserTransactionService userTransactionService = serviceAccessor.getUserTransactionService();
+        final DataInstanceService dataInstanceService = serviceAccessor.getDataInstanceService();
         final long initialNumberOfArchivedProcessInstance = getProcessAPI().getNumberOfArchivedProcessInstances();
         final ProcessDefinitionBuilder processDefinitionBuilder = new ProcessDefinitionBuilder()
                 .createNewInstance("ProcessToDelete", "1.0");
@@ -94,7 +94,9 @@ public class ProcessArchiveIT extends CommonAPILocalIT {
         getProcessAPI().addProcessComment(p1.getId(), "A cool comment on p1");
         getProcessAPI().addProcessComment(p2.getId(), "A cool comment on p2");
         getProcessAPI().addProcessComment(p3.getId(), "A cool comment on p3");
-        final List<Comment> comments = getProcessAPI().getComments(p1.getId());
+        final List<Comment> comments = getProcessAPI().searchComments(
+                new SearchOptionsBuilder(0, 10).filter(SearchCommentsDescriptor.PROCESS_INSTANCE_ID, p1.getId()).done())
+                .getResult();
         assertEquals(1, comments.size());
         assertEquals("A cool comment on p1", comments.get(0).getContent());
         setSessionInfo(getSession()); // the session was cleaned by api call. This must be improved

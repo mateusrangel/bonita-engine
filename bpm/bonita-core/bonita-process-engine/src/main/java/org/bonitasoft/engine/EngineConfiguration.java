@@ -15,11 +15,13 @@ package org.bonitasoft.engine;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import lombok.Data;
 import org.bonitasoft.engine.events.EventService;
 import org.bonitasoft.engine.events.impl.EventServiceImpl;
 import org.bonitasoft.engine.monitoring.ExecutorServiceMetricsProvider;
 import org.bonitasoft.engine.monitoring.NoOpExecutorServiceMetricsProvider;
 import org.bonitasoft.engine.persistence.HibernateMetricsBinder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -29,7 +31,14 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @Configuration
 @ComponentScan("org.bonitasoft.engine")
+@Data
 public class EngineConfiguration {
+
+    /**
+     * Whether the runtime should exit after its initialization or not.
+     */
+    @Value("${bonita.runtime.startup.update-only:false}")
+    private boolean updateOnlyAtStartup;
 
     @Bean("platformEventService")
     @ConditionalOnMissingBean(name = "platformEventService")
@@ -55,4 +64,5 @@ public class EngineConfiguration {
     public ExecutorServiceMetricsProvider noOpExecutorServiceBinder() {
         return new NoOpExecutorServiceMetricsProvider();
     }
+
 }

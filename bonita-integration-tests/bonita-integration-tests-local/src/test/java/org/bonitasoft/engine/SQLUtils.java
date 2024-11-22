@@ -16,9 +16,9 @@ package org.bonitasoft.engine;
 import java.lang.reflect.Field;
 import java.util.List;
 
-import org.bonitasoft.engine.persistence.AbstractHibernatePersistenceService;
+import org.bonitasoft.engine.persistence.HibernatePersistenceService;
 import org.bonitasoft.engine.persistence.ReadPersistenceService;
-import org.bonitasoft.engine.service.TenantServiceSingleton;
+import org.bonitasoft.engine.service.ServiceAccessorSingleton;
 import org.hibernate.SessionFactory;
 
 public class SQLUtils {
@@ -26,12 +26,12 @@ public class SQLUtils {
     private static SessionFactory sessionFactory;
 
     public static List query(String query) throws Exception {
-        return TenantServiceSingleton.getInstance().getUserTransactionService()
+        return ServiceAccessorSingleton.getInstance().getUserTransactionService()
                 .executeInTransaction(() -> getSessionFactory().getCurrentSession().createSQLQuery(query).list());
     }
 
     public static int execute(String query) throws Exception {
-        return TenantServiceSingleton.getInstance().getUserTransactionService()
+        return ServiceAccessorSingleton.getInstance().getUserTransactionService()
                 .executeInTransaction(
                         () -> getSessionFactory().getCurrentSession().createSQLQuery(query).executeUpdate());
     }
@@ -44,8 +44,8 @@ public class SQLUtils {
     }
 
     private static SessionFactory createSessionFactory() throws NoSuchFieldException, IllegalAccessException {
-        ReadPersistenceService persistenceService = TenantServiceSingleton.getInstance().getReadPersistenceService();
-        Field sessionFactoryField = AbstractHibernatePersistenceService.class.getDeclaredField("sessionFactory");
+        ReadPersistenceService persistenceService = ServiceAccessorSingleton.getInstance().getReadPersistenceService();
+        Field sessionFactoryField = HibernatePersistenceService.class.getDeclaredField("sessionFactory");
         sessionFactoryField.setAccessible(true);
         return (SessionFactory) sessionFactoryField.get(persistenceService);
     }

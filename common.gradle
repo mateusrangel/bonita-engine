@@ -1,11 +1,14 @@
+apply plugin: 'org.barfuin.gradle.taskinfo'
+
 allprojects {
     apply plugin: 'maven-publish'
-    group = 'org.bonitasoft.engine'
 
-	tasks.withType(Copy).all {
-		duplicatesStrategy 'include'
-	 }
-	
+    group = 'org.bonitasoft.engine'
+    
+    tasks.withType(Copy).configureEach {
+        setDuplicatesStrategy(DuplicatesStrategy.INCLUDE)
+    }
+
     publishing {
         repositories {
             if (project.hasProperty("altDeploymentRepository")) {
@@ -19,11 +22,6 @@ allprojects {
             }
         }
     }
-    if (project.convention.findPlugin(JavaPluginConvention)) {
-        // Change the output directory for the main and test source sets back to the old path
-        sourceSets.main.output.classesDir = new File(buildDir, "classes/main")
-        sourceSets.test.output.classesDir = new File(buildDir, "classes/test")
-    }
 }
 
 subprojects {
@@ -33,7 +31,6 @@ subprojects {
 
     repositories {
         mavenCentral()
-
         if (project.hasProperty("extraRepositories")) {
 
             def extraRepositories = project.getProperties().get("extraRepositories")
@@ -53,12 +50,21 @@ subprojects {
         maven {
             url 'https://repo.terracotta.org/maven2/'
         }
+        maven {
+            url "https://oss.sonatype.org/content/repositories/snapshots"
+            mavenContent {
+                snapshotsOnly()
+            }
+        }
+        mavenLocal()
     }
 
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
-
-    configurations.all {
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(11)
+        }
+    }
+    configurations.configureEach {
     }
     afterEvaluate {
         tasks.withType(AbstractCompile).configureEach { options.encoding = 'UTF-8' }

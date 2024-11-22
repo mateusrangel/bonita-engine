@@ -34,6 +34,9 @@ import org.bonitasoft.console.common.server.login.utils.LoginUrl;
 import org.bonitasoft.console.common.server.login.utils.RedirectUrl;
 import org.bonitasoft.console.common.server.login.utils.RedirectUrlBuilder;
 import org.bonitasoft.console.common.server.utils.SessionUtil;
+import org.bonitasoft.engine.api.TenantAPIAccessor;
+import org.bonitasoft.engine.api.TenantAdministrationAPI;
+import org.bonitasoft.engine.exception.BonitaException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,9 +50,9 @@ public class AuthenticationFilter extends ExcludingPatternFilter {
 
     protected static final String REDIRECT_PARAM = "redirectWhenUnauthorized";
 
-    protected static final String MAINTENANCE_JSP = "/maintenance.jsp";
-
     protected static final String USER_NOT_FOUND_JSP = "/usernotfound.jsp";
+
+    public static final String ERROR_PAGE_REQUEST_PATH_REGEX = "/portal/resource/app/appDirectoryBonita/error-\\d+/(content|theme)/.*";
 
     protected boolean redirectWhenUnauthorized;
 
@@ -108,10 +111,12 @@ public class AuthenticationFilter extends ExcludingPatternFilter {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 }
             }
-        } catch (TenantIsPausedException e) {
-            handleTenantPausedException(requestAccessor, response, e);
+        } catch (PlatformUnderMaintenanceException e) {
+            handlePlatformUnderMaintenanceException(requestAccessor, response, e);
         } catch (final EngineUserNotFoundOrInactive e) {
             handleUserNotFoundOrInactiveException(requestAccessor, response, e);
+        } catch (BonitaException e) {
+            handleBonitaException(requestAccessor, response, e);
         }
     }
 
@@ -127,15 +132,55 @@ public class AuthenticationFilter extends ExcludingPatternFilter {
      */
     protected boolean isAuthorized(final HttpServletRequestAccessor requestAccessor,
             final HttpServletResponse response,
-            final FilterChain chain) throws ServletException, IOException {
+            final FilterChain chain)
+            throws ServletException, IOException, PlatformUnderMaintenanceException, BonitaException {
 
         for (final AuthenticationRule rule : getRules()) {
             if (rule.doAuthorize(requestAccessor, response)) {
+                checkPlatformMaintenanceState(requestAccessor);
                 rule.proceedWithRequest(chain, requestAccessor.asHttpServletRequest(), response);
                 return true;
             }
         }
         return false;
+    }
+
+    protected void checkPlatformMaintenanceState(final HttpServletRequestAccessor requestAccessor)
+            throws PlatformUnderMaintenanceException, BonitaException {
+        try {
+            // If redirectWhenUnauthorized is set to false it means we are not trying to access a page
+            // Maintenance state will be Handled at REST API Authorization filter in this case
+            if (redirectWhenUnauthorized
+                    && !isLoggedInAsTechnicalUser(requestAccessor)
+                    && isPlaformInMaintenance(requestAccessor)
+                    && !isAccessingErrorPage(requestAccessor)) {
+                throw new PlatformUnderMaintenanceException("Platform is under Maintenance");
+            }
+        } catch (BonitaException e) {
+            if (LOGGER.isWarnEnabled()) {
+                LOGGER.warn("Error while checking platform maintenance state : " + e.getMessage(), e);
+            }
+            throw e;
+        }
+    }
+
+    protected boolean isAccessingErrorPage(HttpServletRequestAccessor requestAccessor) {
+        HttpServletRequest httpRequest = requestAccessor.asHttpServletRequest();
+        if (httpRequest.getPathInfo() != null) {
+            String requestPath = httpRequest.getServletPath() + httpRequest.getPathInfo();
+            return requestPath.matches(ERROR_PAGE_REQUEST_PATH_REGEX);
+        }
+        return false;
+    }
+
+    protected boolean isLoggedInAsTechnicalUser(HttpServletRequestAccessor requestAccessor) {
+        return requestAccessor.getApiSession() != null && requestAccessor.getApiSession().isTechnicalUser();
+    }
+
+    protected boolean isPlaformInMaintenance(HttpServletRequestAccessor requestAccessor) throws BonitaException {
+        TenantAdministrationAPI tenantAdministrationAPI = TenantAPIAccessor
+                .getTenantAdministrationAPI(requestAccessor.getApiSession());
+        return tenantAdministrationAPI.isPaused();
     }
 
     protected void handleUserNotFoundOrInactiveException(final HttpServletRequestAccessor requestAccessor,
@@ -151,16 +196,29 @@ public class AuthenticationFilter extends ExcludingPatternFilter {
         }
     }
 
-    protected void handleTenantPausedException(final HttpServletRequestAccessor requestAccessor,
+    protected void handlePlatformUnderMaintenanceException(final HttpServletRequestAccessor requestAccessor,
             final HttpServletResponse response,
-            final TenantIsPausedException e) throws ServletException {
+            final PlatformUnderMaintenanceException e) throws IOException {
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("redirection to maintenance page : " + e.getMessage(), e);
+            LOGGER.debug("Redirection to maintenance page : " + e.getMessage(), e);
         }
         if (redirectWhenUnauthorized && requestAccessor.asHttpServletRequest().getMethod().equals("GET")) {
-            redirectTo(requestAccessor, response, MAINTENANCE_JSP);
+            response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, "Platform is under maintenance");
         } else {
             response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+        }
+    }
+
+    protected void handleBonitaException(final HttpServletRequestAccessor requestAccessor,
+            final HttpServletResponse response,
+            final BonitaException e) throws IOException {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("redirection to 500 error page : " + e.getMessage(), e);
+        }
+        if (redirectWhenUnauthorized && requestAccessor.asHttpServletRequest().getMethod().equals("GET")) {
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        } else {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 

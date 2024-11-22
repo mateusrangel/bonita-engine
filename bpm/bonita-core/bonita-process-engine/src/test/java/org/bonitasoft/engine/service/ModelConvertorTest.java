@@ -71,7 +71,6 @@ import org.bonitasoft.engine.execution.state.FlowNodeStateManager;
 import org.bonitasoft.engine.form.FormMapping;
 import org.bonitasoft.engine.form.FormMappingType;
 import org.bonitasoft.engine.identity.CustomUserInfoValue;
-import org.bonitasoft.engine.identity.User;
 import org.bonitasoft.engine.identity.impl.CustomUserInfoDefinitionImpl;
 import org.bonitasoft.engine.identity.impl.UserMembershipImpl;
 import org.bonitasoft.engine.identity.model.SCustomUserInfoDefinition;
@@ -130,10 +129,7 @@ class ModelConvertorTest {
     @Test
     void convertSUserToUserDoesntShowPassword() {
         final SUser sUser = mock(SUser.class);
-
-        final User testUser = ModelConvertor.toUser(sUser);
-
-        assertThat(testUser.getPassword()).isEmpty();
+        ModelConvertor.toUser(sUser);
         verify(sUser, never()).getPassword();
     }
 

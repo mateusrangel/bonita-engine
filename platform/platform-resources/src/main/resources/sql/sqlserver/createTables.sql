@@ -306,7 +306,6 @@ GO
 CREATE INDEX idx1_arch_connector_instance ON arch_connector_instance (tenantId, containerId, containerType)
 GO
 CREATE TABLE process_instance (
-  tenantid NUMERIC(19, 0) NOT NULL,
   id NUMERIC(19, 0) NOT NULL,
   name NVARCHAR(75) NOT NULL,
   processDefinitionId NUMERIC(19, 0) NOT NULL,
@@ -328,11 +327,11 @@ CREATE TABLE process_instance (
   stringIndex3 NVARCHAR(255),
   stringIndex4 NVARCHAR(255),
   stringIndex5 NVARCHAR(255),
-  PRIMARY KEY (tenantid, id)
+  PRIMARY KEY (id)
 )
 GO
 
-CREATE INDEX idx1_proc_inst_pdef_state ON process_instance (tenantid, processdefinitionid, stateid)
+CREATE INDEX idx1_proc_inst_pdef_state ON process_instance (processdefinitionid, stateid)
 GO
 
 CREATE TABLE flownode_instance (
@@ -513,9 +512,11 @@ CREATE INDEX idx_biz_data_inst1 ON ref_biz_data_inst (tenantid, proc_inst_id)
 GO
 CREATE INDEX idx_biz_data_inst2 ON ref_biz_data_inst (tenantid, fn_inst_id)
 GO
+CREATE INDEX idx_biz_data_inst3 ON ref_biz_data_inst (proc_inst_id)
+GO
 ALTER TABLE ref_biz_data_inst ADD CONSTRAINT pk_ref_biz_data PRIMARY KEY (tenantid, id)
 GO
-ALTER TABLE ref_biz_data_inst ADD CONSTRAINT fk_ref_biz_data_proc FOREIGN KEY (tenantid, proc_inst_id) REFERENCES process_instance(tenantid, id) ON DELETE CASCADE
+ALTER TABLE ref_biz_data_inst ADD CONSTRAINT fk_ref_biz_data_proc FOREIGN KEY (proc_inst_id) REFERENCES process_instance(id) ON DELETE CASCADE
 GO
 ALTER TABLE ref_biz_data_inst ADD CONSTRAINT fk_ref_biz_data_fn FOREIGN KEY (tenantid, fn_inst_id) REFERENCES flownode_instance(tenantid, id) ON DELETE CASCADE
 GO
@@ -1005,6 +1006,9 @@ CREATE TABLE platform (
   id NUMERIC(19, 0) NOT NULL,
   version NVARCHAR(50) NOT NULL,
   initial_bonita_version NVARCHAR(50) NOT NULL,
+  application_version NVARCHAR(50) NOT NULL,
+  maintenance_message NVARCHAR(MAX),
+  maintenance_message_active BIT NOT NULL,
   created NUMERIC(19, 0) NOT NULL,
   created_by NVARCHAR(50) NOT NULL,
   information NVARCHAR(MAX),
@@ -1148,6 +1152,19 @@ CREATE TABLE bar_resource (
 )
 GO
 CREATE INDEX idx_bar_resource ON bar_resource (tenantId, process_id, type, name)
+GO
+CREATE TABLE temporary_content (
+  id NUMERIC(19, 0) NOT NULL,
+  creationDate NUMERIC(19, 0) NOT NULL,
+  key_ NVARCHAR(255) NOT NULL,
+  fileName NVARCHAR(255) NOT NULL,
+  mimeType NVARCHAR(255) NOT NULL,
+  content VARBINARY(MAX) NOT NULL,
+  UNIQUE (key_),
+  PRIMARY KEY (id)
+);
+GO
+CREATE INDEX idx_temporary_content ON temporary_content (key_);
 GO
 CREATE TABLE tenant_resource (
   tenantId NUMERIC(19, 0) NOT NULL,

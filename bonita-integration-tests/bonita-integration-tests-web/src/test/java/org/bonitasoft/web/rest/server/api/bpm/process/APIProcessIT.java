@@ -16,6 +16,7 @@ package org.bonitasoft.web.rest.server.api.bpm.process;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.bonitasoft.console.common.server.preferences.constants.WebBonitaConstantsUtils;
+import org.bonitasoft.engine.api.PlatformAPIAccessor;
 import org.bonitasoft.engine.api.ProcessAPI;
 import org.bonitasoft.engine.api.TenantAPIAccessor;
 import org.bonitasoft.engine.bpm.bar.BusinessArchive;
@@ -31,6 +33,10 @@ import org.bonitasoft.engine.bpm.bar.BusinessArchiveFactory;
 import org.bonitasoft.engine.bpm.process.ProcessDeploymentInfo;
 import org.bonitasoft.engine.bpm.process.ProcessDeploymentInfoCriterion;
 import org.bonitasoft.engine.bpm.process.impl.ProcessDefinitionBuilder;
+import org.bonitasoft.engine.exception.BonitaHomeNotSetException;
+import org.bonitasoft.engine.exception.ServerAPIException;
+import org.bonitasoft.engine.exception.UnknownAPITypeException;
+import org.bonitasoft.engine.io.FileContent;
 import org.bonitasoft.test.toolkit.bpm.TestProcess;
 import org.bonitasoft.test.toolkit.bpm.TestProcessFactory;
 import org.bonitasoft.test.toolkit.organization.TestUser;
@@ -70,11 +76,11 @@ public class APIProcessIT extends AbstractConsoleTest {
         final BusinessArchive businessArchive = new BusinessArchiveBuilder().createNewBusinessArchive()
                 .setProcessDefinition(new ProcessDefinitionBuilder().createNewInstance("Test process", "1.0").done())
                 .done();
-        final File file = writeBarToFolder("addProcessTest", businessArchive);
+        final String fileKey = writeBarToUploads("addProcessTest", businessArchive);
 
         // use api to deploy process uploaded
         final ProcessItem item = new ProcessItem();
-        item.setAttribute("fileupload", file.getName());
+        item.setAttribute("fileupload", fileKey);
         apiProcess.add(item);
 
         // check the process has been correctly uploaded
@@ -102,7 +108,7 @@ public class APIProcessIT extends AbstractConsoleTest {
     public void testUpdateProcessItem() throws Exception {
         final APIID processDefinitionId = APIID.makeAPIID(TestProcessFactory.getDefaultHumanTaskProcess()
                 .addActor(getInitiator())
-                .setEnable(true)
+                .enable()
                 .getId());
 
         // assert process is well enabled
@@ -155,7 +161,7 @@ public class APIProcessIT extends AbstractConsoleTest {
     public void testSearchProcessItemForUser() throws Exception {
         final APIID processDefinitionId = APIID.makeAPIID(TestProcessFactory.getDefaultHumanTaskProcess()
                 .addActor(getInitiator())
-                .setEnable(true)
+                .enable()
                 .getId());
 
         // Set the filters
@@ -177,24 +183,29 @@ public class APIProcessIT extends AbstractConsoleTest {
 
     /*
      * Create a temporary file, contain a businessArchive
-     * @return File
-     * the create temporary file
+     * @return File key from temporary content
      * @param String
      * prefix path for the temporary file
      * @param BusinessArchive
      * businessArchive write in the temporary file
      */
-    private static File writeBarToFolder(final String barName, final BusinessArchive businessArchive) {
-        File tempFile = null;
+    private static String writeBarToUploads(final String barName, final BusinessArchive businessArchive) {
+        String fileKey = null;
         try {
-            tempFile = File.createTempFile(barName, ".bar",
+            File tempFile = File.createTempFile(barName, ".bar",
                     WebBonitaConstantsUtils.getTenantInstance().getTempFolder());
             tempFile.delete();
             BusinessArchiveFactory.writeBusinessArchiveToFile(businessArchive, tempFile);
-        } catch (final IOException e) {
+
+            // write into database
+            fileKey = PlatformAPIAccessor.getTemporaryContentAPI()
+                    .storeTempFile(new FileContent("thisismynewfile.doc", new FileInputStream(tempFile),
+                            "application/octet-stream"));
+
+        } catch (final IOException | BonitaHomeNotSetException | ServerAPIException | UnknownAPITypeException e) {
             e.printStackTrace();
         }
-        return tempFile;
+        return fileKey;
     }
 
     /**
@@ -216,9 +227,9 @@ public class APIProcessIT extends AbstractConsoleTest {
         TestProcessFactory.getInstance().add(p3);
 
         // map actor John Carpenter on the created processes, then set enable
-        p1.addActor(TestUserFactory.getJohnCarpenter()).setEnable(true);
-        p2.addActor(TestUserFactory.getJohnCarpenter()).setEnable(true);
-        p3.addActor(TestUserFactory.getJohnCarpenter()).setEnable(true);
+        p1.addActor(TestUserFactory.getJohnCarpenter()).enable();
+        p2.addActor(TestUserFactory.getJohnCarpenter()).enable();
+        p3.addActor(TestUserFactory.getJohnCarpenter()).enable();
 
         // Set the filters
         final HashMap<String, String> filters = new HashMap<>();

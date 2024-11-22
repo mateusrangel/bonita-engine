@@ -22,7 +22,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.bonitasoft.engine.persistence.PersistentObject;
+import org.bonitasoft.engine.persistence.PlatformPersistentObject;
 import org.hibernate.annotations.Type;
 
 @Data
@@ -31,7 +31,7 @@ import org.hibernate.annotations.Type;
 @Builder
 @Entity
 @Table(name = "platform")
-public class SPlatform implements PersistentObject {
+public class SPlatform implements PlatformPersistentObject {
 
     public static final String CREATED_BY = "createdBy";
     public static final String CREATED = "created";
@@ -40,6 +40,10 @@ public class SPlatform implements PersistentObject {
     public static final String PREVIOUS_VERSION = "previousVersion";
     public static final String VERSION = "version";
     public static final String INFORMATION = "information";
+    public static final String APPLICATION_VERSION = "applicationVersion";
+    public static final String MAINTENANCE_MESSAGE = "maintenanceMessage";
+    public static final String MAINTENANCE_MESSAGE_ACTIVE = "maintenanceMessageActive";
+
     @Id
     private long id;
     private long created;
@@ -51,11 +55,21 @@ public class SPlatform implements PersistentObject {
     private String dbSchemaVersion;
     @Type(type = "materialized_clob")
     private String information;
+    @Column(name = "application_version")
+    private String applicationVersion;
+    @Column(name = "maintenance_message")
+    private String maintenanceMessage;
+    @Column(name = "maintenance_message_active")
+    private boolean maintenanceMessageActive;
 
-    public SPlatform(final String dbSchemaVersion, final String initialBonitaVersion,
+    public SPlatform(final String dbSchemaVersion, final String initialBonitaVersion, final String applicationVersion,
+            final String maintenanceMessage, final boolean maintenanceMessageActive,
             final String createdBy, final long created) {
         this.dbSchemaVersion = dbSchemaVersion;
         this.initialBonitaVersion = initialBonitaVersion;
+        this.applicationVersion = applicationVersion;
+        this.maintenanceMessage = maintenanceMessage;
+        this.maintenanceMessageActive = maintenanceMessageActive;
         this.createdBy = createdBy;
         this.created = created;
     }

@@ -38,7 +38,6 @@ import org.bonitasoft.engine.util.APITypeManager;
  * <ul>
  * <li>{@link IdentityAPI},</li>
  * <li>{@link ProcessAPI},</li>
- * <li>{@link ThemeAPI}</li>
  * <li>{@link CommandAPI},</li>
  * <li>{@link ProfileAPI},</li>
  * <li>{@link TenantAdministrationAPI},</li>
@@ -46,6 +45,7 @@ import org.bonitasoft.engine.util.APITypeManager;
  * <li>{@link ApplicationAPI},</li>
  * <li>{@link PermissionAPI},</li>
  * <li>{@link BusinessDataAPI} (deprecated as of 7.3),</li>
+ * <li>{@link MaintenanceAPI},</li>
  * </ul>
  *
  * @author Nicolas Chabanoles
@@ -233,18 +233,6 @@ public class APIClient {
     }
 
     /**
-     * Get API to manage themes (Portal and mobile).
-     *
-     * @since 7.2
-     * @deprecated since 7.13.0, ThemeAPI does nothing. There is no replacement, as it used to serve old removed
-     *             feature.
-     */
-    @Deprecated(since = "7.13.0")
-    public ThemeAPI getThemeAPI() {
-        return getAPI(ThemeAPI.class);
-    }
-
-    /**
      * Get API to manage commands and Tenant level dependencies.
      *
      * @since 7.2
@@ -304,7 +292,7 @@ public class APIClient {
      * @since 7.2
      * @deprecated as of 7.3, see {@link BusinessDataAPI} for replacements
      */
-    @Deprecated
+    @Deprecated(since = "7.3")
     public BusinessDataAPI getBusinessDataAPI() {
         return getAPI(BusinessDataAPI.class);
     }
@@ -316,5 +304,25 @@ public class APIClient {
      */
     public ApplicationAPI getApplicationAPI() {
         return getAPI(ApplicationAPI.class);
+    }
+
+    /**
+     * Get API to store and retrieve temporary content like uploaded files.
+     * For internal usage only.
+     *
+     * @since 9.0
+     */
+    @Internal
+    public TemporaryContentAPI getTemporaryContentAPI() {
+        return getAPI(TemporaryContentAPI.class);
+    }
+
+    /**
+     * Get API to manage Platform maintenance.
+     *
+     * @since 9.0
+     */
+    public MaintenanceAPI getMaintenanceAPI() {
+        return getAPI(MaintenanceAPI.class);
     }
 }

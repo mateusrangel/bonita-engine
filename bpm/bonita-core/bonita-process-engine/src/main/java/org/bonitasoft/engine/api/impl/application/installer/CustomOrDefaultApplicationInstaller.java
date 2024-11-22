@@ -16,19 +16,21 @@ package org.bonitasoft.engine.api.impl.application.installer;
 import static java.lang.String.format;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.util.Optional;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bonitasoft.engine.api.result.ExecutionResult;
 import org.bonitasoft.engine.api.utils.VisibleForTesting;
 import org.bonitasoft.engine.business.application.importer.DefaultLivingApplicationImporter;
 import org.bonitasoft.engine.business.application.importer.MandatoryLivingApplicationImporter;
 import org.bonitasoft.engine.event.PlatformStartedEvent;
 import org.bonitasoft.engine.exception.ApplicationInstallationException;
+import org.bonitasoft.engine.platform.PlatformService;
 import org.bonitasoft.engine.tenant.TenantServicesManager;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -44,7 +46,6 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-@ConditionalOnSingleCandidate(CustomOrDefaultApplicationInstaller.class)
 public class CustomOrDefaultApplicationInstaller {
 
     public static final String CUSTOM_APPLICATION_DEFAULT_FOLDER = "my-application";
@@ -52,10 +53,6 @@ public class CustomOrDefaultApplicationInstaller {
     @Value("${bonita.runtime.custom-application.install-folder:" + CUSTOM_APPLICATION_DEFAULT_FOLDER + "}")
     @Getter
     protected String applicationInstallFolder;
-
-    @Value("${bonita.runtime.custom-application.install-provided-pages:false}")
-    @Getter
-    protected boolean addDefaultPages;
 
     protected final ApplicationInstaller applicationInstaller;
 
@@ -68,33 +65,57 @@ public class CustomOrDefaultApplicationInstaller {
             CustomOrDefaultApplicationInstaller.class.getClassLoader());
     private final ApplicationArchiveReader applicationArchiveReader;
 
+    private final PlatformService platformService;
+
     @EventListener
     public void autoDeployDetectedCustomApplication(PlatformStartedEvent event)
             throws Exception {
-
-        // check under custom application default folder if an application is found, and retrieve it
         final Resource customApplication = detectCustomApplication();
-
         if (customApplication == null) {
-            // install default provided applications if custom application does not exist
-            log.info("No custom application detected under folder {}. Continuing with default Bonita startup.",
-                    applicationInstallFolder);
-            installDefaultProvidedApplications();
-        } else {
-            log.info("Custom application detected with name '{}' under folder '{}'", customApplication.getFilename(),
+            if (isPlatformFirstInitialization()) {
+                // install default provided applications if custom application does not exist
+                log.info("No custom application detected under folder {}. Continuing with default Bonita startup.",
+                        applicationInstallFolder);
+                installDefaultProvidedApplications();
+            }
+            return;
+        }
+
+        try (var applicationArchive = createApplicationArchive(customApplication)) {
+            if (!applicationArchive.hasVersion()) {
+                throw new ApplicationInstallationException(
+                        "Application version not found. Abort installation.");
+            }
+            log.info("Custom application detected with name '{}' under folder '{}'",
+                    customApplication.getFilename(),
                     applicationInstallFolder);
             if (isPlatformFirstInitialization()) {
-                // install default page
-                if (isAddDefaultPages()) {
-                    installDefaultProvidedPages();
-                }
                 // install application if it exists and if it is the first init of the platform
                 log.info("Bonita now tries to install it automatically...");
-                installCustomApplication(customApplication);
+                applicationInstaller.install(applicationArchive);
             } else {
-                log.info("Update of custom application not yet implemented. Ignored.");
+                var currentVersion = getInstalledApplicationVersion();
+                log.info("Detected application version: '{}'; Current deployed version: '{}'",
+                        applicationArchive.getVersion(),
+                        currentVersion);
+                if (applicationArchive.hasVersionGreaterThan(currentVersion)) {
+                    log.info("Updating the application...");
+                    applicationInstaller.update(applicationArchive);
+                } else if (applicationArchive.hasVersionEquivalentTo(currentVersion)) {
+                    log.info("Updating process configuration only...");
+                    findAndUpdateConfiguration();
+                } else {
+                    throw new ApplicationInstallationException("An application has been detected, but its newVersion "
+                            + applicationArchive.getVersion() + " is inferior to the one deployed: " + currentVersion
+                            + ". Nothing will be updated, and the Bonita engine startup has been aborted.");
+                }
             }
         }
+    }
+
+    String getInstalledApplicationVersion() throws Exception {
+        return applicationInstaller.inSession(
+                () -> applicationInstaller.inTransaction(() -> platformService.getPlatform().getApplicationVersion()));
     }
 
     boolean isPlatformFirstInitialization() {
@@ -108,7 +129,7 @@ public class CustomOrDefaultApplicationInstaller {
      */
     @VisibleForTesting
     Resource detectCustomApplication() throws IOException, ApplicationInstallationException {
-        log.info("Trying to detect custom application (.zip file from folder {})", applicationInstallFolder);
+        log.debug("Trying to detect custom application (.zip file from folder {})", applicationInstallFolder);
         return getResourceFromClasspath(getCustomAppResourcesFromClasspath(), "application zip");
     }
 
@@ -123,7 +144,7 @@ public class CustomOrDefaultApplicationInstaller {
                     nbZipApplication++;
                     customRsource = resource;
                 } else {
-                    log.info("A custom resource file '{}' is found but it cannot be read. It will be ignored.",
+                    log.warn("A custom resource file '{}' is found but it cannot be read. It will be ignored.",
                             resource.getFilename());
                 }
             }
@@ -143,26 +164,26 @@ public class CustomOrDefaultApplicationInstaller {
                         ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX + "/" + applicationInstallFolder + "/*.zip");
     }
 
-    /**
-     * @param customApplication custom application resource
-     * @throws ApplicationInstallationException if unable to install the application
-     */
-    protected void installCustomApplication(final Resource customApplication) throws Exception {
-        try (final InputStream applicationZipFileStream = customApplication.getInputStream();
-                ApplicationArchive applicationArchive = getApplicationArchive(applicationZipFileStream)) {
-            applicationInstaller.install(applicationArchive);
-        } catch (IOException | ApplicationInstallationException e) {
-            throw new ApplicationInstallationException(
-                    "Unable to install the application " + customApplication.getFilename(), e);
-        }
+    private void setConfigurationFile(ApplicationArchive applicationArchive)
+            throws IOException {
+        detectConfigurationFile().ifPresent(resource -> {
+            try {
+                log.debug("Found application configuration file " + resource.getFilename());
+                applicationArchive.setConfigurationFile(resource.getFile());
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        });
     }
 
-    protected ApplicationArchive getApplicationArchive(InputStream applicationZipFileStream)
-            throws ApplicationInstallationException {
-        try {
-            return applicationArchiveReader.read(applicationZipFileStream);
+    protected ApplicationArchive createApplicationArchive(Resource customApplication) {
+        try (var applicationZipFileStream = customApplication.getInputStream()) {
+            var applicationArchive = applicationArchiveReader.read(applicationZipFileStream);
+            setConfigurationFile(applicationArchive);
+            return applicationArchive;
         } catch (IOException e) {
-            throw new ApplicationInstallationException("Unable to read application archive", e);
+            throw new ApplicationInstallationException(
+                    String.format("Unable to read the %s application archive.", customApplication.getFilename()), e);
         }
     }
 
@@ -179,16 +200,32 @@ public class CustomOrDefaultApplicationInstaller {
         }
     }
 
+    protected Optional<Resource> detectConfigurationFile() throws IOException {
+        log.debug("Trying to detect configuration file (.bconf file from folder {})", applicationInstallFolder);
+        return Optional.ofNullable(
+                getResourceFromClasspath(getConfigurationFileResourcesFromClasspath(), "configuration file .bconf"));
+    }
+
     @VisibleForTesting
-    void installDefaultProvidedPages() throws ApplicationInstallationException {
-        try {
-            // default app importer requires a tenant session and to be executed inside a transaction
-            tenantServicesManager.inTenantSessionTransaction(() -> {
-                defaultLivingApplicationImporter.importDefaultPages();
-                return null;
-            });
-        } catch (Exception e) {
-            throw new ApplicationInstallationException("Unable to import default pages", e);
+    Resource[] getConfigurationFileResourcesFromClasspath() throws IOException {
+        return cpResourceResolver
+                .getResources(
+                        ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX + "/" + applicationInstallFolder + "/*.bconf");
+    }
+
+    protected void findAndUpdateConfiguration() throws ApplicationInstallationException, IOException {
+        final ExecutionResult executionResult = new ExecutionResult();
+        detectConfigurationFile().ifPresent(resource -> {
+            try {
+                log.debug("Found application configuration file " + resource.getFilename());
+                applicationInstaller.updateConfiguration(resource.getFile(), executionResult);
+            } catch (Exception e) {
+                throw new ApplicationInstallationException("Failed to update configuration.", e);
+            }
+        });
+        applicationInstaller.logInstallationResult(executionResult);
+        if (executionResult.hasErrors()) {
+            throw new ApplicationInstallationException("The Application Archive install operation has been aborted");
         }
     }
 }

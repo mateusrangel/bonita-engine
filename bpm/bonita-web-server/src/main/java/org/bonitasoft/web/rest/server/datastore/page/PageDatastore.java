@@ -25,7 +25,6 @@ import org.bonitasoft.console.common.server.page.CustomPageService;
 import org.bonitasoft.console.common.server.preferences.constants.WebBonitaConstantsUtils;
 import org.bonitasoft.console.common.server.servlet.FileUploadServlet;
 import org.bonitasoft.console.common.server.utils.BonitaHomeFolderAccessor;
-import org.bonitasoft.console.common.server.utils.UnauthorizedFolderException;
 import org.bonitasoft.console.common.server.utils.UnzipUtil;
 import org.bonitasoft.engine.api.PageAPI;
 import org.bonitasoft.engine.exception.BonitaException;
@@ -33,14 +32,12 @@ import org.bonitasoft.engine.exception.CreationException;
 import org.bonitasoft.engine.exception.SearchException;
 import org.bonitasoft.engine.exception.UpdateException;
 import org.bonitasoft.engine.io.IOUtil;
-import org.bonitasoft.engine.page.Page;
-import org.bonitasoft.engine.page.PageCreator;
-import org.bonitasoft.engine.page.PageSearchDescriptor;
-import org.bonitasoft.engine.page.PageUpdater;
+import org.bonitasoft.engine.page.*;
 import org.bonitasoft.engine.search.SearchOptionsBuilder;
 import org.bonitasoft.engine.search.SearchResult;
 import org.bonitasoft.engine.session.APISession;
 import org.bonitasoft.web.extension.page.PageResourceProvider;
+import org.bonitasoft.web.rest.model.portal.page.PageDefinition;
 import org.bonitasoft.web.rest.model.portal.page.PageItem;
 import org.bonitasoft.web.rest.server.datastore.CommonDatastore;
 import org.bonitasoft.web.rest.server.datastore.filter.Filters;
@@ -53,7 +50,7 @@ import org.bonitasoft.web.rest.server.framework.api.DatastoreHasSearch;
 import org.bonitasoft.web.rest.server.framework.api.DatastoreHasUpdate;
 import org.bonitasoft.web.rest.server.framework.search.ItemSearchResult;
 import org.bonitasoft.web.toolkit.client.common.exception.api.APIException;
-import org.bonitasoft.web.toolkit.client.common.exception.api.APIForbiddenException;
+import org.bonitasoft.web.toolkit.client.common.exception.api.APIItemNotFoundException;
 import org.bonitasoft.web.toolkit.client.data.APIID;
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.slf4j.Logger;
@@ -103,7 +100,11 @@ public class PageDatastore extends CommonDatastore<PageItem, Page>
         this.pageContentValidator = new CustomPageContentValidator();
     }
 
+    /**
+     * @deprecated as of 9.0.0, a page should be created at startup.
+     */
     @Override
+    @Deprecated(since = "9.0.0")
     public PageItem add(final PageItem pageItem) {
         final String zipFileAttribute = pageItem.getAttributeValue(UNMAPPED_ATTRIBUTE_ZIP_FILE);
         final String[] filenames = zipFileAttribute.split(FileUploadServlet.RESPONSE_SEPARATOR);
@@ -123,10 +124,10 @@ public class PageDatastore extends CommonDatastore<PageItem, Page>
             customPageService.writePageToPageDirectory(page, pageResourceProvider, unzipPageTempFolder, engineSession);
             deleteTempDirectory(unzipPageTempFolder);
             return addedPage;
-        } catch (final UnauthorizedFolderException e) {
-            throw new APIForbiddenException(e.getMessage());
-        } catch (final Exception e) {
+        } catch (final BonitaException | IOException | InvalidPageZipContentException e) {
             throw new APIException(e);
+        } finally {
+            tenantFolder.removeUploadedTempContent(filename);
         }
     }
 
@@ -197,7 +198,9 @@ public class PageDatastore extends CommonDatastore<PageItem, Page>
         try {
             final Page pageItem = pageAPI.getPage(id.toLong());
             return convertEngineToConsoleItem(pageItem);
-        } catch (final Exception e) {
+        } catch (PageNotFoundException e) {
+            throw new APIItemNotFoundException(PageDefinition.TOKEN, id);
+        } catch (final BonitaException e) {
             throw new APIException(e);
         }
     }
@@ -213,7 +216,7 @@ public class PageDatastore extends CommonDatastore<PageItem, Page>
                 pageAPI.deletePage(id.toLong());
                 customPageService.removePageLocally(pageResourceProvider);
             }
-        } catch (final Exception e) {
+        } catch (final BonitaException | IOException e) {
             throw new APIException(e);
         }
     }
@@ -290,8 +293,13 @@ public class PageDatastore extends CommonDatastore<PageItem, Page>
         return pageAPI.searchPages(creator.create());
     }
 
+    /**
+     * @deprecated as of 9.0.0, a page should be updated at startup.
+     */
     @Override
+    @Deprecated(since = "9.0.0")
     public PageItem update(final APIID id, final Map<String, String> attributes) {
+        String filename = null;
         File zipFile = null;
         try {
             Long pageId = id.toLong();
@@ -301,7 +309,7 @@ public class PageDatastore extends CommonDatastore<PageItem, Page>
                 final String zipFileAttribute = attributes.get(UNMAPPED_ATTRIBUTE_ZIP_FILE);
                 if (zipFileAttribute != null && !zipFileAttribute.isEmpty()) {
                     final String[] filenames = zipFileAttribute.split(FileUploadServlet.RESPONSE_SEPARATOR);
-                    final String filename = filenames[0];
+                    filename = filenames[0];
                     String originalFileName = getOriginalFilename(filenames, filename, attributes);
                     final APISession engineSession = getEngineSession();
                     zipFile = tenantFolder.getTempFile(filename);
@@ -322,11 +330,12 @@ public class PageDatastore extends CommonDatastore<PageItem, Page>
                 }
             }
             return updatedPage;
-        } catch (final UnauthorizedFolderException e) {
-            throw new APIForbiddenException(e.getMessage());
-        } catch (final Exception e) {
+        } catch (final BonitaException | IOException | InvalidPageZipContentException e) {
             throw new APIException(e);
         } finally {
+            if (filename != null) {
+                tenantFolder.removeUploadedTempContent(filename);
+            }
             if (zipFile != null) {
                 zipFile.delete();
             }

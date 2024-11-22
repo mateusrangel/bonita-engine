@@ -15,6 +15,7 @@ package org.bonitasoft.web.rest.server.datastore.system;
 
 import java.util.Map;
 
+import lombok.extern.slf4j.Slf4j;
 import org.bonitasoft.engine.session.APISession;
 import org.bonitasoft.web.rest.model.system.TenantAdminItem;
 import org.bonitasoft.web.rest.server.engineclient.EngineAPIAccessor;
@@ -23,47 +24,70 @@ import org.bonitasoft.web.rest.server.engineclient.TenantManagementEngineClient;
 import org.bonitasoft.web.rest.server.framework.api.Datastore;
 import org.bonitasoft.web.rest.server.framework.api.DatastoreHasGet;
 import org.bonitasoft.web.rest.server.framework.api.DatastoreHasUpdate;
-import org.bonitasoft.web.toolkit.client.common.exception.api.APIException;
 import org.bonitasoft.web.toolkit.client.data.APIID;
 
 /**
  * @author Julien Mege
+ * @deprecated since 9.0.0, use {@link org.bonitasoft.web.rest.server.api.system.MaintenanceController} instead.
  */
+@Slf4j
+@Deprecated(since = "9.0.0", forRemoval = true)
 public class TenantAdminDatastore extends Datastore
         implements DatastoreHasUpdate<TenantAdminItem>, DatastoreHasGet<TenantAdminItem> {
 
     protected final APISession apiSession;
 
+    private static boolean hasShownDeprecatedLog = false;
+
     public TenantAdminDatastore(final APISession apiSession) {
         this.apiSession = apiSession;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @deprecated since 9.0.0, use
+     *             {@link org.bonitasoft.web.rest.server.api.system.MaintenanceController#changeMaintenanceState(
+     *             org.bonitasoft.web.rest.model.system.MaintenanceDetailsClient, javax.servlet.http.HttpSession)}
+     *             instead.
+     */
     @Override
+    @Deprecated(since = "9.0.0", forRemoval = true)
     public TenantAdminItem update(final APIID unusedId, final Map<String, String> attributes) {
+        logDeprecatedAPIUsage();
         final TenantAdminItem tenantAdminItem = new TenantAdminItem();
-        try {
-            final boolean doPause = Boolean.parseBoolean(attributes.get(TenantAdminItem.ATTRIBUTE_IS_PAUSED));
-            if (!doPause) {
-                getTenantManagementEngineClient().resumeTenant();
-            } else {
-                getTenantManagementEngineClient().pauseTenant();
-            }
-            tenantAdminItem.setIsPaused(doPause);
-            return tenantAdminItem;
-        } catch (final Exception e) {
-            throw new APIException(e);
+        final boolean doPause = Boolean.parseBoolean(attributes.get(TenantAdminItem.ATTRIBUTE_IS_PAUSED));
+        if (!doPause) {
+            getTenantManagementEngineClient().resumeTenant();
+        } else {
+            getTenantManagementEngineClient().pauseTenant();
         }
+        tenantAdminItem.setIsPaused(doPause);
+        return tenantAdminItem;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @deprecated since 9.0.0, use
+     *             {@link org.bonitasoft.web.rest.server.api.system.MaintenanceController#getMaintenanceDetails(
+     *             javax.servlet.http.HttpSession)} instead.
+     */
     @Override
+    @Deprecated(since = "9.0.0", forRemoval = true)
     public TenantAdminItem get(final APIID id) {
+        logDeprecatedAPIUsage();
         final TenantAdminItem tenantAdminItem = new TenantAdminItem();
-        try {
-            final boolean tenantPaused = getTenantManagementEngineClient().isTenantPaused();
-            tenantAdminItem.setIsPaused(tenantPaused);
-            return tenantAdminItem;
-        } catch (final Exception e) {
-            throw new APIException(e);
+        final boolean tenantPaused = getTenantManagementEngineClient().isTenantPaused();
+        tenantAdminItem.setIsPaused(tenantPaused);
+        return tenantAdminItem;
+    }
+
+    private static void logDeprecatedAPIUsage() {
+        if (!hasShownDeprecatedLog && log.isWarnEnabled()) {
+            log.warn(
+                    "API system/tenant is deprecated and will be removed in a future release. Please use API system/maintenance instead.");
+            hasShownDeprecatedLog = true;
         }
     }
 

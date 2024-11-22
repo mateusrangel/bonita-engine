@@ -13,12 +13,7 @@
  **/
 package org.bonitasoft.engine.platform;
 
-import org.bonitasoft.engine.persistence.SBonitaReadException;
-import org.bonitasoft.engine.platform.exception.SPlatformNotFoundException;
-import org.bonitasoft.engine.platform.exception.STenantActivationException;
-import org.bonitasoft.engine.platform.exception.STenantDeactivationException;
-import org.bonitasoft.engine.platform.exception.STenantNotFoundException;
-import org.bonitasoft.engine.platform.exception.STenantUpdateException;
+import org.bonitasoft.engine.platform.exception.*;
 import org.bonitasoft.engine.platform.model.SPlatform;
 import org.bonitasoft.engine.platform.model.SPlatformProperties;
 import org.bonitasoft.engine.platform.model.STenant;
@@ -31,6 +26,7 @@ import org.bonitasoft.engine.recorder.model.EntityUpdateDescriptor;
  */
 public interface PlatformService {
 
+    String PLATFORM = "PLATFORM";
     String TENANT = "TENANT";
 
     /**
@@ -66,7 +62,9 @@ public interface PlatformService {
      * @throws STenantNotFoundException
      *         occurs when the identifier does not refer to an existing sTenant
      * @since 6.0
+     * @deprecated There is only one tenant. Use {@link #getDefaultTenant()} instead.
      */
+    @Deprecated
     STenant getTenant(long id) throws STenantNotFoundException;
 
     /**
@@ -80,13 +78,13 @@ public interface PlatformService {
     STenant getDefaultTenant() throws STenantNotFoundException;
 
     /**
-     * Is the default tenant already created?
+     * Get the default tenant id
+     * !! Internal use only !! Tenant notion should be removed soon.
      *
-     * @return true if the default tenant exists, false otherwise.
-     * @throws SBonitaReadException when we cannot determine if default tenant is created
-     * @since 7.3
+     * @return the default tenant id
+     * @throws STenantNotFoundException if cannot retrieve tenant from database
      */
-    boolean isDefaultTenantCreated() throws SBonitaReadException;
+    long getDefaultTenantId() throws STenantNotFoundException;
 
     /**
      * Set status of the tenant into activated
@@ -134,4 +132,6 @@ public interface PlatformService {
      * @since 6.1
      */
     SPlatformProperties getSPlatformProperties();
+
+    void updatePlatform(EntityUpdateDescriptor descriptor) throws SPlatformUpdateException;
 }

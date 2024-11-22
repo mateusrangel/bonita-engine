@@ -23,7 +23,7 @@ import org.bonitasoft.engine.event.PlatformStartedEvent;
 import org.bonitasoft.engine.platform.PlatformNotFoundException;
 import org.bonitasoft.engine.platform.session.PlatformSessionService;
 import org.bonitasoft.engine.platform.session.model.SPlatformSession;
-import org.bonitasoft.engine.service.PlatformServiceAccessor;
+import org.bonitasoft.engine.service.ServiceAccessor;
 import org.bonitasoft.engine.service.impl.ServiceAccessorFactory;
 import org.bonitasoft.engine.sessionaccessor.SessionAccessor;
 import org.junit.Before;
@@ -49,7 +49,7 @@ public class EngineInitializerTest {
     @Mock
     private ServiceAccessorFactory serviceAccessorFactory;
     @Mock
-    private PlatformServiceAccessor platformService;
+    private ServiceAccessor platformService;
     @Mock
     private PlatformSessionService platformSessionService;
     @Mock
@@ -72,7 +72,6 @@ public class EngineInitializerTest {
     public void initializeEngine_should_start_node() throws Exception {
         // given
         doReturn(true).when(platformAPI).isPlatformCreated();
-        doReturn(true).when(platformAPI).isPlatformInitialized();
         systemOutRule.clearLog();
         final PlatformStartedEvent platformStartEvent = new PlatformStartedEvent();
 
@@ -89,18 +88,6 @@ public class EngineInitializerTest {
     public void should_not_start_node_when_platform_is_not_created() throws Exception {
         //given
         doReturn(false).when(platformAPI).isPlatformCreated();
-        //when
-        final Throwable throwable = catchThrowable(() -> engineInitializer.initializeEngine());
-        //then
-        assertThat(throwable).isInstanceOf(PlatformNotFoundException.class);
-        verify(platformAPI, never()).startNode();
-    }
-
-    @Test
-    public void should_not_start_node_when_platform_is_not_initialized() throws Exception {
-        //given
-        doReturn(true).when(platformAPI).isPlatformCreated();
-        doReturn(false).when(platformAPI).isPlatformInitialized();
         //when
         final Throwable throwable = catchThrowable(() -> engineInitializer.initializeEngine());
         //then

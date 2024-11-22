@@ -17,25 +17,16 @@ import java.util.List;
 
 import org.bonitasoft.engine.api.impl.converter.ApplicationMenuModelConverter;
 import org.bonitasoft.engine.api.impl.transaction.application.SearchApplicationMenus;
-import org.bonitasoft.engine.business.application.ApplicationMenu;
-import org.bonitasoft.engine.business.application.ApplicationMenuCreator;
-import org.bonitasoft.engine.business.application.ApplicationMenuNotFoundException;
-import org.bonitasoft.engine.business.application.ApplicationMenuUpdater;
-import org.bonitasoft.engine.business.application.ApplicationService;
+import org.bonitasoft.engine.business.application.*;
 import org.bonitasoft.engine.business.application.importer.validator.ApplicationMenuCreatorValidator;
 import org.bonitasoft.engine.business.application.model.SApplicationMenu;
 import org.bonitasoft.engine.business.application.model.builder.SApplicationUpdateBuilder;
 import org.bonitasoft.engine.commons.exceptions.SBonitaException;
-import org.bonitasoft.engine.commons.exceptions.SObjectModificationException;
 import org.bonitasoft.engine.commons.exceptions.SObjectNotFoundException;
-import org.bonitasoft.engine.exception.CreationException;
-import org.bonitasoft.engine.exception.DeletionException;
-import org.bonitasoft.engine.exception.RetrieveException;
-import org.bonitasoft.engine.exception.SearchException;
-import org.bonitasoft.engine.exception.UpdateException;
+import org.bonitasoft.engine.exception.*;
 import org.bonitasoft.engine.recorder.model.EntityUpdateDescriptor;
 import org.bonitasoft.engine.search.SearchResult;
-import org.bonitasoft.engine.service.TenantServiceAccessor;
+import org.bonitasoft.engine.service.ServiceAccessor;
 
 /**
  * @author Elias Ricken de Medeiros
@@ -47,7 +38,7 @@ public class LivingApplicationMenuAPIDelegate {
     private final ApplicationMenuCreatorValidator creatorValidator;
     private final long loggedUserId;
 
-    public LivingApplicationMenuAPIDelegate(final TenantServiceAccessor accessor,
+    public LivingApplicationMenuAPIDelegate(final ServiceAccessor accessor,
             final ApplicationMenuModelConverter converter,
             final ApplicationMenuCreatorValidator creatorValidator, final long loggedUserId) {
         this.creatorValidator = creatorValidator;
@@ -56,6 +47,10 @@ public class LivingApplicationMenuAPIDelegate {
         this.converter = converter;
     }
 
+    /**
+     * @deprecated as of 9.0.0, Application menu should be created at startup.
+     */
+    @Deprecated(since = "9.0.0")
     public ApplicationMenu createApplicationMenu(final ApplicationMenuCreator applicationMenuCreator)
             throws CreationException {
         try {
@@ -75,6 +70,10 @@ public class LivingApplicationMenuAPIDelegate {
         }
     }
 
+    /**
+     * @deprecated as of 9.0.0, Application menu should be updated at startup.
+     */
+    @Deprecated(since = "9.0.0")
     public ApplicationMenu updateApplicationMenu(final long applicationMenuId, final ApplicationMenuUpdater updater)
             throws ApplicationMenuNotFoundException,
             UpdateException {
@@ -85,8 +84,6 @@ public class LivingApplicationMenuAPIDelegate {
             applicationService.updateApplication(sApplicationMenu.getApplicationId(),
                     new SApplicationUpdateBuilder(loggedUserId).done());
             return converter.toApplicationMenu(sApplicationMenu);
-        } catch (final SObjectModificationException e) {
-            throw new UpdateException(e);
         } catch (final SObjectNotFoundException e) {
             throw new ApplicationMenuNotFoundException(e.getMessage());
         } catch (final SBonitaException e) {

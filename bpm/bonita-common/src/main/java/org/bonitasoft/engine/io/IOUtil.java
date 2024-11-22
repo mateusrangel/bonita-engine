@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2019 Bonitasoft S.A.
+ * Copyright (C) 2023 Bonitasoft S.A.
  * Bonitasoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -18,7 +18,6 @@ import static java.util.Collections.emptyList;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -32,16 +31,17 @@ import java.net.URL;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Scanner;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
@@ -55,30 +55,21 @@ import javax.tools.SimpleJavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
-import javax.xml.XMLConstants;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.bonitasoft.engine.exception.BonitaRuntimeException;
-import org.xml.sax.SAXException;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author Elias Ricken de Medeiros
  * @author Celine Souchet
  */
+@Slf4j
 public class IOUtil {
 
+    private IOUtil() {
+        // Utility class
+    }
+
     public static final String TMP_DIRECTORY = System.getProperty("java.io.tmpdir");
-    public static final String FILE_ENCODING = "UTF-8";
-    private static final String LINE_SEPARATOR = System.getProperty("line.separator");
     private static final int BUFFER_SIZE = 100000;
     private static final String CLASS_EXT = ".class";
 
@@ -87,7 +78,7 @@ public class IOUtil {
     }
 
     public static byte[] generateJar(String className, String... content) throws IOException {
-        return generateJar(emptyList(), Pair.of(className, String.join("\n", content)));
+        return generateJar(emptyList(), new AbstractMap.SimpleEntry<>(className, String.join("\n", content)));
     }
 
     static class StringJavaFileObject extends SimpleJavaFileObject {
@@ -104,15 +95,16 @@ public class IOUtil {
         }
     }
 
-    public static byte[] generateJar(Pair<String, String>... classFiles) throws IOException {
+    public static byte[] generateJar(Map.Entry<String, String>... classFiles) throws IOException {
         return generateJar(emptyList(), classFiles);
     }
 
     public static byte[] generateJar(List<Path> additionalJar, String className, String... content) throws IOException {
-        return generateJar(additionalJar, Pair.of(className, String.join("\n", content)));
+        return generateJar(additionalJar, new AbstractMap.SimpleEntry<>(className, String.join("\n", content)));
     }
 
-    public static byte[] generateJar(List<Path> additionalJar, Pair<String, String>... classFiles) throws IOException {
+    public static byte[] generateJar(List<Path> additionalJar, Map.Entry<String, String>... classFiles)
+            throws IOException {
         List<StringJavaFileObject> sourceFiles = stream(classFiles).map(classFile -> {
             StringJavaFileObject sourceFile = new StringJavaFileObject(classFile.getKey(), classFile.getValue());
             return sourceFile;
@@ -131,7 +123,7 @@ public class IOUtil {
         }
 
         Map<String, byte[]> resources = new HashMap<>();
-        for (Pair<String, String> classFile : classFiles) {
+        for (Map.Entry<String, String> classFile : classFiles) {
             String className = classFile.getKey();
             JavaFileObject javaFileForInput = standardFileManager.getJavaFileForInput(StandardLocation.CLASS_OUTPUT,
                     className, JavaFileObject.Kind.CLASS);
@@ -275,20 +267,22 @@ public class IOUtil {
 
         mkdirs(tmpDir);
 
-        FileUtils.isSymlink(tmpDir);
+        Files.isSymbolicLink(tmpDir.toPath());
 
         try {
-
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 try {
                     final boolean deleted = deleteDir(tmpDir);
                     if (!deleted) {
-                        System.err.println(
-                                "Unable to delete directory: " + tmpDir + ". Trying with an alternative force delete.");
-                        FileUtils.forceDelete(tmpDir);
+                        var errorMsg = "Unable to delete directory: " + tmpDir;
+                        log.error(errorMsg);
+                        if (!tmpDir.exists()) {
+                            throw new FileNotFoundException("Directory does not exist: " + tmpDir);
+                        }
+                        throw new IOException(errorMsg);
                     }
                 } catch (final IOException e) {
-                    throw new BonitaRuntimeException(e);
+                    throw new RuntimeException(e);
                 }
             }));
         } catch (IllegalStateException ignored) {
@@ -349,89 +343,6 @@ public class IOUtil {
         }
     }
 
-    /**
-     * Create a structured zip archive recursively.
-     * The string must be OS specific String to represent path.
-     */
-    public static void zipDir(final String dir2zip, final ZipOutputStream zos, final String root) throws IOException {
-        final File zipDir = new File(dir2zip);
-        final byte[] readBuffer = new byte[BUFFER_SIZE];
-
-        for (final String pathName : zipDir.list()) {
-            final File file = new File(zipDir, pathName);
-            final String path = file.getPath();
-            if (file.isDirectory()) {
-                zipDir(path, zos, root);
-                continue;
-            }
-            try {
-                final ZipEntry anEntry = new ZipEntry(path.substring(root.length() + 1, path.length())
-                        .replace(String.valueOf(File.separatorChar), "/"));
-                zos.putNextEntry(anEntry);
-                copyFileToZip(zos, readBuffer, file);
-                zos.flush();
-            } finally {
-                zos.closeEntry();
-            }
-        }
-    }
-
-    private static void copyFileToZip(final ZipOutputStream zos, final byte[] readBuffer, final File file)
-            throws IOException {
-        int bytesIn;
-        try (FileInputStream fis = new FileInputStream(file)) {
-            while ((bytesIn = fis.read(readBuffer)) != -1) {
-                zos.write(readBuffer, 0, bytesIn);
-            }
-        }
-    }
-
-    /**
-     * Read the contents from the given FileInputStream. Return the result as a String.
-     *
-     * @param inputStream the stream to read from
-     * @return the content read from the inputStream, as a String
-     */
-    public static String read(final InputStream inputStream) {
-        if (inputStream == null) {
-            throw new IllegalArgumentException("Input stream is null");
-        }
-        Scanner scanner = null;
-        try {
-            scanner = new Scanner(inputStream, FILE_ENCODING);
-            return read(scanner);
-        } finally {
-            if (scanner != null) {
-                scanner.close();
-            }
-        }
-    }
-
-    private static String read(final Scanner scanner) {
-        final StringBuilder text = new StringBuilder();
-        boolean isFirst = true;
-        while (scanner.hasNextLine()) {
-            if (isFirst) {
-                text.append(scanner.nextLine());
-            } else {
-                text.append(LINE_SEPARATOR).append(scanner.nextLine());
-            }
-            isFirst = false;
-        }
-        return text.toString();
-    }
-
-    /**
-     * Read the contents of the given file.
-     *
-     * @param file the file to read
-     */
-    public static String read(final File file) throws IOException {
-        try (FileInputStream fileInputStream = new FileInputStream(file)) {
-            return read(fileInputStream);
-        }
-    }
-
     public static void unzipToFolder(final InputStream inputStream, final File outputFolder) throws IOException {
         try (ZipInputStream zipInputstream = new ZipInputStream(inputStream)) {
             extractZipEntries(zipInputstream, outputFolder);
@@ -489,7 +400,7 @@ public class IOUtil {
 
     public static void writeContentToFileOutputStream(final String content, final FileOutputStream fileOutput)
             throws IOException {
-        try (OutputStreamWriter out = new OutputStreamWriter(fileOutput, FILE_ENCODING)) {
+        try (OutputStreamWriter out = new OutputStreamWriter(fileOutput, StandardCharsets.UTF_8)) {
             out.write(content);
             out.flush();
         } finally {
@@ -513,47 +424,6 @@ public class IOUtil {
             final byte[] bytes = new byte[size];
             buf.get(bytes);
             return bytes;
-        }
-    }
-
-    public static byte[] marshallObjectToXML(final Object jaxbModel, final URL schemaURL)
-            throws JAXBException, IOException, SAXException {
-        if (jaxbModel == null) {
-            return null;
-        }
-        if (schemaURL == null) {
-            throw new IllegalArgumentException("schemaURL is null");
-        }
-        final SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-        final Schema schema = sf.newSchema(schemaURL);
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            final JAXBContext contextObj = JAXBContext.newInstance(jaxbModel.getClass());
-            final Marshaller m = contextObj.createMarshaller();
-            m.setSchema(schema);
-            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-            m.marshal(jaxbModel, baos);
-            return baos.toByteArray();
-        }
-    }
-
-    public static <T> T unmarshallXMLtoObject(final byte[] xmlObject, final Class<T> objectClass, final URL schemaURL)
-            throws JAXBException, IOException,
-            SAXException {
-        if (xmlObject == null) {
-            return null;
-        }
-        if (schemaURL == null) {
-            throw new IllegalArgumentException("schemaURL is null");
-        }
-        final SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-        final Schema schema = sf.newSchema(schemaURL);
-        final JAXBContext contextObj = JAXBContext.newInstance(objectClass);
-        final Unmarshaller um = contextObj.createUnmarshaller();
-        um.setSchema(schema);
-        try (ByteArrayInputStream bais = new ByteArrayInputStream(xmlObject)) {
-            final StreamSource ss = new StreamSource(bais);
-            final JAXBElement<T> jaxbElement = um.unmarshal(ss, objectClass);
-            return jaxbElement.getValue();
         }
     }
 

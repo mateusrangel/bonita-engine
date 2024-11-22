@@ -33,7 +33,9 @@ public interface TenantAdministrationAPI {
     /**
      * @return
      *         true if the tenant is paused.
+     * @deprecated since 9.0.0, use {@link MaintenanceAPI#getMaintenanceDetails()} instead.
      */
+    @Deprecated(since = "9.0.0", forRemoval = true)
     boolean isPaused();
 
     /**
@@ -41,37 +43,24 @@ public interface TenantAdministrationAPI {
      * when the tenant is paused:
      * Only technical user can login when the tenant is paused.
      * All users connected are disconnected (apart from the technical user).
-     * Only IdentityAPI, ThemeAPI and ProfileAPI are accessible.
+     * Only IdentityAPI and ProfileAPI are accessible.
      *
+     * @deprecated since 9.0.0, use {@link MaintenanceAPI#enableMaintenanceMode()} instead.
      * @throws org.bonitasoft.engine.exception.UpdateException
      *         if the tenant cannot be paused.
      */
+    @Deprecated(since = "9.0.0", forRemoval = true)
     void pause() throws UpdateException;
 
     /**
      * Resume the tenant to a normal state after a pause.
      *
+     * @deprecated since 9.0.0, use {@link MaintenanceAPI#disableMaintenanceMode()} instead.
      * @throws org.bonitasoft.engine.exception.UpdateException
      *         if the tenant cannot be resumed.
      */
+    @Deprecated(since = "9.0.0", forRemoval = true)
     void resume() throws UpdateException;
-
-    /**
-     * Installs a new business data model.
-     *
-     * @param zip
-     *        the binary content of the business object model.
-     * @return the version of the Business Data Model just deployed.
-     * @deprecated since 7.13, as updateBusinessDataModel does the same operation
-     *             and should be used instead
-     * @throws InvalidBusinessDataModelException
-     *         if the Business Data Model content passed as parameter is invalid.
-     * @throws BusinessDataRepositoryDeploymentException
-     *         if the deployment cannot be fulfilled completely.
-     */
-    @Deprecated
-    String installBusinessDataModel(final byte[] zip)
-            throws InvalidBusinessDataModelException, BusinessDataRepositoryDeploymentException;
 
     /**
      * Uninstalls the business data model.
@@ -91,7 +80,9 @@ public interface TenantAdministrationAPI {
      *         if the Business Data Model content passed as parameter is invalid.
      * @throws BusinessDataRepositoryDeploymentException
      *         if the deployment cannot be fulfilled completely.
+     * @deprecated as of 9.0.0. The BDM should only be updated at startup.
      */
+    @Deprecated(since = "9.0.0")
     String updateBusinessDataModel(final byte[] zip)
             throws InvalidBusinessDataModelException, BusinessDataRepositoryDeploymentException;
 

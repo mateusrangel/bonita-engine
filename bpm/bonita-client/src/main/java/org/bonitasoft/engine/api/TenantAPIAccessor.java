@@ -92,16 +92,6 @@ public final class TenantAPIAccessor {
         return getAPI(ProfileAPI.class, session);
     }
 
-    /**
-     * @deprecated since 7.13.0, ThemeAPI does nothing. There is no replacement, as it used to serve old removed
-     *             feature.
-     */
-    @Deprecated(since = "7.13.0")
-    public static ThemeAPI getThemeAPI(final APISession session)
-            throws BonitaHomeNotSetException, ServerAPIException, UnknownAPITypeException {
-        return getAPI(ThemeAPI.class, session);
-    }
-
     public static PermissionAPI getPermissionAPI(final APISession session)
             throws BonitaHomeNotSetException, ServerAPIException, UnknownAPITypeException {
         return getAPI(PermissionAPI.class, session);
@@ -126,7 +116,7 @@ public final class TenantAPIAccessor {
     /**
      * @deprecated as of 7.3, see {@link BusinessDataAPI} for replacements
      */
-    @Deprecated
+    @Deprecated(since = "7.3")
     public static BusinessDataAPI getBusinessDataAPI(APISession session)
             throws BonitaHomeNotSetException, ServerAPIException,
             UnknownAPITypeException {
@@ -138,4 +128,8 @@ public final class TenantAPIAccessor {
         return getAPI(ApplicationAPI.class, session);
     }
 
+    public static MaintenanceAPI getMaintenanceAPI(final APISession session)
+            throws BonitaHomeNotSetException, ServerAPIException, UnknownAPITypeException {
+        return getAPI(MaintenanceAPI.class, session);
+    }
 }

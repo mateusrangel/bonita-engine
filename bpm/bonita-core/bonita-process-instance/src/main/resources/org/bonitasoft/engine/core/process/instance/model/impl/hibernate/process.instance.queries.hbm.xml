@@ -1809,11 +1809,10 @@
                 ID IN (
                     SELECT DISTINCT afi.logicalGroup2
                     FROM arch_flownode_instance afi
-                    WHERE afi.tenantId = :tenantId
-                    AND afi.kind IN ('user', 'manual')
+                    WHERE afi.kind IN ('user', 'manual')
                     AND (afi.executedBy = :userId OR afi.executedBySubstitute = :userId)
                     AND afi.stateId = 2)
-                OR (tenantId = :tenantId AND startedBy = :userId)
+                OR startedBy = :userId
             )
 	</sql-query>
 
@@ -1826,11 +1825,10 @@
                 ID IN (
                     SELECT DISTINCT afi.logicalGroup2
                     FROM arch_flownode_instance afi
-                    WHERE afi.tenantId = :tenantId
-                    AND afi.kind IN ('user', 'manual')
+                    WHERE afi.kind IN ('user', 'manual')
                     AND (afi.executedBy = :userId OR afi.executedBySubstitute = :userId)
                     AND afi.stateId = 2)
-                OR (tenantId = :tenantId AND startedBy = :userId)
+                OR startedBy = :userId
             )
 	</sql-query>
 

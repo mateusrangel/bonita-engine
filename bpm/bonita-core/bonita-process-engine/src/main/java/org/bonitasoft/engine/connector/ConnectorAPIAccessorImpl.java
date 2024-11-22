@@ -15,23 +15,14 @@ package org.bonitasoft.engine.connector;
 
 import java.lang.reflect.Proxy;
 
-import org.bonitasoft.engine.api.APIAccessor;
-import org.bonitasoft.engine.api.ApplicationAPI;
-import org.bonitasoft.engine.api.BusinessDataAPI;
-import org.bonitasoft.engine.api.CommandAPI;
-import org.bonitasoft.engine.api.IdentityAPI;
-import org.bonitasoft.engine.api.PageAPI;
-import org.bonitasoft.engine.api.PermissionAPI;
-import org.bonitasoft.engine.api.ProcessAPI;
-import org.bonitasoft.engine.api.ProfileAPI;
-import org.bonitasoft.engine.api.ThemeAPI;
+import org.bonitasoft.engine.api.*;
 import org.bonitasoft.engine.api.impl.ClientInterceptor;
 import org.bonitasoft.engine.api.impl.ServerAPIFactory;
 import org.bonitasoft.engine.api.internal.ServerAPI;
 import org.bonitasoft.engine.exception.BonitaRuntimeException;
 import org.bonitasoft.engine.service.ModelConvertor;
-import org.bonitasoft.engine.service.TenantServiceAccessor;
-import org.bonitasoft.engine.service.TenantServiceSingleton;
+import org.bonitasoft.engine.service.ServiceAccessor;
+import org.bonitasoft.engine.service.ServiceAccessorSingleton;
 import org.bonitasoft.engine.session.APISession;
 import org.bonitasoft.engine.session.SessionService;
 import org.bonitasoft.engine.session.model.SSession;
@@ -56,9 +47,9 @@ public class ConnectorAPIAccessorImpl implements APIAccessor {
 
     protected APISession getAPISession() {
         if (apiSession == null) {
-            final TenantServiceAccessor tenantServiceAccessor = TenantServiceSingleton.getInstance();
-            final SessionAccessor sessionAccessor = tenantServiceAccessor.getSessionAccessor();
-            final SessionService sessionService = tenantServiceAccessor.getSessionService();
+            final ServiceAccessor serviceAccessor = ServiceAccessorSingleton.getInstance();
+            final SessionAccessor sessionAccessor = serviceAccessor.getSessionAccessor();
+            final SessionService sessionService = serviceAccessor.getSessionService();
             try {
                 final SSession session = sessionService.createSession(tenantId,
                         ConnectorAPIAccessorImpl.class.getSimpleName());// FIXME get the
@@ -91,11 +82,6 @@ public class ConnectorAPIAccessorImpl implements APIAccessor {
     @Override
     public ProfileAPI getProfileAPI() {
         return getAPI(ProfileAPI.class, getAPISession());
-    }
-
-    @Override
-    public ThemeAPI getThemeAPI() {
-        return getAPI(ThemeAPI.class, getAPISession());
     }
 
     @Override

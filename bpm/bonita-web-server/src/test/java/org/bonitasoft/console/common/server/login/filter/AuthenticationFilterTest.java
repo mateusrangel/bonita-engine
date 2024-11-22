@@ -23,11 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -79,6 +75,7 @@ public class AuthenticationFilterTest {
     @Before
     public void setUp() throws Exception {
         initMocks(this);
+        request = spy(new HttpServletRequestAccessor(httpRequest));
         doReturn(httpSession).when(httpRequest).getSession();
         doReturn(authenticationManager).when(authenticationFilter).getAuthenticationManager();
         when(httpRequest.getRequestURL()).thenReturn(new StringBuffer());
@@ -86,8 +83,7 @@ public class AuthenticationFilterTest {
         when(servletContext.getContextPath()).thenReturn("");
         when(filterConfig.getServletContext()).thenReturn(servletContext);
         when(filterConfig.getInitParameterNames()).thenReturn(Collections.emptyEnumeration());
-
-        request = spy(new HttpServletRequestAccessor(httpRequest));
+        doReturn(false).when(authenticationFilter).isPlaformInMaintenance(request);
 
         //remove default rules (already logged in) as they have their own tests
         authenticationFilter.getRules().clear();
@@ -240,26 +236,112 @@ public class AuthenticationFilterTest {
     }
 
     @Test
-    public void testTenantIsPausedOnDoFiltering() throws Exception {
+    public void testTenantIsPausedExceptionOnDoFiltering() throws Exception {
         when(httpRequest.getServletPath()).thenReturn("/apps");
         when(httpRequest.getPathInfo()).thenReturn("/app/home");
-        TenantIsPausedException tenantIsPausedException = new TenantIsPausedException("login failed");
-        authenticationFilter.addRule(createThrowingExceptionRule(tenantIsPausedException));
+        PlatformUnderMaintenanceException platformUnderMaintenanceException = new PlatformUnderMaintenanceException(
+                "login failed");
+        authenticationFilter.addRule(createThrowingExceptionRule(platformUnderMaintenanceException));
 
         authenticationFilter.doAuthenticationFiltering(request, httpResponse, chain);
 
         verify(authenticationManager, never()).getLoginPageURL(eq(request), anyString());
         verify(chain, never()).doFilter(httpRequest, httpResponse);
-        verify(authenticationFilter).handleTenantPausedException(request, httpResponse, tenantIsPausedException);
-        verify(authenticationFilter).redirectTo(request, httpResponse, AuthenticationFilter.MAINTENANCE_JSP);
+        verify(authenticationFilter).handlePlatformUnderMaintenanceException(request, httpResponse,
+                platformUnderMaintenanceException);
+        verify(httpResponse).sendError(eq(HttpServletResponse.SC_SERVICE_UNAVAILABLE), anyString());
+    }
+
+    @Test
+    public void should_redirect_to_503_error_page_in_maintenance() throws Exception {
+        when(httpRequest.getServletPath()).thenReturn("/apps");
+        when(httpRequest.getPathInfo()).thenReturn("/app/home");
+        doReturn(true).when(authenticationFilter).isPlaformInMaintenance(request);
+        authenticationFilter.addRule(createPassingRule());
+
+        authenticationFilter.doAuthenticationFiltering(request, httpResponse, chain);
+
+        verify(authenticationManager, never()).getLoginPageURL(eq(request), anyString());
+        verify(chain, never()).doFilter(httpRequest, httpResponse);
+        verify(authenticationFilter).handlePlatformUnderMaintenanceException(eq(request), eq(httpResponse),
+                any(PlatformUnderMaintenanceException.class));
+        verify(httpResponse).sendError(eq(HttpServletResponse.SC_SERVICE_UNAVAILABLE), anyString());
+    }
+
+    @Test
+    public void should_not_redirect_to_503_error_page_in_maintenance_for_rest_requests() throws Exception {
+        AuthenticationFilter authenticationFilterWithConfig = spy(new AuthenticationFilter());
+        doReturn(authenticationManager).when(authenticationFilterWithConfig).getAuthenticationManager();
+        FilterConfig filterConfig = mock(FilterConfig.class);
+        when(filterConfig.getServletContext()).thenReturn(servletContext);
+        List<String> initParams = new ArrayList<>();
+        initParams.add(AuthenticationFilter.REDIRECT_PARAM);
+        when(filterConfig.getInitParameterNames()).thenReturn(Collections.enumeration(initParams));
+        when(filterConfig.getInitParameter(AuthenticationFilter.REDIRECT_PARAM)).thenReturn(Boolean.FALSE.toString());
+        authenticationFilterWithConfig.init(filterConfig);
+        when(httpRequest.getServletPath()).thenReturn("/apps");
+        when(httpRequest.getPathInfo()).thenReturn("/app/home");
+        doReturn(true).when(authenticationFilterWithConfig).isPlaformInMaintenance(request);
+        authenticationFilterWithConfig.addRule(createPassingRule());
+
+        authenticationFilterWithConfig.doAuthenticationFiltering(request, httpResponse, chain);
+
+        verify(chain).doFilter(httpRequest, httpResponse);
+        verify(httpResponse, never()).sendError(eq(HttpServletResponse.SC_SERVICE_UNAVAILABLE), anyString());
+        verify(httpResponse, never()).setStatus(eq(HttpServletResponse.SC_SERVICE_UNAVAILABLE));
+    }
+
+    @Test
+    public void should_be_able_to_display_error_pages_in_maintenance() throws Exception {
+        when(httpRequest.getServletPath()).thenReturn("/portal/resource/app");
+        when(httpRequest.getPathInfo()).thenReturn("/appDirectoryBonita/error-503/content/");
+        doReturn(true).when(authenticationFilter).isPlaformInMaintenance(request);
+        authenticationFilter.addRule(createPassingRule());
+
+        authenticationFilter.doAuthenticationFiltering(request, httpResponse, chain);
+
+        verify(authenticationManager, never()).getLoginPageURL(eq(request), anyString());
+        verify(chain).doFilter(httpRequest, httpResponse);
+        verify(httpResponse, never()).sendError(eq(HttpServletResponse.SC_SERVICE_UNAVAILABLE), anyString());
+    }
+
+    @Test
+    public void should_be_able_to_display_error_pages_theme_in_maintenance() throws Exception {
+        when(httpRequest.getServletPath()).thenReturn("/portal/resource/app");
+        when(httpRequest.getPathInfo()).thenReturn("/appDirectoryBonita/error-503/theme/theme.css");
+        doReturn(true).when(authenticationFilter).isPlaformInMaintenance(request);
+        authenticationFilter.addRule(createPassingRule());
+
+        authenticationFilter.doAuthenticationFiltering(request, httpResponse, chain);
+
+        verify(authenticationManager, never()).getLoginPageURL(eq(request), anyString());
+        verify(chain).doFilter(httpRequest, httpResponse);
+        verify(httpResponse, never()).sendError(eq(HttpServletResponse.SC_SERVICE_UNAVAILABLE), anyString());
+    }
+
+    @Test
+    public void should_let_technical_user_pass_when_platform_is_in_maintenance() throws Exception {
+        when(httpRequest.getServletPath()).thenReturn("/apps");
+        when(httpRequest.getPathInfo()).thenReturn("/app/home");
+        doReturn(true).when(authenticationFilter).isPlaformInMaintenance(request);
+        when(httpSession.getAttribute(SessionUtil.API_SESSION_PARAM_KEY)).thenReturn(apiSession);
+        doReturn(true).when(apiSession).isTechnicalUser();
+        authenticationFilter.addRule(createPassingRule());
+
+        authenticationFilter.doAuthenticationFiltering(request, httpResponse, chain);
+
+        verify(authenticationManager, never()).getLoginPageURL(eq(request), anyString());
+        verify(chain).doFilter(httpRequest, httpResponse);
+        verify(authenticationFilter, never()).handlePlatformUnderMaintenanceException(eq(request), eq(httpResponse),
+                any(PlatformUnderMaintenanceException.class));
     }
 
     @Test
     public void testRedirectTo() throws Exception {
         final String context = "/bonita";
         when(httpRequest.getContextPath()).thenReturn(context);
-        authenticationFilter.redirectTo(request, httpResponse, AuthenticationFilter.MAINTENANCE_JSP);
-        verify(httpResponse, times(1)).sendRedirect(context + AuthenticationFilter.MAINTENANCE_JSP);
+        authenticationFilter.redirectTo(request, httpResponse, AuthenticationFilter.USER_NOT_FOUND_JSP);
+        verify(httpResponse, times(1)).sendRedirect(context + AuthenticationFilter.USER_NOT_FOUND_JSP);
         verify(httpRequest, times(1)).getContextPath();
     }
 

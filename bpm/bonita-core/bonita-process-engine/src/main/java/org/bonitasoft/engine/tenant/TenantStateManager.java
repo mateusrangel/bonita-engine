@@ -31,7 +31,7 @@ import org.bonitasoft.engine.platform.exception.STenantDeactivationException;
 import org.bonitasoft.engine.platform.model.STenant;
 import org.bonitasoft.engine.scheduler.SchedulerService;
 import org.bonitasoft.engine.service.BroadcastService;
-import org.bonitasoft.engine.service.PlatformServiceAccessor;
+import org.bonitasoft.engine.service.ServiceAccessor;
 import org.bonitasoft.engine.service.TaskResult;
 import org.bonitasoft.engine.service.impl.ServiceAccessorFactory;
 import org.bonitasoft.engine.session.SessionService;
@@ -103,14 +103,14 @@ public class TenantStateManager {
         tenantServicesManager.start();
     }
 
-    protected PlatformServiceAccessor getPlatformAccessor()
-            throws BonitaHomeNotSetException, InstantiationException, IllegalAccessException,
-            ClassNotFoundException, IOException, BonitaHomeConfigurationException {
-        return ServiceAccessorFactory.getInstance().createPlatformServiceAccessor();
+    protected ServiceAccessor getServiceAccessor()
+            throws BonitaHomeNotSetException, IOException, BonitaHomeConfigurationException,
+            ReflectiveOperationException {
+        return ServiceAccessorFactory.getInstance().createServiceAccessor();
     }
 
     private STenant getTenantInTransaction() throws Exception {
-        return transactionService.executeInTransaction(() -> platformService.getTenant(tenantId));
+        return transactionService.executeInTransaction(() -> platformService.getDefaultTenant());
     }
 
     /**
@@ -126,7 +126,6 @@ public class TenantStateManager {
         if (!tenant.isActivated()) {
             throw new UpdateException("Can't pause a tenant in state " + tenant.getStatus());
         }
-        sessionService.deleteSessionsOfTenantExceptTechnicalUser(tenantId);
         pauseTenantInTransaction();
         pauseSchedulerJobsInTransaction(tenantId);
         tenantServicesManager.pause();
@@ -279,5 +278,10 @@ public class TenantStateManager {
         T operationReturn = operation.call();
         LOGGER.info("Successful synchronized tenant maintenance operation {} for tenant {}", operationName, tenantId);
         return operationReturn;
+    }
+
+    public synchronized String getStatus() throws Exception {
+        STenant tenant = getTenantInTransaction();
+        return tenant.getStatus();
     }
 }

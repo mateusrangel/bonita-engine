@@ -27,12 +27,12 @@ import java.util.Map;
 
 import javax.servlet.http.HttpSession;
 
+import org.bonitasoft.engine.exception.TenantStatusException;
 import org.bonitasoft.engine.session.InvalidSessionException;
 import org.bonitasoft.web.rest.server.framework.APIServletCall;
 import org.bonitasoft.web.rest.server.utils.FakeResource;
 import org.bonitasoft.web.rest.server.utils.FakeResource.FakeService;
 import org.bonitasoft.web.rest.server.utils.RestletTest;
-import org.bonitasoft.web.toolkit.client.common.exception.api.APIException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -137,7 +137,7 @@ public class CommonResourceTest extends RestletTest {
         verify(spy).verifyNotNullParameter(objectInParameterMap, parameterName);
     }
 
-    @Test(expected = APIException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void nullMandatoryParameterIsForbidden() {
         new CommonResource().verifyNotNullParameter(null, "unused");
     }
@@ -272,7 +272,7 @@ public class CommonResourceTest extends RestletTest {
         verify(spy, times(0)).verifyNotNullParameter(anyString(), anyString());
     }
 
-    @Test(expected = APIException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void getQueryParameter_throws_Exception() {
         // given:
         final CommonResource spy = spy(new CommonResource());
@@ -291,6 +291,17 @@ public class CommonResourceTest extends RestletTest {
         assertThat(response).hasStatus(Status.CLIENT_ERROR_BAD_REQUEST);
         assertThat(response).hasJsonEntityEqualTo(
                 "{\"exception\":\"class java.lang.IllegalArgumentException\",\"message\":\"an error message\"}'");
+    }
+
+    @Test
+    public void should_respond_503_service_unavailable_if_TenantStatusException_occurs() throws Exception {
+        when(fakeService.saySomething()).thenThrow(new TenantStatusException("an error message"));
+
+        final Response response = request("/test").get();
+
+        assertThat(response).hasStatus(Status.SERVER_ERROR_SERVICE_UNAVAILABLE);
+        assertThat(response).hasJsonEntityEqualTo(
+                "{\"exception\":\"class org.bonitasoft.engine.exception.TenantStatusException\",\"message\":\"Platform is under maintenance\"}'");
     }
 
     @Test

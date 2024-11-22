@@ -13,7 +13,9 @@ dependencies {
     }
     api "org.apache.commons:commons-lang3:${Deps.commonsLangVersion}"
     api project(':services:bonita-classloader')
-    runtimeOnly "javax.xml.bind:jaxb-api:${Deps.jaxbVersion}"
+    annotationProcessor "org.projectlombok:lombok:${Deps.lombokVersion}"
+    compileOnly "org.projectlombok:lombok:${Deps.lombokVersion}"
+
     testImplementation "junit:junit:${Deps.junit4Version}"
     testImplementation "org.assertj:assertj-core:${Deps.assertjVersion}"
     testImplementation "net.javacrumbs.json-unit:json-unit-fluent:${Deps.jsonUnitVersion}"
@@ -22,7 +24,7 @@ dependencies {
     testImplementation "org.jboss.narayana.jta:narayana-jta:${Deps.narayanaVersion}"
     testImplementation "org.springframework:spring-test:${Deps.springVersion}"
     testImplementation "org.springframework:spring-jdbc:${Deps.springVersion}"
-    testImplementation project(':bpm:bonita-util:bonita-common-util-test')
+    testImplementation testFixtures(project(':bpm:bonita-common'))
     testRuntimeOnly "org.apache.commons:commons-dbcp2:${Deps.commonsDbcp2Version}"
     testRuntimeOnly "com.h2database:h2:${Deps.h2Version}"
     testRuntimeOnly "com.mysql:mysql-connector-j:${Deps.mysqlVersion}"

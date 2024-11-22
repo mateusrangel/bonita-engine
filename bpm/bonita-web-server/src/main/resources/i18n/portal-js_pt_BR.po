@@ -11,7 +11,7 @@ msgstr ""
 "X-Crowdin-File-ID: 61810\n"
 "Language-Team: Portuguese, Brazilian\n"
 "Language: pt_BR\n"
-"PO-Revision-Date: 2023-10-24 01:28\n"
+"PO-Revision-Date: 2024-01-01 00:00\n"
 
 msgid "1 case has been deleted"
 msgstr "1 caso foi excluído"
@@ -103,6 +103,9 @@ msgstr "Ocorreu um erro ao enviar o formulário."
 msgid "An error occurred while submitting the form.<br/>The task may not be available anymore."
 msgstr "Ocorreu um erro ao enviar o formulário. <br/> A tarefa pode não estar disponível mais."
 
+msgid "An error occurred with the requested operation."
+msgstr "Ocorreu um erro com a operação solicitada"
+
 msgid "Application XML file"
 msgstr "Arquivo XML do aplicativo"
 
@@ -144,9 +147,6 @@ msgstr "BDM não foi carregado. Sistema não foi capaz de fazer upload de arquiv
 
 msgid "BDM successfully updated."
 msgstr "Arquivo BDM atualizado com sucesso."
-
-msgid "BPM Services must be paused. Go to \"BPM Services\" menu option."
-msgstr "Serviços de BPM devem ser pausados. Vá para a opção do menu \"Serviços de BPM\"."
 
 msgid "Back"
 msgstr "Voltar"
@@ -222,6 +222,18 @@ msgstr "Clique aqui para escolher o arquivo .xml"
 
 msgid "Click here to choose your .zip file"
 msgstr "Clique aqui para escolher o arquivo .zip"
+
+msgid "Click on Cancel to remain on this page and try to execute the operation again once you logged back in (e.g. in another tab)."
+msgstr "Clique em Cancelar para permanecer nesta página e tente executar a operação novamente depois de fazer login novamente (por exemplo, em outra guia)."
+
+msgid "Click on Cancel to remain on this page and wait for the maintenance to end."
+msgstr "Clique em Cancelar para permanecer nesta página e aguardar o término da manutenção."
+
+msgid "Click on OK to be redirected and log back in."
+msgstr "Clique em OK para ser redirecionado e faça login novamente."
+
+msgid "Click on OK to be redirected to the maintenance page."
+msgstr "Clique em OK para ser redirecionado para a página de manutenção."
 
 msgid "Close"
 msgstr "Fechar"
@@ -313,9 +325,6 @@ msgstr "Desativar"
 msgid "Display name"
 msgstr "Nome de exibição"
 
-msgid "Don't forget to start BPM Services again."
-msgstr "Não se esqueça de iniciar serviços de BPM novamente."
-
 msgid "Done tasks"
 msgstr "Tarefas arquivadas"
 
@@ -344,7 +353,7 @@ msgid "Enable all"
 msgstr "Ativar Tudo"
 
 msgid "Enter a new category name and click \"Add\" button to create a new category."
-msgstr "Insira um novo nome de categoria e clique no botão \"Adicionar\" para criar uma nova categoria."
+msgstr "Insira um novo nome de categoria e clique no botão \"Adicionar\" para criar uma categoria nova."
 
 msgid "Enter the user to start the case for..."
 msgstr "Digite o usuário para o qual o caso será iniciado..."
@@ -493,8 +502,8 @@ msgstr "Instalando"
 msgid "Installing Business Data Model"
 msgstr "Instalando o Modelo de Dados de Negócios"
 
-msgid "Installing or updating the BDM implies to be logged in as Technical User, and to shut down all BPM services."
-msgstr "Instalando ou atualizando o BDM implica estar logado como usuário técnico, e encerrar todos os serviços BPM."
+msgid "Installing or updating the BDM implies to be logged in as Technical User, and to activate the maintenance mode."
+msgstr "Instalar ou atualizar o BDM implica estar logado como Usuário Técnico e ativar o modo de manutenção."
 
 msgid "Items per page"
 msgstr "Itens por página"
@@ -534,6 +543,9 @@ msgstr "MMM DD LT"
 
 msgid "Make sure all artifacts enabled on the platform are compatible with the new BDM."
 msgstr "Certifique-se de todos os artefatos habilitados na plataforma são compatíveis com o novo BDM."
+
+msgid "Make sure to deactivate the maintenance mode."
+msgstr "Certifique-se de desativar o modo de manutenção."
 
 msgid "Make this task available to other team members again"
 msgstr "Disponibilizar esta tarefa para outros membros da equipe novamente"
@@ -646,6 +658,9 @@ msgstr "Normal"
 msgid "Not installed"
 msgstr "Não Instalado"
 
+msgid "OK"
+msgstr "OK"
+
 msgid "One or more tasks are not available anymore. The list is now up to date."
 msgstr "Uma ou mais tarefas não estão mais disponíveis. A lista agora esta atualizada."
 
@@ -654,6 +669,9 @@ msgstr "Menu de uma página"
 
 msgid "Only I can do this task"
 msgstr "Só eu posso fazer essa tarefa"
+
+msgid "Only available when the platform is under maintenance. Go to the \"Platform maintenance\" page to activate the maintenance mode."
+msgstr "Apenas disponível quando a plataforma estiver em manutenção. Vá para a página de \"Manutenção da plataforma\" para ativar o modo de manutenção."
 
 msgid "Only one Business Data Model (BDM) can be active at a time."
 msgstr "Somente um Modelo de Dados de Negócios (BDM) pode ser ativado no momento."
@@ -752,7 +770,7 @@ msgid "Remove all"
 msgstr "Remover tudo"
 
 msgid "Removing on apply"
-msgstr "Removendo em aplicar"
+msgstr "Removendo ao aplicar"
 
 msgid "Reset"
 msgstr "Restaurar"
@@ -798,6 +816,9 @@ msgstr "Selecionar a página"
 
 msgid "Select users..."
 msgstr "Selecione usuários..."
+
+msgid "Server is under maintenance."
+msgstr "O servidor está em manutenção."
 
 msgid "Set as Home page"
 msgstr "Definir como página principal"
@@ -914,7 +935,7 @@ msgid "The case {{caseId}} has been started successfully."
 msgstr "A instância {{caseId}} foi iniciada com êxito."
 
 msgid "The category cannot be removed and added at the same time."
-msgstr "Categoria não pode ser removida e adicionada ao mesmo tempo."
+msgstr "Categoria não pode ser removida e adicionada em simultâneo."
 
 msgid "The current process has no connectors defined."
 msgstr "O processo atual tem os conectores não definidos."
@@ -965,7 +986,7 @@ msgid "This application is core to the Bonita platform. To keep it working as it
 msgstr "Essa aplicação é essencial para a plataforma Bonita. Para que continue a funcionar como deve ser, tem de permanecer disponível e o seu menu deve permanecer como está."
 
 msgid "This category has already been added to this process."
-msgstr "Esta categoria já foi adicionada a este processo."
+msgstr "Esta categoria já foi adicionada para este processo."
 
 msgid "This field is mandatory"
 msgstr "Este campo é obrigatório"
@@ -1134,6 +1155,9 @@ msgstr "Você deve adicionar uma página antes de poder referenciá-la em um men
 
 msgid "Your personal task list is empty. You can take a task from the ​<a href=\"#\" ng-click=\"changeFilter(TASK_FILTERS.TODO)\">To do</a> list."
 msgstr "Sua lista de tarefas pessoais está vazia. Você pode tomar uma tarefa da lista <a href=\"#\" ng-click=\"changeFilter(TASK_FILTERS.TODO)\"> para fazer</a>."
+
+msgid "Your session is no longer active."
+msgstr "Sua sessão não está mais ativa."
 
 msgid "Zip code"
 msgstr "Cep"

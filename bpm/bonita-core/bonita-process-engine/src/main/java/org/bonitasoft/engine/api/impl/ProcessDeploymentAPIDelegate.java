@@ -17,16 +17,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import lombok.Getter;
 import org.bonitasoft.engine.api.impl.transaction.process.EnableProcess;
 import org.bonitasoft.engine.bar.BusinessArchiveService;
 import org.bonitasoft.engine.bpm.bar.BusinessArchive;
-import org.bonitasoft.engine.bpm.process.Problem;
-import org.bonitasoft.engine.bpm.process.ProcessDefinition;
-import org.bonitasoft.engine.bpm.process.ProcessDefinitionNotFoundException;
-import org.bonitasoft.engine.bpm.process.ProcessDeployException;
-import org.bonitasoft.engine.bpm.process.ProcessDeploymentInfo;
-import org.bonitasoft.engine.bpm.process.ProcessEnablementException;
-import org.bonitasoft.engine.bpm.process.V6FormDeployException;
+import org.bonitasoft.engine.bpm.process.*;
 import org.bonitasoft.engine.commons.exceptions.SAlreadyExistsException;
 import org.bonitasoft.engine.commons.exceptions.SBonitaException;
 import org.bonitasoft.engine.commons.exceptions.SObjectCreationException;
@@ -37,33 +32,37 @@ import org.bonitasoft.engine.core.process.definition.model.SProcessDefinition;
 import org.bonitasoft.engine.core.process.definition.model.SProcessDefinitionDeployInfo;
 import org.bonitasoft.engine.exception.AlreadyExistsException;
 import org.bonitasoft.engine.exception.RetrieveException;
+import org.bonitasoft.engine.exception.SearchException;
 import org.bonitasoft.engine.execution.event.EventsHandler;
 import org.bonitasoft.engine.persistence.SBonitaReadException;
+import org.bonitasoft.engine.search.SearchOptions;
+import org.bonitasoft.engine.search.SearchResult;
+import org.bonitasoft.engine.search.descriptor.SearchEntitiesDescriptor;
+import org.bonitasoft.engine.search.descriptor.SearchProcessDefinitionsDescriptor;
+import org.bonitasoft.engine.search.process.SearchProcessDeploymentInfos;
 import org.bonitasoft.engine.service.ModelConvertor;
-import org.bonitasoft.engine.service.TenantServiceAccessor;
+import org.bonitasoft.engine.service.ServiceAccessor;
+import org.bonitasoft.engine.service.ServiceAccessorSingleton;
 
 /**
  * @author Emmanuel Duchastenier
  */
 public class ProcessDeploymentAPIDelegate {
 
+    @Getter
     private static final ProcessDeploymentAPIDelegate instance = new ProcessDeploymentAPIDelegate();
 
     private ProcessDeploymentAPIDelegate() {
     }
 
-    public static ProcessDeploymentAPIDelegate getInstance() {
-        return instance;
-    }
-
-    protected TenantServiceAccessor getTenantServiceAccessor() {
-        return APIUtils.getTenantAccessor();
+    protected ServiceAccessor getServiceAccessor() {
+        return ServiceAccessorSingleton.getInstance();
     }
 
     public ProcessDefinition deploy(final BusinessArchive businessArchive)
             throws ProcessDeployException, AlreadyExistsException {
         validateBusinessArchive(businessArchive);
-        final BusinessArchiveService businessArchiveService = getTenantServiceAccessor().getBusinessArchiveService();
+        final BusinessArchiveService businessArchiveService = getServiceAccessor().getBusinessArchiveService();
         try {
             return ModelConvertor.toProcessDefinition(businessArchiveService.deploy(businessArchive));
         } catch (SV6FormsDeployException e) {
@@ -99,9 +98,9 @@ public class ProcessDeploymentAPIDelegate {
 
     public void enableProcess(final long processDefinitionId)
             throws ProcessDefinitionNotFoundException, ProcessEnablementException {
-        final ProcessDefinitionService processDefinitionService = getTenantServiceAccessor()
+        final ProcessDefinitionService processDefinitionService = getServiceAccessor()
                 .getProcessDefinitionService();
-        final EventsHandler eventsHandler = getTenantServiceAccessor().getEventsHandler();
+        final EventsHandler eventsHandler = getServiceAccessor().getEventsHandler();
         try {
             new EnableProcess(processDefinitionService, processDefinitionId,
                     eventsHandler, SessionInfos.getUserNameFromSession()).execute();
@@ -115,7 +114,7 @@ public class ProcessDeploymentAPIDelegate {
     public long getProcessDefinitionId(final String name, final String version)
             throws ProcessDefinitionNotFoundException {
         try {
-            return getTenantServiceAccessor().getProcessDefinitionService().getProcessDefinitionId(name, version);
+            return getServiceAccessor().getProcessDefinitionService().getProcessDefinitionId(name, version);
         } catch (final SProcessDefinitionNotFoundException e) {
             throw new ProcessDefinitionNotFoundException(e);
         } catch (final SBonitaReadException e) {
@@ -125,19 +124,19 @@ public class ProcessDeploymentAPIDelegate {
 
     public List<Problem> getProcessResolutionProblems(final long processDefinitionId)
             throws ProcessDefinitionNotFoundException {
-        final TenantServiceAccessor tenantAccessor = getTenantServiceAccessor();
-        final ProcessDefinitionService processDefinitionService = tenantAccessor.getProcessDefinitionService();
+        final ServiceAccessor serviceAccessor = getServiceAccessor();
+        final ProcessDefinitionService processDefinitionService = serviceAccessor.getProcessDefinitionService();
         try {
             SProcessDefinition processDefinition = processDefinitionService.getProcessDefinition(processDefinitionId);
-            return tenantAccessor.getBusinessArchiveArtifactsManager().getProcessResolutionProblems(processDefinition);
+            return serviceAccessor.getBusinessArchiveArtifactsManager().getProcessResolutionProblems(processDefinition);
         } catch (final SProcessDefinitionNotFoundException | SBonitaReadException e) {
             throw new ProcessDefinitionNotFoundException(e);
         }
     }
 
     public Map<Long, ProcessDeploymentInfo> getProcessDeploymentInfosFromIds(final List<Long> processDefinitionIds) {
-        final TenantServiceAccessor tenantAccessor = getTenantServiceAccessor();
-        final ProcessDefinitionService processDefinitionService = tenantAccessor.getProcessDefinitionService();
+        final ServiceAccessor serviceAccessor = getServiceAccessor();
+        final ProcessDefinitionService processDefinitionService = serviceAccessor.getProcessDefinitionService();
         try {
             final List<SProcessDefinitionDeployInfo> processDefinitionDeployInfos = processDefinitionService
                     .getProcessDeploymentInfos(processDefinitionIds);
@@ -155,7 +154,7 @@ public class ProcessDeploymentAPIDelegate {
 
     public ProcessDeploymentInfo getProcessDeploymentInfo(final long processDefinitionId)
             throws ProcessDefinitionNotFoundException {
-        final ProcessDefinitionService processDefinitionService = getTenantServiceAccessor()
+        final ProcessDefinitionService processDefinitionService = getServiceAccessor()
                 .getProcessDefinitionService();
         try {
             return ModelConvertor
@@ -166,4 +165,23 @@ public class ProcessDeploymentAPIDelegate {
             throw new RetrieveException(e);
         }
     }
+
+    public SearchResult<ProcessDeploymentInfo> searchProcessDeploymentInfos(final SearchOptions searchOptions)
+            throws SearchException {
+        final ServiceAccessor serviceAccessor = getServiceAccessor();
+
+        final SearchEntitiesDescriptor searchEntitiesDescriptor = serviceAccessor.getSearchEntitiesDescriptor();
+        final ProcessDefinitionService processDefinitionService = serviceAccessor.getProcessDefinitionService();
+        final SearchProcessDefinitionsDescriptor searchDescriptor = searchEntitiesDescriptor
+                .getSearchProcessDefinitionsDescriptor();
+        final SearchProcessDeploymentInfos transactionSearch = new SearchProcessDeploymentInfos(
+                processDefinitionService, searchDescriptor, searchOptions);
+        try {
+            transactionSearch.execute();
+        } catch (final SBonitaException e) {
+            throw new SearchException("Can't get processDefinition's executing searchProcessDefinitions()", e);
+        }
+        return transactionSearch.getResult();
+    }
+
 }

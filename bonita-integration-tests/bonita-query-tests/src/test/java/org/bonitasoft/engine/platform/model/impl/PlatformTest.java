@@ -45,6 +45,7 @@ public class PlatformTest {
         SPlatform platform = repository.add(SPlatform.builder()
                 .initialBonitaVersion("5.9.0")
                 .dbSchemaVersion("1.2")
+                .applicationVersion("0.0.0")
                 .created(345L)
                 .information("some infos XYZ")
                 .createdBy("The almighty")
@@ -60,6 +61,9 @@ public class PlatformTest {
                 entry("CREATED", 345L),
                 entry("CREATED_BY", "The almighty"),
                 entry("INITIAL_BONITA_VERSION", "5.9.0"),
+                entry("APPLICATION_VERSION", "0.0.0"),
+                entry("MAINTENANCE_MESSAGE", null),
+                entry("MAINTENANCE_MESSAGE_ACTIVE", false),
                 entry("VERSION", "1.2"),
                 entry("INFORMATION", "some infos XYZ"));
     }

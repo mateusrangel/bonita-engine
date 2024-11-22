@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: bonita\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-04 05:21+0200\n"
-"PO-Revision-Date: 2023-05-23 01:29\n"
+"POT-Creation-Date: 2024-04-01 14:32+0000\n"
+"PO-Revision-Date: 2024-01-01 00:00\n"
 "Last-Translator: \n"
 "Language-Team: Portuguese, Brazilian\n"
 "Language: pt_BR\n"
@@ -21,7 +21,7 @@ msgid "%attribute% file format is not allowed. Only %file_formats% files are all
 msgstr "formato de arquivo %attribute% não é permitido. Apenas arquivos %file_formats% são permitidos."
 
 msgid "%attribute% file format not allowed or not starting with correct servlet path"
-msgstr "O formato do arquivo %attribute% não é permitido ou não inicia com o caminho correto do servlet"
+msgstr ""
 
 msgid "%attribute% is mandatory"
 msgstr "%attribute% é obrigatório"
@@ -256,9 +256,6 @@ msgstr "Esta associação já foi adicionada ao usuário"
 
 msgid "This role has already been mapped to actor"
 msgstr "Esta função já foi designada como ator"
-
-msgid "This service is offline for maintenance. Please try later."
-msgstr "Este serviço está desativado para manutenção. Por favor, tente mais tarde."
 
 msgid "This user has already been mapped to actor"
 msgstr "Este usuário já foi designado como ator"

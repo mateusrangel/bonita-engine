@@ -13,10 +13,7 @@
  **/
 package org.bonitasoft.engine.login;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.util.Date;
@@ -69,8 +66,7 @@ public class LoginAPIIT extends CommonAPIIT {
 
     @SneakyThrows
     private void deleteSession(final long sessionId) {
-        long tenantId = getApiClient().getSession().getTenantId();
-        ServiceAccessorFactory.getInstance().createTenantServiceAccessor()
+        ServiceAccessorFactory.getInstance().createServiceAccessor()
                 .getSessionService()
                 .deleteSession(sessionId);
     }
@@ -128,7 +124,6 @@ public class LoginAPIIT extends CommonAPIIT {
         getIdentityAPI().deleteUser(userName);
 
         assertEquals(userName, user.getUserName());
-        assertNotSame(password, user.getPassword());
         assertTrue(now.before(user.getLastConnection()));
         logoutOnTenant();
     }

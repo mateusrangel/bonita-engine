@@ -717,13 +717,10 @@
 			FROM actormember
 			JOIN actor ON (
 				actor.id = actormember.actorid
-				and actor.tenantid = :tenantId
-				and actormember.tenantid = :tenantId
 				and actor.scopeid = :processId
 				and actor.initiator = :trueValue
 			) JOIN user_membership ON (
-				user_membership.tenantid = actormember.tenantid
-				and (
+				 (
                  (actormember.groupId = user_membership.groupId and actormember.roleId = -1)
 					or
                  (actormember.roleId = user_membership.roleId and actormember.groupId = -1)
@@ -731,8 +728,7 @@
 					(actormember.groupId = user_membership.groupId and actormember.roleId = user_membership.roleId)
 				)
 			) JOIN user_ ON (
-				user_.tenantid=:tenantId
-				and user_membership.userid = user_.id
+				user_membership.userid = user_.id
 				and user_.enabled = :trueValue
 			)
 			UNION
@@ -740,13 +736,10 @@
 			FROM actormember
 			JOIN actor ON (
 				actor.id = actormember.actorid
-				and actor.tenantid = :tenantId
-				and actormember.tenantid = :tenantId
 				and actor.scopeid = :processId
 				and actor.initiator = :trueValue
 			) JOIN user_ ON (
-				user_.tenantid = :tenantId
-				and actormember.userid = user_.id
+				actormember.userid = user_.id
 				and user_.enabled = :trueValue
 			)
 		) user_
@@ -759,13 +752,10 @@
 			FROM actormember
 			JOIN actor ON (
 				actor.id = actormember.actorid
-				and actor.tenantid = :tenantId
-				and actormember.tenantid = :tenantId
 				and actor.scopeid = :processId
 				and actor.initiator = :trueValue
 			) JOIN user_membership ON (
-				user_membership.tenantid = actormember.tenantid
-				and (
+				(
                  (actormember.groupId = user_membership.groupId and actormember.roleId = -1)
 					  or
                  (actormember.roleId = user_membership.roleId and actormember.groupId = -1)
@@ -773,8 +763,7 @@
 					 (actormember.groupId = user_membership.groupId and actormember.roleId = user_membership.roleId)
 				)
 			) JOIN user_ ON (
-			   user_.tenantid=:tenantId
-				and user_membership.userid = user_.id
+				user_membership.userid = user_.id
 				and user_.enabled = :trueValue
 			)
 			UNION
@@ -782,13 +771,10 @@
 			FROM actormember
 			JOIN actor ON (
 				actor.id = actormember.actorid
-				and actor.tenantid = :tenantId
-				and actormember.tenantid = :tenantId
 				and actor.scopeid = :processId
 				and actor.initiator = :trueValue
 			) JOIN user_ ON (
-				user_.tenantid = :tenantId
-				and actormember.userid = user_.id
+				actormember.userid = user_.id
 				and user_.enabled = :trueValue
 			)
 		) user_

@@ -29,6 +29,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import org.bonitasoft.console.common.server.utils.SessionUtil;
 import org.bonitasoft.engine.bpm.contract.ContractViolationException;
 import org.bonitasoft.engine.exception.NotFoundException;
+import org.bonitasoft.engine.exception.TenantStatusException;
 import org.bonitasoft.engine.search.SearchOptions;
 import org.bonitasoft.engine.search.SearchResult;
 import org.bonitasoft.engine.session.APISession;
@@ -37,7 +38,6 @@ import org.bonitasoft.web.rest.server.datastore.filter.Filters;
 import org.bonitasoft.web.rest.server.datastore.utils.SearchOptionsCreator;
 import org.bonitasoft.web.rest.server.datastore.utils.Sorts;
 import org.bonitasoft.web.rest.server.framework.APIServletCall;
-import org.bonitasoft.web.toolkit.client.common.exception.api.APIException;
 import org.restlet.data.CharacterSet;
 import org.restlet.data.MediaType;
 import org.restlet.data.Range;
@@ -148,9 +148,9 @@ public class CommonResource extends ServerResource {
         return getQueryValue(parameterName);
     }
 
-    protected void verifyNotNullParameter(final Object parameter, final String parameterName) throws APIException {
+    protected void verifyNotNullParameter(final Object parameter, final String parameterName) {
         if (parameter == null) {
-            throw new APIException("Parameter " + parameterName + " is mandatory.");
+            throw new IllegalArgumentException("Parameter " + parameterName + " is mandatory.");
         }
     }
 
@@ -196,6 +196,9 @@ public class CommonResource extends ServerResource {
         } else if (t instanceof InvalidSessionException) {
             status = Status.CLIENT_ERROR_UNAUTHORIZED;
             SessionUtil.sessionLogout(getHttpSession());
+        } else if (t instanceof TenantStatusException) {
+            status = Status.SERVER_ERROR_SERVICE_UNAVAILABLE;
+            errorMessage.setMessage("Platform is under maintenance");
         } else {
             super.doCatch(t);
             status = getStatus();
@@ -260,20 +263,20 @@ public class CommonResource extends ServerResource {
     protected int getSearchPageNumber() {
         try {
             return getIntegerParameter(APIServletCall.PARAMETER_PAGE, true);
-        } catch (final APIException e) {
-            throw new IllegalArgumentException("query parameter p (page) is mandatory");
         } catch (final NumberFormatException e) {
             throw new IllegalArgumentException("query parameter p (page) should be a number");
+        } catch (final IllegalArgumentException e) {
+            throw new IllegalArgumentException("query parameter p (page) is mandatory");
         }
     }
 
     protected int getSearchPageSize() {
         try {
             return getIntegerParameter(APIServletCall.PARAMETER_LIMIT, true);
-        } catch (final APIException e) {
-            throw new IllegalArgumentException("query parameter c (count) is mandatory");
         } catch (final NumberFormatException e) {
             throw new IllegalArgumentException("query parameter c (count) should be a number");
+        } catch (final IllegalArgumentException e) {
+            throw new IllegalArgumentException("query parameter c (count) is mandatory");
         }
     }
 

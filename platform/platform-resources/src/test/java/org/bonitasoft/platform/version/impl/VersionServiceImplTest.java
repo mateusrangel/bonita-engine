@@ -13,7 +13,7 @@
  **/
 package org.bonitasoft.platform.version.impl;
 
-import java.util.Arrays;
+import java.util.List;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Rule;
@@ -51,8 +51,8 @@ public class VersionServiceImplTest {
     @Test
     public void should_return_platform_database_version() throws Exception {
         //given
-        Mockito.doReturn(Arrays.asList("a.b.c")).when(jdbcTemplate).query(ArgumentMatchers.anyString(),
-                ArgumentMatchers.any(PlatformRowMapper.class));
+        Mockito.doReturn(List.of("a.b.c")).when(jdbcTemplate).queryForList(ArgumentMatchers.anyString(),
+                ArgumentMatchers.eq(String.class));
 
         //when
         final String platformVersion = versionService.retrieveDatabaseSchemaVersion();

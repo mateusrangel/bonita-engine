@@ -13,8 +13,6 @@
  **/
 package org.bonitasoft.engine.execution.handler;
 
-import java.util.UUID;
-
 import org.bonitasoft.engine.bpm.process.ProcessInstanceState;
 import org.bonitasoft.engine.commons.exceptions.SBonitaException;
 import org.bonitasoft.engine.core.process.definition.model.SFlowNodeType;
@@ -22,7 +20,7 @@ import org.bonitasoft.engine.core.process.instance.api.ProcessInstanceService;
 import org.bonitasoft.engine.core.process.instance.model.SProcessInstance;
 import org.bonitasoft.engine.events.model.SHandlerExecutionException;
 import org.bonitasoft.engine.events.model.SUpdateEvent;
-import org.bonitasoft.engine.service.TenantServiceAccessor;
+import org.bonitasoft.engine.service.ServiceAccessor;
 import org.bonitasoft.engine.service.impl.ServiceAccessorFactory;
 
 /**
@@ -34,37 +32,28 @@ public class ArchiveProcessInstancesHandler implements SProcessInstanceHandler<S
 
     private static final long serialVersionUID = 1L;
 
-    private final long tenantId;
-
     private final String identifier;
 
-    public ArchiveProcessInstancesHandler(final long tenantId) {
-        this(tenantId, UUID.randomUUID().toString());
-    }
-
-    public ArchiveProcessInstancesHandler(final long tenantId, final String identifier) {
-        this.tenantId = tenantId;
-        this.identifier = identifier;
+    public ArchiveProcessInstancesHandler() {
+        this.identifier = ArchiveProcessInstancesHandler.class.getName();
     }
 
     @Override
     public void execute(final SUpdateEvent event) throws SHandlerExecutionException {
         final SProcessInstance processInstance = (SProcessInstance) event.getObject();
         try {
-            getTenantServiceAccessor().getBPMArchiverService().archiveAndDeleteProcessInstance(processInstance);
+            getServiceAccessor().getBPMArchiverService().archiveAndDeleteProcessInstance(processInstance);
         } catch (SBonitaException e) {
             throw new SHandlerExecutionException(e);
         }
     }
 
     /**
-     * @return tenantServiceAccessor
-     * @throws SHandlerExecutionException
+     * @return ServiceAccessor
      */
-    private TenantServiceAccessor getTenantServiceAccessor() throws SHandlerExecutionException {
+    private ServiceAccessor getServiceAccessor() throws SHandlerExecutionException {
         try {
-            ServiceAccessorFactory serviceAccessorFactory = ServiceAccessorFactory.getInstance();
-            return serviceAccessorFactory.createTenantServiceAccessor();
+            return ServiceAccessorFactory.getInstance().createServiceAccessor();
         } catch (Exception e) {
             throw new SHandlerExecutionException(e.getMessage(), null);
         }

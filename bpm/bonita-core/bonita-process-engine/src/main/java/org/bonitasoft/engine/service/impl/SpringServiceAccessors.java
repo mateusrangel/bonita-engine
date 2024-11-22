@@ -13,11 +13,8 @@
  **/
 package org.bonitasoft.engine.service.impl;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
 import org.bonitasoft.engine.service.PlatformServiceAccessor;
+import org.bonitasoft.engine.service.ServiceAccessor;
 import org.bonitasoft.engine.service.TenantServiceAccessor;
 
 /**
@@ -26,17 +23,16 @@ import org.bonitasoft.engine.service.TenantServiceAccessor;
 public class SpringServiceAccessors implements ServiceAccessors {
 
     private SpringBeanAccessor platform;
-    private Map<Long, SpringBeanAccessor> tenants = new HashMap<>();
 
     //----  Initialize spring contexts
-    protected synchronized SpringBeanAccessor getPlatformBeanAccessor() {
+    protected synchronized SpringBeanAccessor getBeanAccessor() {
         if (platform == null) {
-            platform = createPlatformBeanAccessor();
+            platform = createBeanAccessor();
         }
         return platform;
     }
 
-    protected SpringBeanAccessor createPlatformBeanAccessor() {
+    protected SpringBeanAccessor createBeanAccessor() {
         return new SpringBeanAccessor();
     }
 
@@ -44,26 +40,26 @@ public class SpringServiceAccessors implements ServiceAccessors {
 
     @Override
     public PlatformInitServiceAccessor getPlatformInitServiceAccessor() {
-        return new SpringPlatformInitServiceAccessor(getPlatformBeanAccessor());
+        return new SpringPlatformInitServiceAccessor(getBeanAccessor());
+    }
+
+    @Override
+    public ServiceAccessor getServiceAccessor() {
+        return new SpringServiceAccessor(getBeanAccessor());
     }
 
     @Override
     public PlatformServiceAccessor getPlatformServiceAccessor() {
-        return new SpringPlatformServiceAccessor(getPlatformBeanAccessor());
+        return new SpringPlatformServiceAccessor(getBeanAccessor());
     }
 
     @Override
     public TenantServiceAccessor getTenantServiceAccessor() {
-        return new SpringTenantServiceAccessor(getPlatformBeanAccessor());
+        return new SpringTenantServiceAccessor(getBeanAccessor());
     }
 
     @Override
     public void destroy() {
-        Set<Map.Entry<Long, SpringBeanAccessor>> tenantAccessors = tenants.entrySet();
-        for (Map.Entry<Long, SpringBeanAccessor> tenantAccessor : tenantAccessors) {
-            tenantAccessor.getValue().destroy();
-        }
-        tenants.clear();
         if (platform != null) {
             platform.destroy();
             platform = null;

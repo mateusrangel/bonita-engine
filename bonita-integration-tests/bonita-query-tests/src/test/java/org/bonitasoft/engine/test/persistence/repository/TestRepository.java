@@ -13,8 +13,6 @@
  **/
 package org.bonitasoft.engine.test.persistence.repository;
 
-import static org.bonitasoft.engine.test.persistence.builder.PersistentObjectBuilder.DEFAULT_TENANT_ID;
-
 import java.util.List;
 import java.util.Random;
 
@@ -22,6 +20,7 @@ import org.bonitasoft.engine.commons.ClassReflector;
 import org.bonitasoft.engine.commons.Pair;
 import org.bonitasoft.engine.persistence.PersistentObject;
 import org.bonitasoft.engine.persistence.PersistentObjectId;
+import org.bonitasoft.engine.persistence.PlatformPersistentObject;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
@@ -44,28 +43,12 @@ public class TestRepository {
         return sessionFactory.getCurrentSession();
     }
 
-    protected Session getSessionWithTenantFilter() {
-        long tenantId = DEFAULT_TENANT_ID;
-        return getSessionWithTenantFilter(tenantId);
-    }
-
-    private Session getSessionWithTenantFilter(long tenantId) {
-        final Session session = getSession();
-        session.enableFilter("tenantFilter").setParameter("tenantId", tenantId);
-        return session;
-    }
-
     protected Query getNamedQuery(final String queryName) {
         return getSession().getNamedQuery(queryName);
     }
 
     public void flush() {
         getSession().flush();
-    }
-
-    private boolean isTenantIdSet(PersistentObject entity) {
-        Long tenantId = getTenantId(entity);
-        return tenantId != null && tenantId > 0;
     }
 
     private Long getTenantId(PersistentObject entity) {
@@ -85,24 +68,19 @@ public class TestRepository {
                 new PersistentObjectId(id, tenantId));
     }
 
-    public PersistentObject selectOne(String queryName, Pair... parameters) {
-        return selectOne(DEFAULT_TENANT_ID, queryName, parameters);
-    }
-
     public Long selectCount(String queryName, Pair... parameters) {
-        Query namedQuery = getSessionWithTenantFilter(DEFAULT_TENANT_ID).getNamedQuery(queryName);
+        Query namedQuery = getNamedQuery(queryName);
         setParameters(namedQuery, parameters);
         return ((Long) namedQuery.uniqueResult());
     }
 
-    public PersistentObject selectOne(long tenantId, String queryName, Pair... parameters) {
-        Query namedQuery = getSessionWithTenantFilter(tenantId).getNamedQuery(queryName);
+    public PersistentObject selectOne(String queryName, Pair... parameters) {
+        Query namedQuery = getNamedQuery(queryName);
         setParameters(namedQuery, parameters);
         return ((PersistentObject) namedQuery.uniqueResult());
     }
 
     public <T> List<T> selectList(String name, Pair... parameters) {
-        getSessionWithTenantFilter();
         Query<T> namedQuery = getNamedQuery(name);
         setParameters(namedQuery, parameters);
         return namedQuery.list();
@@ -125,9 +103,6 @@ public class TestRepository {
     }
 
     public <T extends PersistentObject> T add(T entity) {
-        if (!isTenantIdSet(entity)) {
-            entity.setTenantId(DEFAULT_TENANT_ID);
-        }
         if (entity.getId() <= 0) {
             entity.setId(new Random().nextLong());
         }
@@ -136,6 +111,20 @@ public class TestRepository {
     }
 
     public <T extends PersistentObject> void add(T... entities) {
+        for (T entity : entities) {
+            add(entity);
+        }
+    }
+
+    public <T extends PlatformPersistentObject> T add(T entity) {
+        if (entity.getId() <= 0) {
+            entity.setId(new Random().nextLong());
+        }
+        getSession().save(entity);
+        return (T) getSession().get(entity.getClass(), entity.getId());
+    }
+
+    public <T extends PlatformPersistentObject> void add(T... entities) {
         for (T entity : entities) {
             add(entity);
         }

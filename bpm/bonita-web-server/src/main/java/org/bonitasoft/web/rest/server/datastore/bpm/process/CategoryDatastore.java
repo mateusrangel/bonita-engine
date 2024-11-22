@@ -22,10 +22,7 @@ import org.bonitasoft.engine.bpm.category.Category;
 import org.bonitasoft.engine.bpm.category.CategoryCriterion;
 import org.bonitasoft.engine.bpm.category.CategoryNotFoundException;
 import org.bonitasoft.engine.bpm.category.CategoryUpdater;
-import org.bonitasoft.engine.exception.AlreadyExistsException;
-import org.bonitasoft.engine.exception.BonitaHomeNotSetException;
-import org.bonitasoft.engine.exception.ServerAPIException;
-import org.bonitasoft.engine.exception.UnknownAPITypeException;
+import org.bonitasoft.engine.exception.*;
 import org.bonitasoft.engine.session.APISession;
 import org.bonitasoft.engine.session.InvalidSessionException;
 import org.bonitasoft.web.rest.model.bpm.process.CategoryDefinition;
@@ -87,26 +84,18 @@ public class CategoryDatastore extends CommonDatastore<CategoryItem, Category> i
      * Retrieve the total number of categories for a given process
      */
     public long getNumberOfCategories(long processId) {
-        try {
-            return getProcessAPI().getNumberOfCategories(processId);
-        } catch (final Exception e) {
-            throw new APIException(e);
-        }
+        return getProcessAPI().getNumberOfCategories(processId);
     }
 
     @Override
     public ItemSearchResult<CategoryItem> search(final int page, final int resultsByPage, final String search,
             final String orders,
             final Map<String, String> filters) {
-        try {
-            CategoryCriterion orderCrit = getOrder(orders);
-            if (filters.containsKey(ProcessItem.ATTRIBUTE_ID)) {
-                return searchProcessCategories(page, resultsByPage, filters, orderCrit);
-            } else {
-                return searchCategories(page, resultsByPage, orderCrit);
-            }
-        } catch (final Exception e) {
-            throw new APIException(e);
+        CategoryCriterion orderCrit = getOrder(orders);
+        if (filters.containsKey(ProcessItem.ATTRIBUTE_ID)) {
+            return searchProcessCategories(page, resultsByPage, filters, orderCrit);
+        } else {
+            return searchCategories(page, resultsByPage, orderCrit);
         }
     }
 
@@ -149,7 +138,7 @@ public class CategoryDatastore extends CommonDatastore<CategoryItem, Category> i
             throw new APIForbiddenException(
                     new T_("Category with name %categoryName% already exists", new Arg("categoryName", item.getName())),
                     e);
-        } catch (final Exception e) {
+        } catch (final BonitaException e) {
             throw new APIException(e);
         }
     }
@@ -161,7 +150,7 @@ public class CategoryDatastore extends CommonDatastore<CategoryItem, Category> i
             return convertEngineToConsoleItem(result);
         } catch (CategoryNotFoundException e) {
             throw new APIItemNotFoundException(CategoryDefinition.TOKEN, id);
-        } catch (final Exception e) {
+        } catch (final BonitaException e) {
             throw new APIException(e);
         }
     }
@@ -199,7 +188,7 @@ public class CategoryDatastore extends CommonDatastore<CategoryItem, Category> i
                 } while (processAPI.removeProcessDefinitionsFromCategory(idCat, 0, 20) > 0);
                 processAPI.deleteCategory(idCat);
             }
-        } catch (final Exception e) {
+        } catch (final BonitaException e) {
             if (e.getCause() instanceof CategoryNotFoundException) {
                 throw new APIItemNotFoundException(CategoryDefinition.TOKEN);
             } else {
@@ -217,7 +206,7 @@ public class CategoryDatastore extends CommonDatastore<CategoryItem, Category> i
             catItem.setId(id);
             processAPI.updateCategory(id.toLong(), createCategoryUpdater(catItem));
             return get(id);
-        } catch (final Exception e) {
+        } catch (final BonitaException e) {
             throw new APIException(e);
         }
     }
@@ -225,7 +214,7 @@ public class CategoryDatastore extends CommonDatastore<CategoryItem, Category> i
     protected ProcessAPI getProcessAPI() {
         try {
             return TenantAPIAccessor.getProcessAPI(getEngineSession());
-        } catch (Exception e) {
+        } catch (BonitaException e) {
             throw new APIException(e);
         }
     }

@@ -28,14 +28,13 @@ public class CacheConfigurationIT extends CommonBPMServicesTest {
 
     @Before
     public void setUp() {
-        cacheService = (EhCacheCacheService) getPlatformAccessor().getPlatformCacheService();
+        cacheService = (EhCacheCacheService) getServiceAccessor().getPlatformCacheService();
     }
 
     @Test
     public void all_required_cache_configurations_should_exist() {
         assertThat(cacheService.getCacheConfigurationNames()).containsExactlyInAnyOrder(
                 "CONFIGURATION_FILES_CACHE",
-                "PLATFORM",
                 "USER_FILTER",
                 "transient_data",
                 "GROOVY_SCRIPT_CACHE_NAME",

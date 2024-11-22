@@ -29,14 +29,11 @@ import org.bonitasoft.engine.bpm.process.ProcessInstanceCriterion;
 import org.bonitasoft.engine.bpm.process.impl.ProcessDefinitionBuilder;
 import org.bonitasoft.engine.bpm.process.impl.UserTaskDefinitionBuilder;
 import org.bonitasoft.engine.event.AbstractEventIT;
-import org.bonitasoft.engine.exception.BonitaException;
 import org.bonitasoft.engine.exception.BonitaRuntimeException;
 import org.bonitasoft.engine.expression.Expression;
 import org.bonitasoft.engine.expression.ExpressionBuilder;
 import org.bonitasoft.engine.scheduler.SchedulerService;
-import org.bonitasoft.engine.service.PlatformServiceAccessor;
-import org.bonitasoft.engine.service.TenantServiceAccessor;
-import org.bonitasoft.engine.service.TenantServiceSingleton;
+import org.bonitasoft.engine.service.ServiceAccessor;
 import org.bonitasoft.engine.service.impl.ServiceAccessorFactory;
 import org.bonitasoft.engine.session.APISession;
 import org.bonitasoft.engine.sessionaccessor.SessionAccessor;
@@ -53,17 +50,9 @@ public class LocalInterruptingTimerBoundaryEventIT extends AbstractEventIT {
         sessionAccessor.setSessionInfo(session.getId(), session.getTenantId());
     }
 
-    protected PlatformServiceAccessor getPlatformAccessor() {
+    protected ServiceAccessor getServiceAccessor() {
         try {
-            return ServiceAccessorFactory.getInstance().createPlatformServiceAccessor();
-        } catch (final Exception e) {
-            throw new BonitaRuntimeException(e);
-        }
-    }
-
-    protected TenantServiceAccessor getServiceAccessor() {
-        try {
-            return TenantServiceSingleton.getInstance();
+            return ServiceAccessorFactory.getInstance().createServiceAccessor();
         } catch (final Exception e) {
             throw new BonitaRuntimeException(e);
         }
@@ -71,8 +60,8 @@ public class LocalInterruptingTimerBoundaryEventIT extends AbstractEventIT {
 
     private boolean containsTimerJob(final String jobName) throws Exception {
         setSessionInfo(getSession());
-        final SchedulerService schedulerService = getPlatformAccessor().getSchedulerService();
-        final TransactionService transactionService = getPlatformAccessor().getTransactionService();
+        final SchedulerService schedulerService = getServiceAccessor().getSchedulerService();
+        final TransactionService transactionService = getServiceAccessor().getTransactionService();
         transactionService.begin();
         try {
             final List<String> jobs = schedulerService.getJobs();
@@ -277,7 +266,7 @@ public class LocalInterruptingTimerBoundaryEventIT extends AbstractEventIT {
         // start P3, the call activities will start instances of P2 a and P1
         final ProcessInstance rootProcessInstance = getProcessAPI().startProcess(rootProcess.getId());
         waitForUserTask(rootProcessInstance, simpleStepName);
-        List<String> allJobs = getPlatformAccessor().getSchedulerService().getAllJobs();
+        List<String> allJobs = getServiceAccessor().getSchedulerService().getAllJobs();
 
         boolean timer_ev_isCreated = false;
         for (String job : allJobs) {
@@ -303,7 +292,7 @@ public class LocalInterruptingTimerBoundaryEventIT extends AbstractEventIT {
         assertThat(taskInstances.size()).isEqualTo(0);
 
         //check the quartz events got deleted correctly
-        allJobs = getPlatformAccessor().getSchedulerService().getAllJobs();
+        allJobs = getServiceAccessor().getSchedulerService().getAllJobs();
 
         for (String job : allJobs) {
             // There might be a few of those left in the DB, it should be the only ones
@@ -314,7 +303,7 @@ public class LocalInterruptingTimerBoundaryEventIT extends AbstractEventIT {
     }
 
     private ProcessDefinition deployAndEnableSimpleProcessWithBoundaryEvent(final String processName,
-            final String userTaskName) throws BonitaException {
+            final String userTaskName) throws Exception {
         final ProcessDefinitionBuilder processDefBuilder = new ProcessDefinitionBuilder().createNewInstance(processName,
                 "1.0");
         processDefBuilder.addActor(ACTOR_NAME);
@@ -332,7 +321,7 @@ public class LocalInterruptingTimerBoundaryEventIT extends AbstractEventIT {
 
     private ProcessDefinition deployAndEnableProcessWithCallActivity(final String processName,
             final String targetProcessName, final String userTaskName,
-            final String callActivityName) throws BonitaException {
+            final String callActivityName) throws Exception {
         final Expression targetProcessNameExpr = new ExpressionBuilder()
                 .createConstantStringExpression(targetProcessName);
 

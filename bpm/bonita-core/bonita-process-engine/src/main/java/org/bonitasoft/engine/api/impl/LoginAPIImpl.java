@@ -13,11 +13,11 @@
  **/
 package org.bonitasoft.engine.api.impl;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang3.math.NumberUtils;
 import org.bonitasoft.engine.api.LoginAPI;
 import org.bonitasoft.engine.api.impl.transaction.CustomTransactions;
 import org.bonitasoft.engine.authentication.AuthenticationConstants;
@@ -26,16 +26,13 @@ import org.bonitasoft.engine.commons.exceptions.SBonitaRuntimeException;
 import org.bonitasoft.engine.core.login.LoginService;
 import org.bonitasoft.engine.core.login.SLoginException;
 import org.bonitasoft.engine.core.login.TechnicalUser;
-import org.bonitasoft.engine.exception.TenantStatusException;
+import org.bonitasoft.engine.exception.BonitaHomeConfigurationException;
 import org.bonitasoft.engine.platform.LoginException;
 import org.bonitasoft.engine.platform.LogoutException;
 import org.bonitasoft.engine.platform.PlatformService;
-import org.bonitasoft.engine.platform.UnknownUserException;
 import org.bonitasoft.engine.platform.model.STenant;
 import org.bonitasoft.engine.service.ModelConvertor;
-import org.bonitasoft.engine.service.PlatformServiceAccessor;
-import org.bonitasoft.engine.service.TenantServiceAccessor;
-import org.bonitasoft.engine.service.TenantServiceSingleton;
+import org.bonitasoft.engine.service.ServiceAccessor;
 import org.bonitasoft.engine.service.impl.ServiceAccessorFactory;
 import org.bonitasoft.engine.session.APISession;
 import org.bonitasoft.engine.session.SSessionNotFoundException;
@@ -56,7 +53,7 @@ public class LoginAPIImpl implements LoginAPI {
     @AvailableWhenTenantIsPaused
     public APISession login(final String userName, final String password) throws LoginException {
         try {
-            return loginInternal(userName, password, null);
+            return loginInternal(userName, password);
         } catch (final LoginException e) {
             throw e;
         } catch (final Exception e) {
@@ -69,7 +66,7 @@ public class LoginAPIImpl implements LoginAPI {
     protected APISession login(final String userName, final String password, final Long tenantId)
             throws LoginException {
         try {
-            return loginInternal(userName, password, tenantId);
+            return loginInternal(userName, password);
         } catch (final LoginException e) {
             throw e;
         } catch (final Exception e) {
@@ -80,15 +77,10 @@ public class LoginAPIImpl implements LoginAPI {
     @Override
     @CustomTransactions
     @AvailableWhenTenantIsPaused
-    public APISession login(final Map<String, Serializable> credentials) throws LoginException, UnknownUserException {
+    public APISession login(final Map<String, Serializable> credentials) throws LoginException {
         checkCredentialsAreNotNullOrEmpty(credentials);
         try {
-            final Long tenantId = NumberUtils
-                    .isNumber(String.valueOf(credentials.get(AuthenticationConstants.BASIC_TENANT_ID)))
-                            ? NumberUtils.toLong(String
-                                    .valueOf(credentials.get(AuthenticationConstants.BASIC_TENANT_ID)))
-                            : null;
-            return loginInternal(tenantId, credentials);
+            return loginInternal(credentials);
         } catch (final LoginException e) {
             throw e;
         } catch (final Exception e) {
@@ -96,29 +88,25 @@ public class LoginAPIImpl implements LoginAPI {
         }
     }
 
-    protected APISession loginInternal(final String userName, final String password, final Long tenantId)
+    protected APISession loginInternal(final String userName, final String password)
             throws Exception {
         checkUsernameAndPassword(userName, password);
         final Map<String, Serializable> credentials = new HashMap<>();
         credentials.put(AuthenticationConstants.BASIC_USERNAME, userName);
         credentials.put(AuthenticationConstants.BASIC_PASSWORD, password);
-        return loginInternal(tenantId, credentials);
+        return loginInternal(credentials);
     }
 
-    protected APISession loginInternal(final Long tenantId, final Map<String, Serializable> credentials)
+    protected APISession loginInternal(final Map<String, Serializable> credentials)
             throws Exception {
         final String userName = credentials.get(AuthenticationConstants.BASIC_USERNAME) != null
-                ? String.valueOf(credentials
-                        .get(AuthenticationConstants.BASIC_USERNAME))
-                : null;
-        final PlatformServiceAccessor platformServiceAccessor = ServiceAccessorFactory.getInstance()
-                .createPlatformServiceAccessor();
-        final STenant sTenant = getTenant(tenantId, platformServiceAccessor);
+                ? String.valueOf(credentials.get(AuthenticationConstants.BASIC_USERNAME)) : null;
+        final ServiceAccessor serviceAccessor = ServiceAccessorFactory.getInstance().createServiceAccessor();
+        final STenant sTenant = getTenant(serviceAccessor);
 
-        final TenantServiceAccessor serviceAccessor = getTenantServiceAccessor();
         checkThatWeCanLogin(userName, sTenant, serviceAccessor.getTechnicalUser());
         final LoginService loginService = serviceAccessor.getLoginService();
-        final TransactionService transactionService = platformServiceAccessor.getTransactionService();
+        final TransactionService transactionService = serviceAccessor.getTransactionService();
         SessionAccessor sessionAccessor = serviceAccessor.getSessionAccessor();
 
         final Map<String, Serializable> credentialsWithResolvedTenantId = new HashMap<>(credentials);
@@ -135,16 +123,11 @@ public class LoginAPIImpl implements LoginAPI {
         }
     }
 
-    protected STenant getTenant(final Long tenantId, final PlatformServiceAccessor platformServiceAccessor)
+    private STenant getTenant(final ServiceAccessor serviceAccessor)
             throws SBonitaException {
-        final PlatformService platformService = platformServiceAccessor.getPlatformService();
-        final TransactionService transactionService = platformServiceAccessor.getTransactionService();
+        final PlatformService platformService = serviceAccessor.getPlatformService();
         try {
-            if (tenantId == null) {
-                return transactionService.executeInTransaction(platformService::getDefaultTenant);
-            } else {
-                return transactionService.executeInTransaction(() -> platformService.getTenant(tenantId));
-            }
+            return serviceAccessor.getTransactionService().executeInTransaction(platformService::getDefaultTenant);
         } catch (SBonitaException | RuntimeException e) {
             throw e;
         } catch (Exception e) {
@@ -173,24 +156,20 @@ public class LoginAPIImpl implements LoginAPI {
         if (sTenant.isDeactivated()) {
             throw new LoginException("Tenant " + sTenant.getName() + " is not activated !!");
         }
-        if (sTenant.isPaused()) {
-            final String technicalUserName = technicalUser.getUserName();
-
-            if (!technicalUserName.equals(userName)) {
-                throw new TenantStatusException("Tenant with ID " + sTenant.getId()
-                        + " is in pause, unable to login with other user than the technical user.");
-            }
-        }
     }
 
-    protected TenantServiceAccessor getTenantServiceAccessor() {
-        return TenantServiceSingleton.getInstance();
+    protected ServiceAccessor getServiceAccessor() {
+        try {
+            return ServiceAccessorFactory.getInstance().createServiceAccessor();
+        } catch (BonitaHomeConfigurationException | IOException | ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     @CustomTransactions
     public void logout(final APISession session) throws LogoutException, SessionNotFoundException {
-        final TenantServiceAccessor serviceAccessor = getTenantServiceAccessor();
+        final ServiceAccessor serviceAccessor = getServiceAccessor();
         try {
             serviceAccessor.getLoginService().logout(session.getId());
         } catch (final SSessionNotFoundException sbe) {

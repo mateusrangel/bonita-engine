@@ -41,16 +41,12 @@ import org.bonitasoft.engine.identity.User;
 import org.bonitasoft.engine.operation.LeftOperandBuilder;
 import org.bonitasoft.engine.operation.OperationBuilder;
 import org.bonitasoft.engine.operation.OperatorType;
-import org.bonitasoft.engine.service.TenantServiceAccessor;
-import org.bonitasoft.engine.service.TenantServiceSingleton;
+import org.bonitasoft.engine.service.ServiceAccessor;
+import org.bonitasoft.engine.service.ServiceAccessorSingleton;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class BDRepositoryLocalIT extends CommonAPIIT {
-
-    private static final Logger log = LoggerFactory.getLogger(BDRepositoryLocalIT.class);
 
     private static final String FIND_BY_FIRST_NAME_AND_LAST_NAME_NEW_ORDER = "findByFirstNameAndLastNameNewOrder";
 
@@ -117,7 +113,7 @@ public class BDRepositoryLocalIT extends CommonAPIIT {
         final byte[] zip = converter.zip(buildCustomBOM());
         getTenantAdministrationAPI().pause();
         getTenantAdministrationAPI().cleanAndUninstallBusinessDataModel();
-        getTenantAdministrationAPI().installBusinessDataModel(zip);
+        getTenantAdministrationAPI().updateBusinessDataModel(zip);
         getTenantAdministrationAPI().resume();
 
         // needed for remote testing
@@ -156,7 +152,7 @@ public class BDRepositoryLocalIT extends CommonAPIIT {
         final Expression addressRomeExpression = createGrovyExpressionThatCreateAddressWithCityName(CITY_ROME,
                 COUNTRY_ITALY);
 
-        final Expression employeeExpression = createGrovyExpressionThatCreateEmployeWithOneAddress(
+        final Expression employeeExpression = createGroovyExpressionThatCreateEmployeeWithOneAddress(
                 BIZ_GRENOBLE_ADDRESS);
 
         final ProcessDefinitionBuilder processDefinitionBuilder = new ProcessDefinitionBuilder().createNewInstance(
@@ -227,8 +223,8 @@ public class BDRepositoryLocalIT extends CommonAPIIT {
     private void verifyLazyAddressesCount(final HumanTaskInstance humanTaskInstance, final int expectedCount)
             throws Exception {
 
-        final Map<String, Serializable> map = new HashMap<String, Serializable>();
-        final Map<Expression, Map<String, Serializable>> expressions = new HashMap<Expression, Map<String, Serializable>>();
+        final Map<String, Serializable> map = new HashMap<>();
+        final Map<Expression, Map<String, Serializable>> expressions = new HashMap<>();
 
         final Expression createQueryBusinessDataExpression = new ExpressionBuilder().createQueryBusinessDataExpression(
                 "expression Name",
@@ -248,7 +244,7 @@ public class BDRepositoryLocalIT extends CommonAPIIT {
         final Serializable businessData = evaluateExpressionsAtProcessInstanciation
                 .get(createQueryBusinessDataExpression.getName());
 
-        final Map<Expression, Map<String, Serializable>> expressions2 = new HashMap<Expression, Map<String, Serializable>>();
+        final Map<Expression, Map<String, Serializable>> expressions2 = new HashMap<>();
         expressions2.put(countExpression, Collections.singletonMap("myEmployee", businessData));
 
         final Map<String, Serializable> evaluateExpressionsOnActivityInstance = getProcessAPI()
@@ -263,8 +259,8 @@ public class BDRepositoryLocalIT extends CommonAPIIT {
     private void verifyEagerCountryFieldInAddresses(final HumanTaskInstance humanTaskInstance,
             final String expectedCountry) throws Exception {
 
-        final Map<String, Serializable> map = new HashMap<String, Serializable>();
-        final Map<Expression, Map<String, Serializable>> mapGetEmployee = new HashMap<Expression, Map<String, Serializable>>();
+        final Map<String, Serializable> map = new HashMap<>();
+        final Map<Expression, Map<String, Serializable>> mapGetEmployee = new HashMap<>();
 
         final Expression getEmployeeExpression = new ExpressionBuilder().createQueryBusinessDataExpression(
                 "expression Name",
@@ -286,7 +282,7 @@ public class BDRepositoryLocalIT extends CommonAPIIT {
 
         final Serializable returnedEmployee = getEmployeeResultMap.get(queryName);
 
-        final Map<Expression, Map<String, Serializable>> mapGetCountry = new HashMap<Expression, Map<String, Serializable>>();
+        final Map<Expression, Map<String, Serializable>> mapGetCountry = new HashMap<>();
         mapGetCountry.put(getCountryExpression, Collections.singletonMap("myEmployee", returnedEmployee));
 
         final Map<String, Serializable> getCountryResultMap = getProcessAPI().evaluateExpressionsOnActivityInstance(
@@ -300,8 +296,8 @@ public class BDRepositoryLocalIT extends CommonAPIIT {
     private void verifySimpleFieldInAddresses(final HumanTaskInstance humanTaskInstance, final String expectedCity)
             throws Exception {
 
-        final Map<String, Serializable> map = new HashMap<String, Serializable>();
-        final Map<Expression, Map<String, Serializable>> mapGetEmployee = new HashMap<Expression, Map<String, Serializable>>();
+        final Map<String, Serializable> map = new HashMap<>();
+        final Map<Expression, Map<String, Serializable>> mapGetEmployee = new HashMap<>();
 
         final Expression getEmployeeExpression = new ExpressionBuilder().createQueryBusinessDataExpression(
                 "expression Name",
@@ -321,7 +317,7 @@ public class BDRepositoryLocalIT extends CommonAPIIT {
 
         final Serializable returnedEmployee = getEmployeeResultMap.get(queryName);
 
-        final Map<Expression, Map<String, Serializable>> mapGetCountry = new HashMap<Expression, Map<String, Serializable>>();
+        final Map<Expression, Map<String, Serializable>> mapGetCountry = new HashMap<>();
         mapGetCountry.put(getCountryExpression, Collections.singletonMap("myEmployee", returnedEmployee));
 
         final Map<String, Serializable> cityResultMap = getProcessAPI().evaluateExpressionsOnActivityInstance(
@@ -333,21 +329,15 @@ public class BDRepositoryLocalIT extends CommonAPIIT {
 
     }
 
-    private Expression createGrovyExpressionThatCreateEmployeWithOneAddress(final String businessDataAdressName)
+    private Expression createGroovyExpressionThatCreateEmployeeWithOneAddress(final String businessDataAddressName)
             throws InvalidExpressionException {
-        final StringBuilder script = new StringBuilder();
-        script.append("import ")
-                .append(EMPLOYEE_QUALIFIED_NAME)
-                .append(";")
-                .append("import ")
-                .append(ADDRESS_QUALIFIED_NAME)
-                .append("; Employee e = new Employee(); e.firstName = 'Alphonse';")
-                .append(" e.lastName = 'Dupond'; e.addToAddresses(")
-                .append(businessDataAdressName)
-                .append("); return e;");
-        return new ExpressionBuilder().createGroovyScriptExpression("createNewEmployee", script.toString(),
+        String script = "import " + EMPLOYEE_QUALIFIED_NAME + "; import " + ADDRESS_QUALIFIED_NAME +
+                "; Employee e = new Employee(); e.firstName = 'Alphonse'; e.lastName = 'Dupond'; e.addToAddresses(" +
+                businessDataAddressName +
+                "); return e;";
+        return new ExpressionBuilder().createGroovyScriptExpression("createNewEmployee", script,
                 EMPLOYEE_QUALIFIED_NAME,
-                createBusinessDataExpressionWithName(businessDataAdressName));
+                createBusinessDataExpressionWithName(businessDataAddressName));
     }
 
     private Expression createBusinessDataExpressionWithName(final String businessDataName)
@@ -519,9 +509,9 @@ public class BDRepositoryLocalIT extends CommonAPIIT {
     }
 
     private List execute_native_sql(String query) throws Exception {
-        TenantServiceAccessor tenantServiceAccessor = TenantServiceSingleton.getInstance();
-        return tenantServiceAccessor.getUserTransactionService().executeInTransaction(
-                () -> ((JPABusinessDataRepositoryImpl) (tenantServiceAccessor.getBusinessDataRepository()))
+        ServiceAccessor serviceAccessor = ServiceAccessorSingleton.getInstance();
+        return serviceAccessor.getUserTransactionService().executeInTransaction(
+                () -> ((JPABusinessDataRepositoryImpl) (serviceAccessor.getBusinessDataRepository()))
                         .getEntityManagerFactory().createEntityManager().createNativeQuery(query).getResultList());
     }
 

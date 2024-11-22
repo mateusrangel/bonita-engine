@@ -14,25 +14,22 @@
 package org.bonitasoft.engine.job;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
+import org.bonitasoft.engine.command.RuntimeCommand;
 import org.bonitasoft.engine.command.SCommandExecutionException;
-import org.bonitasoft.engine.command.TenantCommand;
 import org.bonitasoft.engine.scheduler.SchedulerService;
 import org.bonitasoft.engine.scheduler.exception.SSchedulerException;
 import org.bonitasoft.engine.scheduler.model.SJobDescriptor;
-import org.bonitasoft.engine.scheduler.model.SJobParameter;
 import org.bonitasoft.engine.scheduler.trigger.OneShotTrigger;
 import org.bonitasoft.engine.scheduler.trigger.Trigger;
-import org.bonitasoft.engine.service.TenantServiceAccessor;
+import org.bonitasoft.engine.service.ServiceAccessor;
 
-public class AddJobCommand extends TenantCommand {
+public class AddJobCommand extends RuntimeCommand {
 
     @Override
-    public Serializable execute(final Map<String, Serializable> parameters, final TenantServiceAccessor serviceAccessor)
+    public Serializable execute(final Map<String, Serializable> parameters, final ServiceAccessor serviceAccessor)
             throws SCommandExecutionException {
         final SchedulerService schedulerService = serviceAccessor.getSchedulerService();
         final Trigger trigger = new OneShotTrigger("OneShot", new Date());
@@ -41,16 +38,6 @@ public class AddJobCommand extends TenantCommand {
                 .jobName("ThrowsExceptionJob")
                 .description("Throw an exception when 'throwException'=true")
                 .build();
-        Boolean throwException = Boolean.TRUE;
-        final Serializable exception = parameters.get("throwException");
-        if (exception != null) {
-            throwException = (Boolean) exception;
-        }
-        final SJobParameter parameter = SJobParameter.builder()
-                .key("throwException")
-                .value(throwException).build();
-        final List<SJobParameter> params = new ArrayList<SJobParameter>(2);
-        params.add(parameter);
         try {
             schedulerService.schedule(jobDescriptor, trigger);
             return null;

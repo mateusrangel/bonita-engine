@@ -16,13 +16,8 @@ package org.bonitasoft.engine.api;
 import java.util.Map;
 
 import org.bonitasoft.engine.exception.CreationException;
-import org.bonitasoft.engine.exception.DeletionException;
 import org.bonitasoft.engine.exception.UpdateException;
-import org.bonitasoft.engine.platform.Platform;
-import org.bonitasoft.engine.platform.PlatformNotFoundException;
-import org.bonitasoft.engine.platform.PlatformState;
-import org.bonitasoft.engine.platform.StartNodeException;
-import org.bonitasoft.engine.platform.StopNodeException;
+import org.bonitasoft.engine.platform.*;
 
 /**
  * <b>Manage the platform.</b>
@@ -51,9 +46,9 @@ public interface PlatformAPI {
      *         occurs if the API session is invalid, e.g session has expired.
      * @throws CreationException
      *         occurs when an exception is thrown during platform creation
-     * @deprecated Not usefull anymore, initialization is done by the setup tool
+     * @deprecated Not useful anymore, initialization is done by the setup tool
      */
-    @Deprecated(forRemoval = true, since = "7.16.0")
+    @Deprecated(forRemoval = true, since = "8.0.0")
     void initializePlatform() throws CreationException;
 
     /**
@@ -86,27 +81,6 @@ public interface PlatformAPI {
     void stopNode() throws StopNodeException;
 
     /**
-     * <b>Clean the platform.</b>
-     * <p>
-     * Empty all execution informations, i.e. database tables are cleaned and a new execution environment can be
-     * initialized.
-     * <p>
-     * /!\Please remember that <b>all data will be DELETED</b>/!\
-     * <p>
-     * This method does the opposite of {@link #initializePlatform()}
-     *
-     * @see #initializePlatform()
-     * @throws org.bonitasoft.engine.session.InvalidSessionException
-     *         Generic exception thrown if API Session is invalid, e.g session has expired.
-     * @throws DeletionException
-     *         occurs when an exception is thrown during platform deletion
-     * @deprecated since 7.15.0, that method delete all tenants, we don't want to do that, delete the database schema
-     *             instead
-     */
-    @Deprecated(forRemoval = true, since = "7.15.0")
-    void cleanPlatform() throws DeletionException;
-
-    /**
      * Get the platform.
      *
      * @return the Platform object
@@ -116,16 +90,6 @@ public interface PlatformAPI {
      *         occurs when the identifier does not refer to an existing platform
      */
     Platform getPlatform() throws PlatformNotFoundException;
-
-    /**
-     * Check if the default tenant is created or not.
-     *
-     * @return true if the default tenant exists
-     * @throws PlatformNotFoundException when the default tenant existence cannot be determined
-     * @since 7.3
-     */
-    @Deprecated(forRemoval = true, since = "7.15.0")
-    boolean isPlatformInitialized() throws PlatformNotFoundException;
 
     /**
      * Check if the platform created or not.
@@ -178,15 +142,14 @@ public interface PlatformAPI {
 
     /**
      * INTERNAL USE ONLY
-     * get client configuration files of the tenants. Since 7.16, as there is only 1 tenant, the map only contains
-     * 1 element.
+     * Get client configuration files at tenant level.
+     * Since 8.0, as there is only 1 tenant, the tenantId is not relevant anymore.
      *
-     * @return the client tenants configuration files as a map containing for each tenant id a map with file name and
-     *         file content
+     * @return the client tenants configuration files as a map with file name and file content
      * @since 7.3
      */
     @Internal
-    Map<Long, Map<String, byte[]>> getClientTenantConfigurations();
+    Map<String, byte[]> getClientTenantConfigurations();
 
     /**
      * INTERNAL USE ONLY

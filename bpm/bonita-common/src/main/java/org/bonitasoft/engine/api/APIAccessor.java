@@ -53,16 +53,6 @@ public interface APIAccessor extends Serializable {
     ProfileAPI getProfileAPI();
 
     /**
-     * Gives access to the <code>ThemeAPI</code>
-     *
-     * @return an <code>ThemeAPI</code>
-     * @deprecated since 7.13.0, ThemeAPI does nothing. There is no replacement, as it used to serve old removed
-     *             feature.
-     */
-    @Deprecated(since = "7.13.0")
-    ThemeAPI getThemeAPI();
-
-    /**
      * Gives access to the <code>PermissionAPI</code>
      *
      * @return an <code>PermissionAPI</code>
@@ -89,7 +79,7 @@ public interface APIAccessor extends Serializable {
      * @return an <code>BusinessDataAPI</code>
      * @deprecated as of 7.3, see {@link BusinessDataAPI} for replacements
      */
-    @Deprecated
+    @Deprecated(since = "7.3")
     BusinessDataAPI getBusinessDataAPI();
 
 }

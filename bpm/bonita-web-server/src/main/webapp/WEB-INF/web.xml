@@ -11,6 +11,10 @@
         <location>/error/500</location>
     </error-page>
     <error-page>
+        <error-code>503</error-code>
+        <location>/error/503</location>
+    </error-page>
+    <error-page>
         <error-code>403</error-code>
         <location>/error/403</location>
     </error-page>
@@ -240,12 +244,19 @@
         <url-pattern>/APIToolkit/*</url-pattern>
         <!-- see TokenValidatorFilter comment -->
         <url-pattern>/portal/custom-page/API/*</url-pattern>
+        <url-pattern>/services/*</url-pattern>
         <url-pattern>/portal/formsDocumentDownload</url-pattern>
         <url-pattern>/portal/documentDownload</url-pattern>
         <url-pattern>/portal/downloadDocument</url-pattern>
         <url-pattern>/portal/pageDownload</url-pattern>
-        <url-pattern>/services/*</url-pattern>
         <url-pattern>/portal/exportOrganization</url-pattern>
+        <url-pattern>/portal/fileUpload</url-pattern>
+        <url-pattern>/portal/processUpload</url-pattern>
+        <url-pattern>/portal/organizationUpload</url-pattern>
+        <url-pattern>/portal/actorsUpload</url-pattern>
+        <url-pattern>/portal/applicationsUpload</url-pattern>
+        <url-pattern>/portal/pageUpload</url-pattern>
+        <url-pattern>/portal/imageUpload</url-pattern>
         <!--  Add more servlet mappings here -->
         <dispatcher>REQUEST</dispatcher>
         <dispatcher>FORWARD</dispatcher>
@@ -276,7 +287,6 @@
     <filter-mapping>
         <filter-name>CacheFilter</filter-name>
         <url-pattern>/login.jsp</url-pattern>
-        <url-pattern>/portal/pageResource</url-pattern>
         <url-pattern>/platformloginservice</url-pattern>
         <url-pattern>/platformlogoutservice</url-pattern>
         <url-pattern>/API/system/i18ntranslation</url-pattern>
@@ -343,6 +353,19 @@
         <servlet-class>org.bonitasoft.web.rest.server.BonitaRestletApplicationServlet</servlet-class>
     </servlet>
     <servlet>
+        <servlet-name>SpringRest</servlet-name>
+        <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+        <init-param>
+            <param-name>contextClass</param-name>
+            <param-value>org.springframework.web.context.support.AnnotationConfigWebApplicationContext</param-value>
+        </init-param>
+        <init-param>
+            <param-name>contextConfigLocation</param-name>
+            <param-value>org.bonitasoft.web.rest.server.SpringWebConfiguration</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    <servlet>
         <servlet-name>ConsoleServiceServlet</servlet-name>
         <servlet-class>org.bonitasoft.console.server.ConsoleServiceServlet</servlet-class>
     </servlet>
@@ -350,6 +373,10 @@
     <servlet>
         <servlet-name>fileUploadServlet</servlet-name>
         <servlet-class>org.bonitasoft.console.common.server.servlet.TenantFileUploadServlet</servlet-class>
+        <init-param>
+            <param-name>CheckUploadedFileSize</param-name>
+            <param-value>true</param-value>
+        </init-param>
     </servlet>
     <servlet>
         <servlet-name>formFileUploadServlet</servlet-name>
@@ -367,6 +394,7 @@
             <param-value>true</param-value>
         </init-param>
     </servlet>
+    <!-- @deprecated as of 9.0.0, Process should be created/updated at startup -->
     <servlet>
         <servlet-name>processUploadServlet</servlet-name>
         <servlet-class>org.bonitasoft.console.common.server.servlet.TenantFileUploadServlet</servlet-class>
@@ -375,6 +403,7 @@
             <param-value>bar</param-value>
         </init-param>
     </servlet>
+    <!-- @deprecated as of 9.0.0, Process should be created/updated at startup -->
     <servlet>
         <servlet-name>apiProcessUploadServlet</servlet-name>
         <servlet-class>org.bonitasoft.console.common.server.servlet.TenantFileUploadServlet</servlet-class>
@@ -397,6 +426,14 @@
         <init-param>
             <param-name>SupportedExtensions</param-name>
             <param-value>xml</param-value>
+        </init-param>
+    </servlet>
+    <servlet>
+        <servlet-name>zipUploadServlet</servlet-name>
+        <servlet-class>org.bonitasoft.console.common.server.servlet.TenantFileUploadServlet</servlet-class>
+        <init-param>
+            <param-name>SupportedExtensions</param-name>
+            <param-value>zip</param-value>
         </init-param>
     </servlet>
     <servlet>
@@ -501,13 +538,6 @@
         <servlet-name>CustomPageServlet</servlet-name>
         <servlet-class>org.bonitasoft.console.common.server.page.CustomPageServlet</servlet-class>
     </servlet>
-    <!--This pageResource servlet is deprecated.
-        You can now access your resources through their relative URL.
-        see the custom page documentation.-->
-    <servlet>
-        <servlet-name>pageResource</servlet-name>
-        <servlet-class>org.bonitasoft.console.common.server.page.PageResourceServlet</servlet-class>
-    </servlet>
     <servlet>
         <servlet-name>pageDownload</servlet-name>
         <servlet-class>org.bonitasoft.console.common.server.page.PageDownloadServlet</servlet-class>
@@ -577,10 +607,12 @@
         <servlet-name>livingApplicationPageServlet</servlet-name>
         <url-pattern>/portal/resource/app/*</url-pattern>
     </servlet-mapping>
+    <!-- @deprecated as of 9.0.0, Process should be created/updated at startup -->
     <servlet-mapping>
         <servlet-name>processUploadServlet</servlet-name>
         <url-pattern>/portal/processUpload</url-pattern>
     </servlet-mapping>
+    <!-- @deprecated as of 9.0.0, Process should be created/updated at startup -->
     <servlet-mapping>
         <servlet-name>apiProcessUploadServlet</servlet-name>
         <url-pattern>/API/processUpload</url-pattern>
@@ -589,13 +621,30 @@
         <servlet-name>xmlUploadServlet</servlet-name>
         <url-pattern>/portal/organizationUpload</url-pattern>
     </servlet-mapping>
+    <!-- @deprecated as of 9.0.0, Applications should be created/updated at startup -->
     <servlet-mapping>
         <servlet-name>xmlUploadServlet</servlet-name>
         <url-pattern>/portal/applicationsUpload</url-pattern>
     </servlet-mapping>
+    <!-- @deprecated as of 9.0.0, Actors should be created/updated at startup -->
     <servlet-mapping>
         <servlet-name>xmlUploadServlet</servlet-name>
         <url-pattern>/portal/actorsUpload</url-pattern>
+    </servlet-mapping>
+    <!-- @deprecated as of 9.0.0, BDM should be created/updated at startup -->
+    <servlet-mapping>
+        <servlet-name>zipUploadServlet</servlet-name>
+        <url-pattern>/portal/bdmUpload</url-pattern>
+    </servlet-mapping>
+    <!-- @deprecated as of 9.0.0, Application page should be created/updated at startup -->
+    <servlet-mapping>
+        <servlet-name>pageUploadServlet</servlet-name>
+        <url-pattern>/portal/pageUpload</url-pattern>
+    </servlet-mapping>
+    <!-- @deprecated as of 9.0.0, Application page should be created/updated at startup -->
+    <servlet-mapping>
+        <servlet-name>apiPageUploadServlet</servlet-name>
+        <url-pattern>/API/pageUpload</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>imageUploadServlet</servlet-name>
@@ -609,6 +658,7 @@
         <servlet-name>fileUploadServlet</servlet-name>
         <url-pattern>/portal/fileUpload</url-pattern>
     </servlet-mapping>
+    <!-- @deprecated as of 9.0.0, Process Form should be created/updated at startup -->
     <servlet-mapping>
         <servlet-name>formFileUploadServlet</servlet-name>
         <url-pattern>/API/formFileUpload</url-pattern>
@@ -677,6 +727,11 @@
         <url-pattern>/APIToolkit/*</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
+        <servlet-name>SpringRest</servlet-name>
+        <!-- API resource URLs need to be listed here in order to avoid being picked up by Restlet which is bound to /API/* -->
+        <url-pattern>/API/system/maintenance</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
         <servlet-name>ConsoleServiceServlet</servlet-name>
         <url-pattern>/services/*</url-pattern>
         <url-pattern>/API/services/*</url-pattern>
@@ -686,25 +741,10 @@
         <servlet-name>CustomPageServlet</servlet-name>
         <url-pattern>/portal/custom-page/*</url-pattern>
     </servlet-mapping>
-    <!--This pageResource servlet is deprecated.
-        You can now access your resources through their relative URL.
-        see the custom page documentation.-->
-    <servlet-mapping>
-        <servlet-name>pageResource</servlet-name>
-        <url-pattern>/portal/pageResource</url-pattern>
-    </servlet-mapping>
     <servlet-mapping>
         <servlet-name>pageDownload</servlet-name>
         <url-pattern>/portal/pageDownload</url-pattern>
         <url-pattern>/API/pageDownload</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>pageUploadServlet</servlet-name>
-        <url-pattern>/portal/pageUpload</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>apiPageUploadServlet</servlet-name>
-        <url-pattern>/API/pageUpload</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>ProcessFormServlet</servlet-name>

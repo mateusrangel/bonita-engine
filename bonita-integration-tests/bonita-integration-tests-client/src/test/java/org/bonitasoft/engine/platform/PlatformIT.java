@@ -18,6 +18,7 @@ import static org.junit.Assert.*;
 
 import java.time.Duration;
 
+import org.assertj.core.api.Assertions;
 import org.bonitasoft.engine.CommonAPIIT;
 import org.bonitasoft.engine.PrintTestsStatusRule;
 import org.bonitasoft.engine.api.APIClient;
@@ -90,11 +91,6 @@ public class PlatformIT extends CommonAPIIT {
     }
 
     @Test
-    public void isPlatformInitialized() throws BonitaException {
-        assertTrue(platformAPI.isPlatformInitialized());
-    }
-
-    @Test
     public void getPlatformState() throws Exception {
         // test started state
         PlatformState state = platformAPI.getPlatformState();
@@ -118,14 +114,18 @@ public class PlatformIT extends CommonAPIIT {
         final APISession tenantSession = loginAPI.login("install", "install");
         final IdentityAPI identityAPI = TenantAPIAccessor.getIdentityAPI(tenantSession);
         identityAPI.getNumberOfUsers();
-        platformAPI.stopNode();
-        platformAPI.startNode();
+        restartPlatform();
         try {
             identityAPI.getNumberOfUsers();
             fail("session should not work");
         } catch (final InvalidSessionException e) {
             // ok
         }
+    }
+
+    private static void restartPlatform() throws StopNodeException, StartNodeException {
+        platformAPI.stopNode();
+        platformAPI.startNode();
     }
 
     @Test
@@ -143,7 +143,8 @@ public class PlatformIT extends CommonAPIIT {
         }
 
         await().until(() -> apiClient.getProcessAPI().getNumberOfProcessInstances(), nb -> nb > 0L);
-        stopNodeAndStartNode();
+        Assertions.assertThat(apiClient.getProcessAPI().getNumberOfProcessInstances()).isGreaterThan(0);
+        restartPlatform();
         apiClient.login("install", "install");
         await().atMost(Duration.ofMinutes(4)).until(() -> apiClient.getProcessAPI().getNumberOfProcessInstances(),
                 nb -> nb == 0L);
