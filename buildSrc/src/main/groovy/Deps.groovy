@@ -1,6 +1,6 @@
 class Deps {
 
-    public static String bonitaArtifactsModelVersion = "1.0.1-SNAPSHOT"
+    public static String bonitaArtifactsModelVersion = "1.0.1"
     public static String springVersion = "5.3.39"
     public static String springBootVersion = "2.7.18"
     public static String springSessionVersion = "2.7.4"
