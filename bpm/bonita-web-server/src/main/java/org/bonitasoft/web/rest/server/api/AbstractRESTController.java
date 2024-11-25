@@ -15,6 +15,7 @@ package org.bonitasoft.web.rest.server.api;
 
 import javax.servlet.http.HttpSession;
 
+import lombok.extern.slf4j.Slf4j;
 import org.bonitasoft.console.common.server.utils.SessionUtil;
 import org.bonitasoft.engine.session.APISession;
 import org.springframework.http.HttpStatus;
@@ -23,6 +24,7 @@ import org.springframework.web.server.ResponseStatusException;
 /**
  * Parent class providing common methods for Bonita REST Controllers
  */
+@Slf4j
 public abstract class AbstractRESTController {
 
     public APISession getApiSession(HttpSession session) {
@@ -31,6 +33,26 @@ public abstract class AbstractRESTController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
         }
         return apiSession;
+    }
+
+    protected long getParameterAsLong(String parameterValue, String errorMessage) {
+        try {
+            return Long.parseLong(parameterValue);
+        } catch (NumberFormatException e) {
+            log.debug(errorMessage, e);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    errorMessage);
+        }
+    }
+
+    protected int getParameterAsInt(String parameterValue, String errorMessage) {
+        try {
+            return Integer.parseInt(parameterValue);
+        } catch (NumberFormatException e) {
+            log.debug(errorMessage, e);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    errorMessage);
+        }
     }
 
 }
