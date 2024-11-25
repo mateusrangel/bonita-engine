@@ -77,7 +77,7 @@ public class BusinessObjectValidationRule extends ValidationRule<BusinessObject,
         } else {
             var discouragingGrammars = sqlNameValidator.isKeywordDiscouragedBy(simpleName);
             if (!discouragingGrammars.isEmpty()) {
-                String msg = String.format("%1$s is discourages as business object's name. It is a keyword in %2$s.",
+                String msg = String.format("%1$s is discouraged as a business object's name. It is a keyword in %2$s.",
                         simpleName,
                         discouragingGrammars.stream().map(Grammar::toString).collect(Collectors.joining(", ")));
                 status.addWarning(StatusCode.DISCOURAGED_JAVA_IDENTIFIER_NAME, msg,
