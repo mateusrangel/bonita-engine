@@ -52,7 +52,7 @@ public class FieldValidationRule extends ValidationRule<Field, ValidationStatus>
         } else {
             var discouragingGrammars = sqlNameValidator.isKeywordDiscouragedBy(name);
             if (!discouragingGrammars.isEmpty()) {
-                String msg = String.format("%1$s is discouraged as field identifier. It is a keyword in %2$s.",
+                String msg = String.format("%1$s is discouraged as a field identifier. It is a keyword in %2$s.",
                         name, discouragingGrammars.stream().map(Grammar::toString).collect(Collectors.joining(", ")));
                 status.addWarning(StatusCode.DISCOURAGED_FIELD_IDENTIFIER, msg,
                         Collections.singletonMap(StatusContext.BDM_ARTIFACT_NAME_KEY, name));
