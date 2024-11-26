@@ -13,12 +13,14 @@
  **/
 package org.bonitasoft.engine.bpm;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 
 /**
  * Interface <code>BaseRestElement</code> identifies a <code>BonitaObject</code> that can be used in the REST API.
  */
+@JsonPropertyOrder(alphabetic = true)
 public interface BaseRestElement extends BaseElement {
 
     /**
