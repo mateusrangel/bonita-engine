@@ -49,6 +49,7 @@ import org.bonitasoft.engine.core.process.definition.model.event.trigger.impl.ST
 import org.bonitasoft.engine.core.process.definition.model.impl.SFlowElementContainerDefinitionImpl;
 import org.bonitasoft.engine.core.process.definition.model.impl.SProcessDefinitionImpl;
 import org.bonitasoft.engine.core.process.instance.api.ActivityInstanceService;
+import org.bonitasoft.engine.core.process.instance.api.BPMFailureService;
 import org.bonitasoft.engine.core.process.instance.api.RefBusinessDataService;
 import org.bonitasoft.engine.core.process.instance.api.event.EventInstanceService;
 import org.bonitasoft.engine.core.process.instance.api.exceptions.SProcessInstanceModificationException;
@@ -146,6 +147,9 @@ public class ProcessInstanceServiceImplTest {
     @Mock
     private ContractDataService contractDataService;
 
+    @Mock
+    private BPMFailureService bpmFailureService;
+
     @Spy
     @InjectMocks
     private ProcessInstanceServiceImpl processInstanceService;
@@ -224,6 +228,7 @@ public class ProcessInstanceServiceImplTest {
         verify(processInstanceService, times(1))
                 .deleteArchivedProcessInstances(Collections.singletonList(sProcessInstance.getId()));
         verify(activityInstanceService, times(1)).deleteArchivedFlowNodeInstances(asList(4L, 5L, 6L));
+        verify(bpmFailureService, times(1)).deleteArchivedFlowNodeFailures(asList(4L, 5L, 6L));
     }
 
     @Test
@@ -765,10 +770,11 @@ public class ProcessInstanceServiceImplTest {
     }
 
     @Test
-    public void deleteFlowNodeInstanceElements_should_do_nothing_when_flownode_is_gateway()
+    public void deleteFlowNodeInstanceElements_should_always_delete_bpm_failures()
             throws Exception {
         // Given
         final SFlowNodeInstance flowNodeInstance = new SGatewayInstance();
+        flowNodeInstance.setId(1L);
         final SProcessDefinition processDefinition = mock(SProcessDefinition.class);
         doReturn(mock(SFlowElementContainerDefinition.class)).when(processDefinition).getProcessContainer();
 
@@ -779,6 +785,7 @@ public class ProcessInstanceServiceImplTest {
         verify(processInstanceService, never()).deleteDataInstancesIfNecessary(flowNodeInstance, processDefinition);
         verify(processInstanceService, never()).deleteConnectorInstancesIfNecessary(flowNodeInstance,
                 processDefinition);
+        verify(bpmFailureService).deleteFlowNodeFailures(1L);
     }
 
     @Test

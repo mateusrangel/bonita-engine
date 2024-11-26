@@ -227,8 +227,12 @@ class SanitizerFilterTest {
 
         ServletRequest r = requestCaptor.getValue();
         var updatedBody = new String(r.getInputStream().readAllBytes());
-        assertThat(updatedBody).isEqualTo(
-                "{\"key\":\"<p><a href=\\\"https://documentation.bonitasoft.com/bonita/latest/\\\" rel=\\\"noopener noreferrer nofollow\\\">link text</a></p>\"}");
+        assertThat(updatedBody).contains(
+                "{\"key\":\"<p><a href=\\\"https://documentation.bonitasoft.com/bonita/latest/\\\"")
+                .contains("link text</a></p>\"}")
+                .contains("noreferrer")
+                .contains("noopener")
+                .contains("nofollow");
     }
 
     @Test

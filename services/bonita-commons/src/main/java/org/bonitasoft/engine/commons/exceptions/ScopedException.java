@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2019 Bonitasoft S.A.
+ * Copyright (C) 2024 Bonitasoft S.A.
  * Bonitasoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -11,28 +11,27 @@
  * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301, USA.
  **/
-package org.bonitasoft.engine.core.contract.data;
+package org.bonitasoft.engine.commons.exceptions;
 
-import java.io.Serializable;
+public interface ScopedException {
 
-/**
- * @author Baptiste Mesta
- */
-class MyPojo implements Serializable {
+    String UNKNOWN_SCOPE = "UNKNOWN";
+    String GENERAL_INFORMATION = "General information";
+    String OPERATION = "Operation";
+    String EVENT = "Event";
+    String ITERATION = "Iteration";
+    String CONNECTOR = "Connector";
+    String DATA = "Data initialization";
+    String ACTOR_MAPPING = "Actor mapping";
+    String OUTGOING_TRANSITION = "Outgoing transition";
 
-    private final String name;
-    private final byte[] content;
-
-    public MyPojo(String name, byte[] content) {
-        this.name = name;
-        this.content = content;
+    /**
+     * Describe the scope of the exception with a human-readable category.
+     *
+     * @return The scope of the exception
+     */
+    default String getScope() {
+        return UNKNOWN_SCOPE;
     }
 
-    public byte[] getContent() {
-        return content;
-    }
-
-    public String getName() {
-        return name;
-    }
 }

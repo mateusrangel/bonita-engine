@@ -140,7 +140,7 @@ public class HibernatePersistenceService implements PersistenceService {
     }
 
     @Override
-    public void delete(final PersistentObject entity) throws SPersistenceException {
+    public <T extends PersistentObject> void delete(final T entity) throws SPersistenceException {
         if (getLogger().isDebugEnabled()) {
             getLogger().debug(
                     "Deleting instance of class " + entity.getClass().getSimpleName() + " with id=" + entity.getId());
@@ -199,7 +199,7 @@ public class HibernatePersistenceService implements PersistenceService {
     }
 
     @Override
-    public void insert(final PersistentObject entity) throws SPersistenceException {
+    public <T extends PersistentObject> T insert(final T entity) throws SPersistenceException {
         if (!(entity instanceof PlatformPersistentObject)) {
             setTenant(entity);
         }
@@ -209,6 +209,7 @@ public class HibernatePersistenceService implements PersistenceService {
         setId(entity);
         try {
             session.save(entity);
+            return entity;
         } catch (final AssertionFailure | LockAcquisitionException | StaleStateException e) {
             throw new SRetryableException(e);
         } catch (final HibernateException he) {
@@ -217,21 +218,20 @@ public class HibernatePersistenceService implements PersistenceService {
     }
 
     @Override
-    public void insertInBatch(final List<? extends PersistentObject> entities) throws SPersistenceException {
-        for (final PersistentObject entity : entities) {
-            if (!(entity instanceof PlatformPersistentObject)) {
-                setTenant(entity);
-            }
-        }
+    public <T extends PersistentObject> List<T> insertInBatch(final List<T> entities) throws SPersistenceException {
         if (!entities.isEmpty()) {
             final Session session = getSession();
             for (final PersistentObject entity : entities) {
+                if (!(entity instanceof PlatformPersistentObject)) {
+                    setTenant(entity);
+                }
                 final Class<? extends PersistentObject> entityClass = entity.getClass();
                 checkClassMapping(entityClass);
                 setId(entity);
                 session.save(entity);
             }
         }
+        return entities;
     }
 
     @Override
@@ -612,7 +612,7 @@ public class HibernatePersistenceService implements PersistenceService {
             }
             QueryGeneratorForFilters.QueryGeneratedFilters whereClause = new QueryGeneratorForFilters(
                     getClassAliasMappings(), '%'/* there is no 'like' in these delete queries */)
-                            .generate(filters);
+                    .generate(filters);
             parameters.putAll(whereClause.getParameters());
             baseQuery += " WHERE ( " + whereClause.getFilters() + " )";
         }

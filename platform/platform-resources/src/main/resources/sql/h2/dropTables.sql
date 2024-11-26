@@ -66,3 +66,5 @@ DROP TABLE bar_resource;
 DROP TABLE temporary_content;
 DROP TABLE tenant_resource;
 DROP TABLE icon;
+DROP TABLE arch_bpm_failure;
+DROP TABLE bpm_failure;

@@ -1,19 +1,19 @@
 [versions]
 # The groovy version must be in synch with the bonita-project-parent POM (bonita-project repository):
-groovyVersion = "3.0.19"
+groovyVersion = "3.0.23"
 springVersion = "5.3.39"
 springSessionVersion = "2.7.4"
 springBootVersion = "2.7.18"
-commonsLangVersion = "3.14.0"
+commonsLangVersion = "3.17.0"
 bonitaArtifactsModelVersion = "1.1.2"
-bonitaSecurityVersion = "1.26.2"
-commonsIOVersion = "2.17.0"
+bonitaSecurityVersion = "1.27.0"
+commonsIOVersion = "2.18.0"
 commonsFileUploadVersion = "1.5"
 commonsBeanutilsVersion = "1.9.4"
 commonsCollectionsVersion = "4.4"
-tomcatVersion = "9.0.96"
-commonsCLIVersion = "1.8.0"
-commonsTextVersion = "1.10.0"
+tomcatVersion = "9.0.97"
+commonsCLIVersion = "1.9.0"
+commonsTextVersion = "1.12.0"
 semver4jVersion = '3.1.0'
 slf4jVersion = "1.7.36"
 # Attention, see PassingPropertiesJCacheRegionFactory javadoc if this version changes:
@@ -22,7 +22,7 @@ hibernateVersion = "5.4.33"
 javassistVersion = "3.27.0-GA"
 # javax.persistence-api is used by hibernate:
 javaxPersistenceApiVersion = "2.2"
-jacksonBomVersion = "2.17.1"
+jacksonBomVersion = "2.18.1"
 jakartaTransactionVersion = "1.3.3"
 jakartaServletVersion = "4.0.4"
 # Keep this until all client projects have migrated to jakarta or it will break their builds !
@@ -30,65 +30,63 @@ javaxServletVersion = "4.0.1"
 httpComponentsVersion = "4.5.14"
 xstreamVersion = "1.4.21"
 ehCacheVersion = "2.10.10.12.7"
-eclipseCompilerVersion = "3.38.0"
+eclipseCompilerVersion = "3.39.0"
 jakartaActivationVersion = "1.2.2"
 quartzVersion = "2.3.2"
-micrometerVersion = "1.13.1"
+micrometerVersion = "1.14.1"
 # DB drivers:
-mysqlVersion = "8.2.0"
-msSqlServerVersion = "8.4.1.jre8"
-oracleVersion = "19.3.0.0"
-postgresqlVersion = "42.4.4"
+mysqlVersion = "8.4.0"
+msSqlServerVersion = "9.4.1.jre11"
+oracleVersion = "19.25.0.0"
+postgresqlVersion = "42.7.4"
 
 narayanaVersion = "5.10.6.Final"
 logbackVersion = "1.2.13"
-jaxbVersion = "2.3.1"
+jaxbVersion = "2.3.9"
 javaxAnnotationsVersion = "1.3.2"
 hazelcastVersion = "5.4.0" # Also update http://www.hazelcast.com/schema/config/hazelcast-config-<VERSION>.xsd if needed
-jcacheVersion = "1.0.0"
-guavaVersion = "32.1.2-jre"
+jcacheVersion = "1.1.1"
+guavaVersion = "33.3.1-jre"
 antlr4RuntimeVersion = "4.7.2"
 casClientCoreVersion = "4.0.4"
 jtidyVersion = "r938"
-jakartaJmsVersion = "3.0.0"
-activemqVersion = "5.16.2"
 squigglyFilterJacksonVersion = "1.3.18"
 
 # bonita-web specific dependencies:
-jsonSimpleVersion = "1.1"
-urlrewritefilterVersion = "4.0.3"
+jsonSimpleVersion = "1.1.1"
+urlrewritefilterVersion = "4.0.4"
 jakartaJstlVersion = "1.2.6"
 jakartaJstlApiVersion = "1.2.7"
 restletVersion = "2.3.12"
-xbeanClassloaderVersion = "3.7"
-jgettextVersion = "0.13"
-hamcrestVersion = "2.1"
-woodstoxCoreVersion = "6.4.0"
+xbeanClassloaderVersion = "4.26"
+jgettextVersion = "0.15.1"
+hamcrestVersion = "3.0"
+woodstoxCoreVersion = "7.1.0"
 # When updating Keycloak version, if necessary, make sure to update the code in
 # subscription/bpm/bonita-web-server-sp package org.bonitasoft.console.common.server.auth.impl
 keycloakVersion = "21.1.2"
-xmlsecVersion = "2.2.6"
-bouncyCastleVersion = "1.78.1"
+xmlsecVersion = "2.3.4"
+bouncyCastleVersion = "1.79"
 spnegoVersion = "1.1.1"
-owaspHtmlSanitizerVersion = "20220608.1"
+owaspHtmlSanitizerVersion = "20240325.1"
 
 # Test dependency versions
 junit4Version = "4.13.2"
 junit5Version = "5.11.3"
-awaitilityVersion = "4.0.3"
-assertjVersion = "3.17.2"
+awaitilityVersion = "4.2.2"
+assertjVersion = "3.26.3"
 xmlunitVersion = "1.6"
 mockitoVersion = "5.14.2"
-jsonUnitVersion = "2.19.0"
+jsonUnitVersion = "4.0.0"
 systemRulesVersion = "1.19.0"
-systemLambdaVersion = "1.2.0"
+systemLambdaVersion = "1.2.1"
 concurrentUnitVersion = "0.4.6"
 junitQuickCheck = "1.0"
-jettyVersion = "9.4.9.v20180320"
-jbossLoggingVersion = "3.1.3.GA"
-commonsExecVersion = "1.3"
-jmockitVersion = "1.44"
-mockServerJunitVersion = "5.14.0"
+jettyVersion = "9.4.56.v20240826"
+jbossLoggingVersion = "3.6.1.Final"
+commonsExecVersion = "1.4.0"
+jmockitVersion = "1.49"
+mockServerJunitVersion = "5.15.0"
 
 
 [libraries]
@@ -194,15 +192,12 @@ msSqlServer = { group = "com.microsoft.sqlserver", name = "mssql-jdbc", version.
 oracle = { group = "com.oracle.database.jdbc", name = "ojdbc8", version.ref = "oracleVersion" }
 postgresql = { group = "org.postgresql", name = "postgresql", version.ref = "postgresqlVersion" }
 
-lombok = "org.projectlombok:lombok:1.18.32"
+lombok = "org.projectlombok:lombok:1.18.36"
 
 logback = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logbackVersion" }
 
 casClientCore = { group = "org.apereo.cas.client", name = "cas-client-core", version.ref = "casClientCoreVersion" }
 jtidy = { group = "net.sf.jtidy", name = "jtidy", version.ref = "jtidyVersion" }
-
-jakartaJmsApi = { group = "jakarta.jms", name = "jakarta.jms-api", version.ref = "jakartaJmsVersion" }
-activemqClient = { group = "org.apache.activemq", name = "activemq-client", version.ref = "activemqVersion" }
 
 squigglyFilterJackson = { group = "com.github.bohnman", name = "squiggly-filter-jackson", version.ref = "squigglyFilterJacksonVersion" }
 
@@ -242,8 +237,7 @@ assertj = { group = "org.assertj", name = "assertj-core", version.ref = "assertj
 xmlunit = { group = "xmlunit", name = "xmlunit", version.ref = "xmlunitVersion" }
 mockitoCore = { group = "org.mockito", name = "mockito-core", version.ref = "mockitoVersion" }
 mockitoJunitJupiter = { group = "org.mockito", name = "mockito-junit-jupiter", version.ref = "mockitoVersion" }
-jsonUnit = { group = "net.javacrumbs.json-unit", name = "json-unit", version.ref = "jsonUnitVersion" }
-jsonUnitFluent = { group = "net.javacrumbs.json-unit", name = "json-unit-fluent", version.ref = "jsonUnitVersion" }
+jsonUnit = { group = "net.javacrumbs.json-unit", name = "json-unit-assertj", version.ref = "jsonUnitVersion" }
 systemRules = { group = "com.github.stefanbirkner", name = "system-rules", version.ref = "systemRulesVersion" }
 systemLambda = { group = "com.github.stefanbirkner", name = "system-lambda", version.ref = "systemLambdaVersion" }
 concurrentUnit = { group = "net.jodah", name = "concurrentunit", version.ref = "concurrentUnitVersion" }
@@ -255,7 +249,7 @@ jettySecurity = { group = "org.eclipse.jetty", name = "jetty-security", version.
 jbossLogging = { group = "org.jboss.logging", name = "jboss-logging", version.ref = "jbossLoggingVersion" }
 commonsExec = { group = "org.apache.commons", name = "commons-exec", version.ref = "commonsExecVersion" }
 jmockit = { group = "org.jmockit", name = "jmockit", version.ref = "jmockitVersion" }
-mockServerJunit = { group = "org.mock-server", name = "mockserver-junit-rule-no-dependencies", version.ref = "mockServerJunitVersion" }
+mockServerJunit = { group = "org.mock-server", name = "mockserver-junit-jupiter", version.ref = "mockServerJunitVersion" }
 
 
 [bundles]
@@ -263,6 +257,6 @@ groovy = ["groovyCore", "groovyServlet", "groovyXml", "groovyJson", "groovyJmx",
     "groovyDateutil", "groovyDocgenerator", "groovyJsr223", "groovySql", "groovyTemplates", "groovyYaml"]
 
 [plugins]
-bonitaFormatting = { id = "com.bonitasoft.gradle.bonita-formatting", version = "0.1.63" }
+bonitaFormatting = { id = "com.bonitasoft.gradle.bonita-formatting", version = "0.1.64" }
 dependencyUpdates = { id = "com.github.ben-manes.versions", version = "0.51.0" } # used by "List out-of-date dependencies" script
 taskInfo = { id = "org.barfuin.gradle.taskinfo", version = "2.2.0" } # Adds a 'tiTree' task to display Gradle task-graph

@@ -17,7 +17,7 @@ dependencies {
     compileOnly libs.lombok
 
     testImplementation libs.assertj
-    testImplementation libs.jsonUnitFluent
+    testImplementation libs.jsonUnit
     testImplementation libs.mockitoCore
     testImplementation libs.logback
     testImplementation libs.narayanaJta

@@ -27,6 +27,7 @@ import org.bonitasoft.engine.api.impl.transaction.actor.GetActor;
 import org.bonitasoft.engine.bpm.connector.ConnectorState;
 import org.bonitasoft.engine.builder.BuilderFactory;
 import org.bonitasoft.engine.commons.exceptions.SBonitaException;
+import org.bonitasoft.engine.commons.exceptions.ScopedException;
 import org.bonitasoft.engine.core.connector.ConnectorInstanceService;
 import org.bonitasoft.engine.core.data.instance.TransientDataService;
 import org.bonitasoft.engine.core.expression.control.api.ExpressionResolverService;
@@ -227,8 +228,7 @@ public class BPMInstancesCreator {
             final long parentProcessInstanceId, final boolean createInnerActivity, final int loopCounter,
             final SStateCategory stateCategory,
             final long relatedActivityInstanceId) throws SActorNotFoundException, SActivityReadException {
-        if (!createInnerActivity && sFlowNodeDefinition instanceof SActivityDefinition) {
-            final SActivityDefinition activityDefinition = (SActivityDefinition) sFlowNodeDefinition;
+        if (!createInnerActivity && sFlowNodeDefinition instanceof SActivityDefinition activityDefinition) {
             final SLoopCharacteristics loopCharacteristics = activityDefinition.getLoopCharacteristics();
             if (loopCharacteristics != null) {
                 SFlowNodeInstanceBuilder builder;
@@ -763,7 +763,7 @@ public class BPMInstancesCreator {
     }
 
     private void createDataForProcess(final List<SDataInstance> sDataInstances)
-            throws SDataInstanceException, SFlowNodeNotFoundException, SFlowNodeReadException {
+            throws SDataInstanceException {
         if (!sDataInstances.isEmpty()) {
             for (final SDataInstance sDataInstance : sDataInstances) {
                 dataInstanceService.createDataInstance(sDataInstance);
@@ -875,25 +875,33 @@ public class BPMInstancesCreator {
             throws SActivityStateExecutionException {
         final List<SDataDefinition> sDataDefinitions = activityDefinition.getSDataDefinitions();
         final SLoopCharacteristics loopCharacteristics = activityDefinition.getLoopCharacteristics();
-        try {
-            if (loopCharacteristics instanceof SMultiInstanceLoopCharacteristics
-                    && (((SMultiInstanceLoopCharacteristics) loopCharacteristics).getDataInputItemRef() != null
-                            || ((SMultiInstanceLoopCharacteristics) loopCharacteristics)
-                                    .getDataOutputItemRef() != null)) {
+
+        if (loopCharacteristics instanceof SMultiInstanceLoopCharacteristics multiInstanceLoopCharacteristics
+                && (multiInstanceLoopCharacteristics.getDataInputItemRef() != null
+                        || multiInstanceLoopCharacteristics.getDataOutputItemRef() != null)) {
+            try {
                 createDataInstancesForMultiInstance(activityDefinition, flowNodeInstance, expressionContext);
-            } else {
+            } catch (final SBonitaException e) {
+                throw new SActivityStateExecutionException(
+                        "Failed to initialize multi instance variables of " + flowNodeInstance,
+                        ScopedException.ITERATION, e);
+            }
+        } else {
+            try {
                 createDataInstances(sDataDefinitions, flowNodeInstance.getId(), DataInstanceContainer.ACTIVITY_INSTANCE,
                         expressionContext);
+            } catch (final SBonitaException e) {
+                throw new SActivityStateExecutionException("Failed to initialize variables of " + flowNodeInstance,
+                        ScopedException.DATA, e);
             }
-            if (!sDataDefinitions.isEmpty() && log.isDebugEnabled()) {
-                final String message = "Initialized variables for flow node"
-                        + LogMessageBuilder.buildFlowNodeContextMessage(flowNodeInstance);
-                log.debug(message);
-            }
-            return sDataDefinitions.size() > 0;
-        } catch (final SBonitaException e) {
-            throw new SActivityStateExecutionException(e);
         }
+        if (!sDataDefinitions.isEmpty() && log.isDebugEnabled()) {
+            final String message = "Initialized variables for flow node"
+                    + LogMessageBuilder.buildFlowNodeContextMessage(flowNodeInstance);
+            log.debug(message);
+        }
+        return !sDataDefinitions.isEmpty();
+
     }
 
     protected void createDataInstancesForMultiInstance(final SActivityDefinition activityDefinition,

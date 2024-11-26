@@ -45,6 +45,7 @@ import org.bonitasoft.engine.core.platform.login.PlatformLoginService;
 import org.bonitasoft.engine.core.process.comment.api.SCommentService;
 import org.bonitasoft.engine.core.process.definition.ProcessDefinitionService;
 import org.bonitasoft.engine.core.process.instance.api.ActivityInstanceService;
+import org.bonitasoft.engine.core.process.instance.api.BPMFailureService;
 import org.bonitasoft.engine.core.process.instance.api.GatewayInstanceService;
 import org.bonitasoft.engine.core.process.instance.api.ProcessInstanceService;
 import org.bonitasoft.engine.core.process.instance.api.RefBusinessDataService;
@@ -133,6 +134,8 @@ public interface ServiceAccessor {
     ProcessInstanceService getProcessInstanceService();
 
     ActivityInstanceService getActivityInstanceService();
+
+    BPMFailureService getBpmFailureService();
 
     BPMInstancesCreator getBPMInstancesCreator();
 

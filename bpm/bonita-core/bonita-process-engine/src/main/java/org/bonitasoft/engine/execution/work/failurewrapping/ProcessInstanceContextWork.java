@@ -15,6 +15,7 @@ package org.bonitasoft.engine.execution.work.failurewrapping;
 
 import java.util.Map;
 
+import org.bonitasoft.engine.commons.exceptions.ExceptionContext;
 import org.bonitasoft.engine.commons.exceptions.SBonitaException;
 import org.bonitasoft.engine.core.process.instance.api.ProcessInstanceService;
 import org.bonitasoft.engine.core.process.instance.model.SProcessInstance;
@@ -70,7 +71,7 @@ public class ProcessInstanceContextWork extends TxInHandleFailureWrappingWork {
     }
 
     @Override
-    protected void setExceptionContext(final SBonitaException sBonitaException, final Map<String, Object> context)
+    protected void setExceptionContext(final ExceptionContext sBonitaException, final Map<String, Object> context)
             throws SBonitaException {
         if (rootProcessInstanceId < 0) {
             final ServiceAccessor serviceAccessor = getServiceAccessor(context);

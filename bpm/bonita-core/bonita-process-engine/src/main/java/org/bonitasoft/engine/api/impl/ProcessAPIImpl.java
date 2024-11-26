@@ -110,6 +110,7 @@ import org.bonitasoft.engine.core.connector.parser.SConnectorImplementationDescr
 import org.bonitasoft.engine.core.contract.data.ContractDataService;
 import org.bonitasoft.engine.core.contract.data.SContractDataNotFoundException;
 import org.bonitasoft.engine.core.data.instance.TransientDataService;
+import org.bonitasoft.engine.core.document.api.DocumentService;
 import org.bonitasoft.engine.core.expression.control.api.ExpressionResolverService;
 import org.bonitasoft.engine.core.expression.control.model.SExpressionContext;
 import org.bonitasoft.engine.core.filter.FilterResult;
@@ -3267,13 +3268,15 @@ public class ProcessAPIImpl implements ProcessAPI {
             final long processInstanceId) throws SBonitaException {
         final UserTransactionService userTransactionService = serviceAccessor.getUserTransactionService();
         final ProcessInstanceService processInstanceService = serviceAccessor.getProcessInstanceService();
+        final DocumentService documentService = serviceAccessor.getDocumentService();
 
         try {
             userTransactionService.executeInTransaction((Callable<Void>) () -> {
-                final SProcessInstance sProcessInstance = processInstanceService
-                        .getProcessInstance(processInstanceId);
-
+                final SProcessInstance sProcessInstance = processInstanceService.getProcessInstance(processInstanceId);
                 deleteJobsOnProcessInstance(sProcessInstance);
+                // Documents are only deleted when deleting the unfinished process instance from the API,
+                // and not when the finished process instance is archived:
+                documentService.deleteDocumentContentsForProcessInstance(sProcessInstance.getId());
                 processInstanceService.deleteParentProcessInstanceAndElements(sProcessInstance);
                 return null;
             });
@@ -3322,6 +3325,7 @@ public class ProcessAPIImpl implements ProcessAPI {
             }
 
             final LockService lockService = serviceAccessor.getLockService();
+            final DocumentService documentService = serviceAccessor.getDocumentService();
             final String objectType = SFlowElementsContainerType.PROCESS.name();
             List<BonitaLock> locks = null;
             try {
@@ -3331,6 +3335,11 @@ public class ProcessAPIImpl implements ProcessAPI {
                     final List<SProcessInstance> sProcessInstances = new ArrayList<>(
                             processInstancesWithChildrenIds.keySet());
                     deleteJobsOnProcessInstance(processDefinitionId, sProcessInstances);
+                    for (SProcessInstance spi : sProcessInstances) {
+                        // Documents are only deleted when deleting the unfinished process instance from the API,
+                        // and not when the finished process instance is archived:
+                        documentService.deleteDocumentContentsForProcessInstance(spi.getId());
+                    }
                     return processInstanceService.deleteParentProcessInstanceAndElements(sProcessInstances);
                 });
             } finally {
@@ -5888,10 +5897,9 @@ public class ProcessAPIImpl implements ProcessAPI {
             final SProcessDefinition processDefinition = processDefinitionService
                     .getProcessDefinition(processDefinitionId);
             final SFlowNodeDefinition flowNode = processDefinition.getProcessContainer().getFlowNode(humanTaskName);
-            if (!(flowNode instanceof SHumanTaskDefinition)) {
+            if (!(flowNode instanceof SHumanTaskDefinition humanTask)) {
                 return Collections.emptyList();
             }
-            final SHumanTaskDefinition humanTask = (SHumanTaskDefinition) flowNode;
             final String actorName = humanTask.getActorName();
             final List<Long> userIds = getUserIdsForActor(serviceAccessor, processDefinitionId, actorName, startIndex,
                     maxResults);

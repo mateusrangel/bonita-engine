@@ -13,16 +13,22 @@
  **/
 package org.bonitasoft.web.rest.server.api;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import lombok.extern.slf4j.Slf4j;
 import org.bonitasoft.console.common.server.utils.SessionUtil;
 import org.bonitasoft.engine.session.APISession;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Parent class providing common methods for Bonita REST Controllers
  */
+@Slf4j
 public abstract class AbstractRESTController {
 
     public APISession getApiSession(HttpSession session) {
@@ -31,6 +37,13 @@ public abstract class AbstractRESTController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
         }
         return apiSession;
+    }
+
+    @ResponseStatus(value = HttpStatus.BAD_REQUEST, reason = "Bad request")
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public void handleBadRequestError(HttpServletRequest req, MethodArgumentTypeMismatchException ex) {
+        String error = "[" + req.getPathInfo() + "] " + ex.getName() + ": " + ex.getMessage();
+        log.debug(error);
     }
 
 }
