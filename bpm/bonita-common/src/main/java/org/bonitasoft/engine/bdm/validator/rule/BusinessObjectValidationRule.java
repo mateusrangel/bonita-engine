@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.lang.model.SourceVersion;
 
@@ -31,6 +32,7 @@ import org.bonitasoft.engine.bdm.model.Query;
 import org.bonitasoft.engine.bdm.model.UniqueConstraint;
 import org.bonitasoft.engine.bdm.model.field.Field;
 import org.bonitasoft.engine.bdm.validator.SQLNameValidator;
+import org.bonitasoft.engine.bdm.validator.SQLNameValidator.Grammar;
 import org.bonitasoft.engine.bdm.validator.ValidationStatus;
 
 /**
@@ -72,6 +74,15 @@ public class BusinessObjectValidationRule extends ValidationRule<BusinessObject,
                     String.format("%s is not a valid Java qualified name", qualifiedName),
                     Collections.singletonMap(StatusContext.BUSINESS_OBJECT_NAME_KEY, qualifiedName));
             return status;
+        } else {
+            var discouragingGrammars = sqlNameValidator.isKeywordDiscouragedBy(simpleName);
+            if (!discouragingGrammars.isEmpty()) {
+                String msg = String.format("%1$s is discouraged as a business object's name. It is a keyword in %2$s.",
+                        simpleName,
+                        discouragingGrammars.stream().map(Grammar::toString).collect(Collectors.joining(", ")));
+                status.addWarning(StatusCode.DISCOURAGED_JAVA_IDENTIFIER_NAME, msg,
+                        Collections.singletonMap(StatusContext.BUSINESS_OBJECT_NAME_KEY, simpleName));
+            }
         }
 
         if (simpleName.contains("_")) {

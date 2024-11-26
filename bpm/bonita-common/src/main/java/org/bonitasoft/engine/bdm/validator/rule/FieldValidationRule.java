@@ -14,6 +14,7 @@
 package org.bonitasoft.engine.bdm.validator.rule;
 
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 import javax.lang.model.SourceVersion;
 
@@ -21,6 +22,7 @@ import org.bonitasoft.engine.api.result.StatusCode;
 import org.bonitasoft.engine.api.result.StatusContext;
 import org.bonitasoft.engine.bdm.model.field.Field;
 import org.bonitasoft.engine.bdm.validator.SQLNameValidator;
+import org.bonitasoft.engine.bdm.validator.SQLNameValidator.Grammar;
 import org.bonitasoft.engine.bdm.validator.ValidationStatus;
 
 /**
@@ -47,6 +49,14 @@ public class FieldValidationRule extends ValidationRule<Field, ValidationStatus>
                     String.format("%s is not a valid field identifier", name),
                     Collections.singletonMap(StatusContext.BDM_ARTIFACT_NAME_KEY, name));
             return status;
+        } else {
+            var discouragingGrammars = sqlNameValidator.isKeywordDiscouragedBy(name);
+            if (!discouragingGrammars.isEmpty()) {
+                String msg = String.format("%1$s is discouraged as a field identifier. It is a keyword in %2$s.",
+                        name, discouragingGrammars.stream().map(Grammar::toString).collect(Collectors.joining(", ")));
+                status.addWarning(StatusCode.DISCOURAGED_FIELD_IDENTIFIER, msg,
+                        Collections.singletonMap(StatusContext.BDM_ARTIFACT_NAME_KEY, name));
+            }
         }
         return status;
     }
