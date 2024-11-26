@@ -9,7 +9,6 @@ dependencies {
     api project(':services:bonita-events')
     api project(':services:bonita-log')
     api project(':services:bonita-archive')
-    testImplementation libs.junit4
     testImplementation libs.assertj
     testImplementation libs.mockitoCore
     testImplementation libs.logback

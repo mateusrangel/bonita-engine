@@ -24,7 +24,6 @@ import java.nio.file.Path;
 import java.sql.Blob;
 import java.sql.SQLException;
 
-import org.apache.commons.io.IOUtils;
 import org.bonitasoft.engine.test.persistence.repository.TemporaryContentRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -64,8 +63,9 @@ public class TemporaryContentQueryTest {
         InputStream uploadedFileStream = savedTemporaryContent.getContent().getBinaryStream();
         assertThat(savedTemporaryContent.getFileName()).isEqualTo(temporaryContent.getFileName());
         assertThat(savedTemporaryContent.getMimeType()).isEqualTo(temporaryContent.getMimeType());
-        assertThat(tempFilePath.toFile().length()).isEqualTo(uploadedFileStream.available());
-        assertArrayEquals(IOUtils.toByteArray(uploadedFileStream), "test".getBytes());
+        final byte[] contentByteArray = uploadedFileStream.readAllBytes();
+        assertThat(tempFilePath.toFile().length()).isEqualTo(contentByteArray.length);
+        assertArrayEquals(contentByteArray, "test".getBytes());
     }
 
     @Test

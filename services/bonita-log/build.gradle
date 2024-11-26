@@ -7,7 +7,6 @@ dependencies {
     api project(':services:bonita-builder')
     api project(':services:bonita-platform')
     api project(':services:bonita-transaction')
-    testImplementation libs.junit4
     testImplementation libs.assertj
     testImplementation libs.mockitoCore
     testImplementation libs.logback

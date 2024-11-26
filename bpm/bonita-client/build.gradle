@@ -10,7 +10,6 @@ dependencies {
     api libs.httpComponentsClient
     api libs.xstream
     api libs.httpComponentsMime
-    testImplementation libs.junit4
     testImplementation libs.assertj
     testImplementation libs.logback
     testImplementation libs.mockitoCore

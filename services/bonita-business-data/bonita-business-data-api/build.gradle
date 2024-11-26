@@ -3,7 +3,6 @@
 dependencies {
     api project(':services:bonita-commons')
     api libs.javassist
-    testImplementation libs.junit4
     testImplementation libs.assertj
     testImplementation libs.mockitoCore
     testImplementation libs.logback

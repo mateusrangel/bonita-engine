@@ -3,7 +3,6 @@
 dependencies {
     api project(':services:bonita-commons')
     api project(':services:bonita-session')
-    testImplementation libs.junit4
     testImplementation libs.assertj
     testImplementation libs.logback
 }

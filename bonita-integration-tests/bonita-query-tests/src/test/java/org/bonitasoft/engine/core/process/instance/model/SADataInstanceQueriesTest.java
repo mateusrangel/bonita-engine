@@ -45,6 +45,7 @@ import org.bonitasoft.engine.data.instance.model.archive.SALongTextDataInstance;
 import org.bonitasoft.engine.data.instance.model.archive.SAShortTextDataInstance;
 import org.bonitasoft.engine.data.instance.model.archive.SAXMLObjectDataInstance;
 import org.bonitasoft.engine.persistence.PersistentObject;
+import org.bonitasoft.engine.test.persistence.jdbc.JdbcRowMapper;
 import org.bonitasoft.engine.test.persistence.repository.SADataInstanceRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -95,11 +96,17 @@ public class SADataInstanceQueriesTest {
     }
 
     protected Map<String, Object> getDataUsingJDBC(SDataInstance dataInstance) {
-        return jdbcTemplate.queryForMap("SELECT * FROM data_instance where id = " + dataInstance.getId());
+        return jdbcTemplate.queryForObject("SELECT * FROM data_instance where id = " + dataInstance.getId(),
+                new JdbcRowMapper(List.of("LONGVALUE"),
+                        List.of("BOOLEANVALUE"),
+                        List.of("DOUBLEVALUE")));
     }
 
     protected Map<String, Object> getDataUsingJDBC(SADataInstance dataInstance) {
-        return jdbcTemplate.queryForMap("SELECT * FROM arch_data_instance where id = " + dataInstance.getId());
+        return jdbcTemplate.queryForObject("SELECT * FROM arch_data_instance where id = " + dataInstance.getId(),
+                new JdbcRowMapper(List.of("LONGVALUE"),
+                        List.of("BOOLEANVALUE"),
+                        List.of("DOUBLEVALUE")));
     }
 
     protected PersistentObject getDataInstance(String dataName) {
@@ -185,7 +192,7 @@ public class SADataInstanceQueriesTest {
 
         assertThat(persistentObject).isEqualTo(dataInstance);
         assertThat(persistentObject).isInstanceOf(SDoubleDataInstance.class);
-        assertThat(dataAsMap).containsEntry("DOUBLEVALUE", 1234567890.0);
+        assertThat(dataAsMap).containsEntry("DOUBLEVALUE", 1234567890.0d);
         assertThat(dataAsMap).containsEntry("DISCRIMINANT", "SDoubleDataInstanceImpl");
     }
 
@@ -232,7 +239,7 @@ public class SADataInstanceQueriesTest {
 
         assertThat(persistentObject).isEqualTo(dataInstance);
         assertThat(persistentObject).isInstanceOf(SDateDataInstance.class);
-        assertThat(dataAsMap).containsEntry("LongValue", date.getTime());
+        assertThat(dataAsMap).containsEntry("LONGVALUE", date.getTime());
         assertThat(dataAsMap).containsEntry("DISCRIMINANT", "SDateDataInstanceImpl");
     }
 
@@ -263,7 +270,7 @@ public class SADataInstanceQueriesTest {
 
         assertThat(persistentObject).isEqualTo(dataInstance);
         assertThat(persistentObject).isInstanceOf(SFloatDataInstance.class);
-        assertThat(dataAsMap.get("FLOATVALUE")).isEqualTo(1.0);
+        assertThat(((Number) dataAsMap.get("FLOATVALUE")).floatValue()).isEqualTo(1.0f);
         assertThat(dataAsMap).containsEntry("DISCRIMINANT", "SFloatDataInstanceImpl");
     }
 
@@ -323,7 +330,7 @@ public class SADataInstanceQueriesTest {
 
         assertThat(persistentObject).isEqualTo(dataInstance);
         assertThat(persistentObject).isInstanceOf(SADoubleDataInstance.class);
-        assertThat(dataAsMap).containsEntry("DOUBLEVALUE", 1234567890.0);
+        assertThat(dataAsMap).containsEntry("DOUBLEVALUE", 1234567890.0d);
         assertThat(dataAsMap).containsEntry("DISCRIMINANT", "SADoubleDataInstanceImpl");
     }
 
@@ -370,7 +377,7 @@ public class SADataInstanceQueriesTest {
 
         assertThat(persistentObject).isEqualTo(dataInstance);
         assertThat(persistentObject).isInstanceOf(SADateDataInstance.class);
-        assertThat(dataAsMap).containsEntry("LongValue", date.getTime());
+        assertThat(dataAsMap).containsEntry("LONGVALUE", date.getTime());
         assertThat(dataAsMap).containsEntry("DISCRIMINANT", "SADateDataInstanceImpl");
     }
 
@@ -400,7 +407,7 @@ public class SADataInstanceQueriesTest {
 
         assertThat(persistentObject).isEqualTo(dataInstance);
         assertThat(persistentObject).isInstanceOf(SAFloatDataInstance.class);
-        assertThat(dataAsMap.get("FLOATVALUE")).isEqualTo(1.0);
+        assertThat(((Number) dataAsMap.get("FLOATVALUE")).floatValue()).isEqualTo(1.0f);
         assertThat(dataAsMap).containsEntry("DISCRIMINANT", "SAFloatDataInstanceImpl");
     }
 

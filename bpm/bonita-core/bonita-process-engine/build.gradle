@@ -72,13 +72,9 @@ dependencies {
     annotationProcessor libs.lombok
     compileOnly libs.lombok
 
-    testImplementation libs.junit5api
     testImplementation libs.junit5params
-    testRuntimeOnly libs.junitJupiterEngine
-    testRuntimeOnly libs.junitVintageEngine
     testAnnotationProcessor libs.lombok
 
-    testImplementation libs.junit4
     testImplementation libs.assertj
     testImplementation libs.mockitoJunitJupiter
     testImplementation libs.systemRules      // works with Junit4
@@ -88,8 +84,4 @@ dependencies {
     testImplementation testFixtures(project(':bpm:bonita-common'))
     testImplementation libs.awaitility
     testRuntimeOnly libs.logback
-}
-
-test {
-    useJUnitPlatform()
 }

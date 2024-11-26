@@ -16,7 +16,6 @@ dependencies {
     annotationProcessor libs.lombok
     compileOnly libs.lombok
 
-    testImplementation libs.junit4
     testImplementation libs.assertj
     testImplementation libs.jsonUnitFluent
     testImplementation libs.mockitoCore
@@ -27,19 +26,10 @@ dependencies {
     testImplementation testFixtures(project(':bpm:bonita-common'))
     testRuntimeOnly libs.tomcatDbcp
     testRuntimeOnly libs.h2
-    testRuntimeOnly libs.mysql
-    testRuntimeOnly libs.postgresql
-    testRuntimeOnly libs.msSqlServer
 
     // Property Based Test framework:
     testImplementation(libs.quickcheckCore)
     testImplementation(libs.quickcheckGenerators)
 }
 
-// run:
-// ./gradlew mysqlDatabaseTest
-// ./gradlew oracleDatabaseTest
-// ./gradlew sqlserverDatabaseTest
-// ./gradlew postgresDatabaseTest
-// to run tests on specific docker DB:
 databaseIntegrationTest { includes '**/*Test.class' }

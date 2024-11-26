@@ -7,7 +7,6 @@ dependencies {
     api project(':services:bonita-transaction')
     api libs.springJdbc
     api libs.springContext
-    testImplementation libs.junit4
     testImplementation libs.awaitility
     testImplementation libs.assertj
     testImplementation libs.mockitoCore

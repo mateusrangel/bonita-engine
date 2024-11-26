@@ -3,6 +3,5 @@
 dependencies {
     api project(':services:bonita-identity')
     api project(':services:bonita-commons')
-    testImplementation libs.junit4
     testImplementation libs.mockitoCore
 }

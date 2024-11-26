@@ -17,9 +17,9 @@ class DockerDatabasePlugin implements Plugin<Project> {
         driversConfiguration(project)
         def databaseIntegrationTest = project.extensions.create("databaseIntegrationTest", DatabasePluginExtension)
 
-        DockerDatabaseContainerTasksCreator.createTasks(project, databaseIntegrationTest)
 
         project.afterEvaluate {
+            DockerDatabaseContainerTasksCreator.createTasks(project, databaseIntegrationTest, getVendors())
             if (!databaseIntegrationTest.includes) {
                 println "No databaseIntegrationTest.include found. No tests to run!"
             }
@@ -30,10 +30,18 @@ class DockerDatabasePlugin implements Plugin<Project> {
         project.dependencies {
             // the following jdbc drivers are available for integration tests
             def versionCatalog = project.extensions.getByType(VersionCatalogsExtension.class).named("libs")
-            drivers(versionCatalog.findLibrary("mysql").get())
-            drivers(versionCatalog.findLibrary("oracle").get())
             drivers(versionCatalog.findLibrary("postgresql").get())
-            drivers(versionCatalog.findLibrary("msSqlServer").get())
         }
     }
+
+    List getVendors() {
+        return [
+                [name       : 'postgres',
+                 image      : 'bonitasoft/bonita-postgres:16.4',
+                 portBinding: 5432,
+                 uriTemplate: 'jdbc:postgresql://%s:%s/%s',
+                ]
+        ]
+    }
+
 }

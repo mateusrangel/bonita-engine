@@ -9,7 +9,6 @@ dependencies {
 
     testImplementation libs.assertj
     testImplementation libs.mockitoCore
-    testImplementation libs.junit4
     testImplementation libs.logback
     testImplementation testFixtures(project(':bpm:bonita-common'))
 

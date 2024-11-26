@@ -6,7 +6,6 @@ dependencies {
     api project(':services:bonita-authentication')
     api project(':services:bonita-profile')
     api project(':services:bonita-authorization')
-    testImplementation libs.junit4
     testImplementation libs.mockitoCore
     testImplementation libs.assertj
     testImplementation libs.logback

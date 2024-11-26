@@ -22,7 +22,6 @@ dependencies {
     annotationProcessor libs.lombok
 
     testImplementation project(':bpm:bonita-sap-jco-connector-api')
-    testImplementation libs.junit4
     testImplementation libs.assertj
     testImplementation libs.mockitoCore
     testImplementation libs.logback

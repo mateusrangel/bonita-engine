@@ -2,10 +2,13 @@ dependencies {
     api project(':bpm:bonita-client')
     api project(':bpm:bonita-common')
     api project(':bonita-test-api')
-    api libs.junit4
     api libs.commonsIO
     api libs.xmlunit
     api libs.assertj
+
+    implementation project(':bpm:bonita-core:bonita-process-engine')
+    implementation libs.junit4
+    implementation libs.springTest
 }
 
 publishing {
