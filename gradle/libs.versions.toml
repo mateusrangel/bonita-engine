@@ -237,8 +237,7 @@ assertj = { group = "org.assertj", name = "assertj-core", version.ref = "assertj
 xmlunit = { group = "xmlunit", name = "xmlunit", version.ref = "xmlunitVersion" }
 mockitoCore = { group = "org.mockito", name = "mockito-core", version.ref = "mockitoVersion" }
 mockitoJunitJupiter = { group = "org.mockito", name = "mockito-junit-jupiter", version.ref = "mockitoVersion" }
-jsonUnit = { group = "net.javacrumbs.json-unit", name = "json-unit", version.ref = "jsonUnitVersion" }
-jsonUnitFluent = { group = "net.javacrumbs.json-unit", name = "json-unit-fluent", version.ref = "jsonUnitVersion" }
+jsonUnit = { group = "net.javacrumbs.json-unit", name = "json-unit-assertj", version.ref = "jsonUnitVersion" }
 systemRules = { group = "com.github.stefanbirkner", name = "system-rules", version.ref = "systemRulesVersion" }
 systemLambda = { group = "com.github.stefanbirkner", name = "system-lambda", version.ref = "systemLambdaVersion" }
 concurrentUnit = { group = "net.jodah", name = "concurrentunit", version.ref = "concurrentUnitVersion" }

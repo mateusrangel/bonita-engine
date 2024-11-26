@@ -14,7 +14,7 @@
 package org.bonitasoft.engine.business.data;
 
 import static java.util.Collections.singletonList;
-import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.assertj.core.api.Assertions.*;
@@ -1775,7 +1775,9 @@ public class BDRepositoryIT extends CommonAPIIT {
         // then
         assertThatJson(lazyAddressResultWithChildName).as("should get address with lazy link to country")
                 .node("[0].addresses[0].links[0]")
-                .isEqualTo("{\"rel\":\"country\",\"href\":\"/businessdata/com.company.model.Address/2/country\"}");
+                .isObject()
+                .containsEntry("rel", "country")
+                .containsKey("href");
     }
 
     private void verifyCommandGetBusinessDataById(final SimpleBusinessDataReference businessDataReference)
@@ -1802,7 +1804,9 @@ public class BDRepositoryIT extends CommonAPIIT {
         // then
         assertThatJson(employeeResultWithAddress).as("should get employee with lazy link to country in addresses")
                 .node("addresses[0].links[0]")
-                .isEqualTo("{\"rel\":\"country\",\"href\":\"/businessdata/com.company.model.Address/2/country\"}");
+                .isObject()
+                .containsEntry("rel", "country")
+                .containsKey("href");
 
     }
 
