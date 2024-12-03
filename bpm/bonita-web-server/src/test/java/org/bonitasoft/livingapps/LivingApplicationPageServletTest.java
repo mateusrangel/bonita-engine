@@ -15,11 +15,7 @@ package org.bonitasoft.livingapps;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 import java.io.File;
 import java.util.Arrays;
@@ -28,7 +24,7 @@ import java.util.List;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.bonitasoft.console.common.server.page.CustomPageAuthorizationsHelper;
+import org.bonitasoft.console.common.server.page.ApplicationAuthorizationsHelper;
 import org.bonitasoft.console.common.server.page.PageRenderer;
 import org.bonitasoft.console.common.server.page.ResourceRenderer;
 import org.bonitasoft.console.common.server.page.extension.PageResourceProviderImpl;
@@ -66,7 +62,7 @@ public class LivingApplicationPageServletTest {
     APISession apiSession;
 
     @Mock
-    CustomPageAuthorizationsHelper customPageAuthorizationsHelper;
+    ApplicationAuthorizationsHelper customPageAuthorizationsHelper;
 
     @Mock
     PageRenderer pageRenderer;
@@ -111,7 +107,7 @@ public class LivingApplicationPageServletTest {
         hsRequest.setPathInfo("/AppToken/pageToken/content/");
         given(resourceRenderer.getPathSegments("/AppToken/pageToken/content/"))
                 .willReturn(Arrays.asList("AppToken", "pageToken", "content"));
-        given(customPageAuthorizationsHelper.isPageAuthorized("AppToken", "customPageName")).willReturn(false);
+        given(customPageAuthorizationsHelper.isAuthorized("AppToken")).willReturn(false);
 
         doReturn(applicationPage).when(applicationAPI).getApplicationPage("AppToken", "pageToken");
         doReturn(2L).when(applicationPage).getPageId();
@@ -176,7 +172,7 @@ public class LivingApplicationPageServletTest {
             final List<String> pathSegment) throws Exception {
         hsRequest.setPathInfo(path);
         given(resourceRenderer.getPathSegments(path)).willReturn(pathSegment);
-        given(customPageAuthorizationsHelper.isPageAuthorized(appToken, "customPage_" + pageToken)).willReturn(true);
+        given(customPageAuthorizationsHelper.isAuthorized(appToken)).willReturn(true);
 
         doReturn(applicationPage).when(applicationAPI).getApplicationPage(appToken, pageToken);
         doReturn(2L).when(applicationPage).getPageId();
@@ -210,7 +206,7 @@ public class LivingApplicationPageServletTest {
         given(resourceRenderer.getPathSegments("/AppToken/htmlexample/content/css/file.css"))
                 .willReturn(Arrays.asList("AppToken", "htmlexample", "content", "css", "file.css"));
         final String pageName = "customPage_htmlexample";
-        doReturn(true).when(customPageAuthorizationsHelper).isPageAuthorized(any(String.class), any(String.class));
+        doReturn(true).when(customPageAuthorizationsHelper).isAuthorized(any(String.class));
         doReturn(pageResourceProvider).when(pageRenderer).getPageResourceProvider(pageName);
         doReturn(pageDir).when(pageResourceProvider).getPageDirectory();
         doReturn(true).when(bonitaHomeFolderAccessor).isInFolder(any(File.class), any(File.class));
