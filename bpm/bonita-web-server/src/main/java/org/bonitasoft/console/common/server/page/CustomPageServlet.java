@@ -27,7 +27,11 @@ import org.bonitasoft.console.common.server.page.extension.PageResourceProviderI
 import org.bonitasoft.console.common.server.utils.BonitaHomeFolderAccessor;
 import org.bonitasoft.console.common.server.utils.SessionUtil;
 import org.bonitasoft.engine.api.TenantAPIAccessor;
-import org.bonitasoft.engine.exception.*;
+import org.bonitasoft.engine.exception.BonitaException;
+import org.bonitasoft.engine.exception.BonitaHomeNotSetException;
+import org.bonitasoft.engine.exception.ServerAPIException;
+import org.bonitasoft.engine.exception.UnauthorizedAccessException;
+import org.bonitasoft.engine.exception.UnknownAPITypeException;
 import org.bonitasoft.engine.session.APISession;
 import org.bonitasoft.livingapps.ApplicationModelFactory;
 import org.slf4j.Logger;
@@ -78,7 +82,7 @@ public class CustomPageServlet extends HttpServlet {
 
         try {
 
-            if (isAuthorized(apiSession, appToken, pageName)) {
+            if (isAuthorized(apiSession, appToken)) {
                 if (isPageRequest(pathSegments)) {
                     pageRenderer.displayCustomPage(request, response, apiSession, pageName);
                 } else {
@@ -133,25 +137,24 @@ public class CustomPageServlet extends HttpServlet {
         return resourcePath.substring(pageName.length() + 2);
     }
 
-    private boolean isAuthorized(final APISession apiSession, final String appToken, final String pageName)
+    private boolean isAuthorized(final APISession apiSession, final String appToken)
             throws BonitaException {
         //Technical user should be authorized in order for the custom pages to be displayed in his profile
         return apiSession.isTechnicalUser()
-                || getCustomPageAuthorizationsHelper(apiSession).isPageAuthorized(appToken, pageName);
+                || getCustomPageAuthorizationsHelper(apiSession).isAuthorized(appToken);
     }
 
     private void handleException(final String pageName, final Exception e) throws ServletException {
         if (LOGGER.isWarnEnabled()) {
-            LOGGER.warn("Error while trying to render the custom page " + pageName, e);
+            LOGGER.warn("Error while trying to render the custom page {}", pageName, e);
         }
         throw new ServletException(e.getMessage());
     }
 
-    protected CustomPageAuthorizationsHelper getCustomPageAuthorizationsHelper(final APISession apiSession)
+    protected ApplicationAuthorizationsHelper getCustomPageAuthorizationsHelper(final APISession apiSession)
             throws BonitaHomeNotSetException,
             ServerAPIException, UnknownAPITypeException {
-        return new CustomPageAuthorizationsHelper(apiSession,
-                TenantAPIAccessor.getLivingApplicationAPI(apiSession), TenantAPIAccessor.getCustomPageAPI(apiSession),
+        return new ApplicationAuthorizationsHelper(apiSession,
                 new ApplicationModelFactory(
                         TenantAPIAccessor.getLivingApplicationAPI(apiSession),
                         TenantAPIAccessor.getCustomPageAPI(apiSession),

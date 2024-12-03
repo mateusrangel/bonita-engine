@@ -24,7 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
-import org.bonitasoft.console.common.server.page.CustomPageAuthorizationsHelper;
+import org.bonitasoft.console.common.server.page.ApplicationAuthorizationsHelper;
 import org.bonitasoft.console.common.server.page.CustomPageRequestModifier;
 import org.bonitasoft.console.common.server.page.CustomPageService;
 import org.bonitasoft.console.common.server.page.PageRenderer;
@@ -224,7 +224,7 @@ public class LivingApplicationPageServlet extends HttpServlet {
 
     private boolean isAuthorized(final APISession apiSession, final String appToken, final String pageName)
             throws BonitaException {
-        return getCustomPageAuthorizationsHelper(apiSession).isPageAuthorized(appToken, pageName);
+        return getCustomPageAuthorizationsHelper(apiSession).isAuthorized(appToken);
     }
 
     private void handleException(final String pageName, final Exception e, final HttpServletRequest request,
@@ -258,11 +258,10 @@ public class LivingApplicationPageServlet extends HttpServlet {
         return TenantAPIAccessor.getCustomPageAPI(apiSession);
     }
 
-    protected CustomPageAuthorizationsHelper getCustomPageAuthorizationsHelper(final APISession apiSession)
+    protected ApplicationAuthorizationsHelper getCustomPageAuthorizationsHelper(final APISession apiSession)
             throws BonitaHomeNotSetException,
             ServerAPIException, UnknownAPITypeException {
-        return new CustomPageAuthorizationsHelper(apiSession,
-                TenantAPIAccessor.getLivingApplicationAPI(apiSession), TenantAPIAccessor.getCustomPageAPI(apiSession),
+        return new ApplicationAuthorizationsHelper(apiSession,
                 new ApplicationModelFactory(
                         TenantAPIAccessor.getLivingApplicationAPI(apiSession),
                         TenantAPIAccessor.getCustomPageAPI(apiSession),
