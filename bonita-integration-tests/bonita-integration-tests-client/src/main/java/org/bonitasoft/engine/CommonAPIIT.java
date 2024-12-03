@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.assertj.core.api.Assertions;
+import org.bonitasoft.engine.api.TenantAdministrationAPI;
 import org.bonitasoft.engine.bpm.bar.BarResource;
 import org.bonitasoft.engine.bpm.process.ProcessDefinition;
 import org.bonitasoft.engine.bpm.process.impl.ProcessDefinitionBuilder;
@@ -37,6 +38,7 @@ import org.bonitasoft.engine.identity.User;
 import org.bonitasoft.engine.io.IOUtil;
 import org.bonitasoft.engine.search.SearchOptionsBuilder;
 import org.bonitasoft.engine.search.SearchResult;
+import org.bonitasoft.engine.tenant.TenantResource;
 import org.bonitasoft.engine.test.APITestUtil;
 import org.bonitasoft.engine.test.junit.BonitaEngineRule;
 import org.junit.Rule;
@@ -74,7 +76,22 @@ public abstract class CommonAPIIT extends APITestUtil {
         cleanRoles();
         cleanSupervisors();
         checkThereAreNoWaitingEventsLeft();
+        cleanBdm();
         logoutOnTenant();
+    }
+
+    private void cleanBdm() throws BonitaException {
+        TenantAdministrationAPI tenantAdministrationAPI = getTenantAdministrationAPI();
+        if (tenantAdministrationAPI.getBusinessDataModelResource() != TenantResource.NONE) {
+            if (!tenantAdministrationAPI.isPaused()) {
+                tenantAdministrationAPI.pause();
+            }
+            try {
+                tenantAdministrationAPI.cleanAndUninstallBusinessDataModel();
+            } finally {
+                tenantAdministrationAPI.resume();
+            }
+        }
     }
 
     private void checkThereAreNoWaitingEventsLeft() throws BonitaException {
