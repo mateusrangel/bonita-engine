@@ -191,7 +191,7 @@ public class ApplicationModelTest {
         given(applicationApi.getApplicationPage("token", "pageToken"))
                 .willReturn(new ApplicationPageImpl(1, 1, "pageToken"));
 
-        assertThat(model.hasPage("pageToken")).isEqualTo(true);
+        assertThat(model.hasPage("pageToken")).isTrue();
     }
 
     @Test
@@ -199,7 +199,7 @@ public class ApplicationModelTest {
         given(applicationApi.getApplicationPage("token", "pageToken"))
                 .willThrow(new ApplicationPageNotFoundException(""));
 
-        assertThat(model.hasPage("pageToken")).isEqualTo(false);
+        assertThat(model.hasPage("pageToken")).isFalse();
     }
 
     @Test
@@ -216,15 +216,15 @@ public class ApplicationModelTest {
     public void should_check_that_application_has_a_profile_mapped_to_it() throws Exception {
         application.setProfileId(1L);
         application.setVisibility(ApplicationVisibility.RESTRICTED);
-        assertThat(model.hasProfileMapped()).isEqualTo(true);
+        assertThat(model.hasProfileMapped()).isTrue();
 
         application.setProfileId(null);
-        assertThat(model.hasProfileMapped()).isEqualTo(false);
+        assertThat(model.hasProfileMapped()).isFalse();
 
         application.setVisibility(ApplicationVisibility.ALL);
-        assertThat(model.hasProfileMapped()).isEqualTo(true);
+        assertThat(model.hasProfileMapped()).isTrue();
 
         application.setVisibility(ApplicationVisibility.TECHNICAL_USER);
-        assertThat(model.hasProfileMapped()).isEqualTo(true);
+        assertThat(model.hasProfileMapped()).isTrue();
     }
 }
