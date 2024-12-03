@@ -51,7 +51,7 @@ public class CustomPageServletTest {
     APISession apiSession;
 
     @Mock
-    CustomPageAuthorizationsHelper customPageAuthorizationsHelper;
+    ApplicationAuthorizationsHelper customPageAuthorizationsHelper;
 
     @Mock
     PageRenderer pageRenderer;
@@ -85,7 +85,7 @@ public class CustomPageServletTest {
         hsRequest.setParameter("appToken", "myApp");
         given(resourceRenderer.getPathSegments("/pageToken/")).willReturn(Arrays.asList("pageToken"));
         doReturn(false).when(apiSession).isTechnicalUser();
-        given(customPageAuthorizationsHelper.isPageAuthorized("myApp", "pageToken")).willReturn(false);
+        given(customPageAuthorizationsHelper.isAuthorized("myApp")).willReturn(false);
 
         servlet.doGet(hsRequest, hsResponse);
 
@@ -129,7 +129,7 @@ public class CustomPageServletTest {
             throws Exception {
         hsRequest.setPathInfo(path);
         given(resourceRenderer.getPathSegments(path)).willReturn(pathSegment);
-        given(customPageAuthorizationsHelper.isPageAuthorized(null, token)).willReturn(true);
+        given(customPageAuthorizationsHelper.isAuthorized(null)).willReturn(true);
 
         servlet.doGet(hsRequest, hsResponse);
 
@@ -146,7 +146,7 @@ public class CustomPageServletTest {
         doReturn(pageResourceProvider).when(pageRenderer).getPageResourceProvider(pageName);
         doReturn(pageDir).when(pageResourceProvider).getPageDirectory();
         doReturn(true).when(bonitaHomeFolderAccessor).isInFolder(any(File.class), any(File.class));
-        given(customPageAuthorizationsHelper.isPageAuthorized(null, "custompage_htmlexample")).willReturn(true);
+        given(customPageAuthorizationsHelper.isAuthorized(null)).willReturn(true);
 
         servlet.doGet(hsRequest, hsResponse);
 
@@ -163,7 +163,7 @@ public class CustomPageServletTest {
                 Arrays.asList("custompage_htmlexample", "css", "..", "..", "..", "file.css"));
         doReturn(pageResourceProvider).when(pageRenderer).getPageResourceProvider("custompage_htmlexample");
         given(pageResourceProvider.getPageDirectory()).willReturn(pageDir);
-        given(customPageAuthorizationsHelper.isPageAuthorized(null, "custompage_htmlexample")).willReturn(true);
+        given(customPageAuthorizationsHelper.isAuthorized(null)).willReturn(true);
         // folder we wants to access is not authorized
         doReturn(false).when(bonitaHomeFolderAccessor).isInFolder(any(File.class), any(File.class));
 
