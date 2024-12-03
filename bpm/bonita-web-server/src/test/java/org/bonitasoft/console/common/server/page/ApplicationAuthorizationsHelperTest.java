@@ -16,9 +16,7 @@ package org.bonitasoft.console.common.server.page;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.bonitasoft.engine.api.ApplicationAPI;
 import org.bonitasoft.engine.business.application.Application;
@@ -31,7 +29,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class CustomPageAuthorizationsHelperTest {
+public class ApplicationAuthorizationsHelperTest {
 
     @Mock
     ApplicationAPI applicationAPI;
