@@ -38,6 +38,9 @@ import org.bonitasoft.engine.business.application.model.builder.SApplicationPage
 import org.bonitasoft.engine.business.application.model.builder.impl.SApplicationLogBuilderImpl;
 import org.bonitasoft.engine.business.application.model.builder.impl.SApplicationMenuLogBuilderImpl;
 import org.bonitasoft.engine.business.application.model.builder.impl.SApplicationPageLogBuilderImpl;
+import org.bonitasoft.engine.cache.CacheService;
+import org.bonitasoft.engine.cache.SCacheException;
+import org.bonitasoft.engine.cache.configuration.CacheConfiguration;
 import org.bonitasoft.engine.commons.exceptions.SBonitaException;
 import org.bonitasoft.engine.commons.exceptions.SObjectAlreadyExistsException;
 import org.bonitasoft.engine.commons.exceptions.SObjectCreationException;
@@ -81,13 +84,15 @@ public class ApplicationServiceImpl implements ApplicationService {
     private final ApplicationDestructor applicationDestructor;
     private final ApplicationPageDestructor applicationPageDestructor;
     private final ApplicationMenuDestructor applicationMenuDestructor;
+    private final CacheService cacheService;
 
     @Autowired
     public ApplicationServiceImpl(Recorder recorder, ReadPersistenceService persistenceService,
-            final QueriableLoggerService queriableLoggerService) {
+            final QueriableLoggerService queriableLoggerService, CacheService cacheService) {
         this.recorder = recorder;
         this.persistenceService = persistenceService;
         this.queriableLoggerService = queriableLoggerService;
+        this.cacheService = cacheService;
         indexManager = new IndexManager(new IndexUpdater(this, MAX_RESULTS), new MenuIndexValidator());
         menuIndexConverter = new MenuIndexConverter(this);
         final ApplicationMenuCleaner applicationMenuCleaner = new ApplicationMenuCleaner(this);
@@ -103,10 +108,11 @@ public class ApplicationServiceImpl implements ApplicationService {
             MenuIndexConverter menuIndexConverter,
             ApplicationDestructor applicationDestructor,
             ApplicationPageDestructor applicationPageDestructor,
-            ApplicationMenuDestructor applicationMenuDestructor) {
+            ApplicationMenuDestructor applicationMenuDestructor, CacheService cacheService) {
         this.recorder = recorder;
         this.persistenceService = persistenceService;
         this.queriableLoggerService = queriableLoggerService;
+        this.cacheService = cacheService;
         this.indexManager = indexManager;
         this.menuIndexConverter = menuIndexConverter;
         this.applicationDestructor = applicationDestructor;
@@ -161,8 +167,21 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     public SApplication getApplicationByToken(final String token) throws SBonitaReadException {
-        return persistenceService.selectOne(new SelectOneDescriptor<>("getApplicationByToken", Collections
-                .singletonMap("token", token), SApplication.class));
+        try {
+            SApplication application = (SApplication) cacheService.get(CacheConfiguration.APPLICATION_TOKEN_CACHE_NAME,
+                    token);
+            if (application == null) {
+                application = persistenceService
+                        .selectOne(new SelectOneDescriptor<>("getApplicationByToken", Collections
+                                .singletonMap("token", token), SApplication.class));
+                if (application != null) {
+                    cacheService.store(CacheConfiguration.APPLICATION_TOKEN_CACHE_NAME, token, application);
+                }
+            }
+            return application;
+        } catch (SCacheException e) {
+            throw new SBonitaReadException(e);
+        }
     }
 
     private <T extends SLogBuilder & HasCRUDEAction> void initializeLogBuilder(final T logBuilder, final String message,
@@ -250,6 +269,9 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     private void deleteApplication(SApplication application) throws SBonitaException {
+        if (application.getToken() != null) {
+            cacheService.remove(CacheConfiguration.APPLICATION_TOKEN_CACHE_NAME, application.getToken());
+        }
         applicationDestructor.onDeleteApplication(application);
         recorder.recordDelete(new DeleteRecord(application), APPLICATION);
         log(application.getId(), SQueriableLog.STATUS_OK, getApplicationLogBuilder(ActionType.DELETED,
@@ -306,6 +328,9 @@ public class ApplicationServiceImpl implements ApplicationService {
                 "Updating application with id " + application.getId());
         try {
             validateUpdatedFields(updateDescriptor, application);
+            if (application.getToken() != null) {
+                cacheService.remove(CacheConfiguration.APPLICATION_TOKEN_CACHE_NAME, application.getToken());
+            }
             updateDescriptor.addField(AbstractSApplication.LAST_UPDATE_DATE, now);
 
             recorder.recordUpdate(UpdateRecord.buildSetFields(application,

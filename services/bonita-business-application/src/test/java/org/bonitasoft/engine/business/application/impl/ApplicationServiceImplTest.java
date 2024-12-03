@@ -41,6 +41,7 @@ import org.bonitasoft.engine.business.application.model.SApplicationState;
 import org.bonitasoft.engine.business.application.model.SApplicationWithIcon;
 import org.bonitasoft.engine.business.application.model.builder.SApplicationMenuUpdateBuilder;
 import org.bonitasoft.engine.business.application.model.builder.SApplicationUpdateBuilder;
+import org.bonitasoft.engine.cache.CacheService;
 import org.bonitasoft.engine.commons.exceptions.SObjectAlreadyExistsException;
 import org.bonitasoft.engine.commons.exceptions.SObjectCreationException;
 import org.bonitasoft.engine.commons.exceptions.SObjectModificationException;
@@ -103,6 +104,9 @@ public class ApplicationServiceImplTest {
     @Mock
     private ApplicationMenuDestructor applicationMenuDestructor;
 
+    @Mock
+    private CacheService cacheService;
+
     private SApplicationWithIcon application;
 
     private ApplicationServiceImpl applicationServiceImpl;
@@ -110,7 +114,8 @@ public class ApplicationServiceImplTest {
     @Before
     public void setUp() {
         applicationServiceImpl = new ApplicationServiceImpl(recorder, persistenceService, queriableLogService,
-                indexManager, convertor, applicationDestructor, applicationPageDestructor, applicationMenuDestructor);
+                indexManager, convertor, applicationDestructor, applicationPageDestructor, applicationMenuDestructor,
+                cacheService);
 
         when(queriableLogService.isLoggable(anyString(), any(SQueriableLogSeverity.class))).thenReturn(true);
         application = buildApplication(APPLICATION_TOKEN, APPLICATION_DISPLAY_NAME);

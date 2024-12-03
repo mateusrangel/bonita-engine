@@ -43,6 +43,7 @@ public class CacheConfigurationIT extends CommonBPMServicesTest {
                 "SYNCHRO_SERVICE_CACHE",
                 "parameters",
                 "DEFAULT_PLATFORM",
-                "CONNECTOR");
+                "CONNECTOR",
+                "application-token");
     }
 }
