@@ -51,7 +51,6 @@ import org.bonitasoft.engine.page.PageNotFoundException;
 import org.bonitasoft.engine.search.SearchOptionsBuilder;
 import org.bonitasoft.engine.service.ServiceAccessorSingleton;
 import org.bonitasoft.engine.tenant.TenantResource;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -76,16 +75,6 @@ public class ApplicationInstallerUpdateIT extends CommonAPIIT {
                         new ProcessDetector(), new ThemeDetector(), new PageAndFormDetector(), new LayoutDetector(),
                         new IconDetector()));
         initFirstInstall();
-    }
-
-    @After
-    public void after() throws Exception {
-        if (!getTenantAdministrationAPI().isPaused()) {
-            getTenantAdministrationAPI().pause();
-            getTenantAdministrationAPI().cleanAndUninstallBusinessDataModel();
-            getTenantAdministrationAPI().resume();
-        }
-        logoutOnTenant();
     }
 
     private void initFirstInstall() throws Exception {

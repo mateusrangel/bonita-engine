@@ -23,6 +23,7 @@ import java.lang.reflect.UndeclaredThrowableException;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -34,6 +35,7 @@ import org.bonitasoft.engine.api.PlatformAPI;
 import org.bonitasoft.engine.api.impl.transaction.CustomTransactions;
 import org.bonitasoft.engine.api.internal.ServerAPI;
 import org.bonitasoft.engine.api.internal.ServerWrappedException;
+import org.bonitasoft.engine.classloader.BonitaClassLoader;
 import org.bonitasoft.engine.classloader.ClassLoaderIdentifier;
 import org.bonitasoft.engine.classloader.ClassLoaderService;
 import org.bonitasoft.engine.classloader.SClassLoaderException;
@@ -42,7 +44,13 @@ import org.bonitasoft.engine.commons.exceptions.SBonitaException;
 import org.bonitasoft.engine.core.login.LoginService;
 import org.bonitasoft.engine.core.platform.login.PlatformLoginService;
 import org.bonitasoft.engine.dependency.model.ScopeType;
-import org.bonitasoft.engine.exception.*;
+import org.bonitasoft.engine.exception.BonitaContextException;
+import org.bonitasoft.engine.exception.BonitaException;
+import org.bonitasoft.engine.exception.BonitaHomeConfigurationException;
+import org.bonitasoft.engine.exception.BonitaHomeNotSetException;
+import org.bonitasoft.engine.exception.BonitaRuntimeException;
+import org.bonitasoft.engine.exception.TenantStatusException;
+import org.bonitasoft.engine.exception.UnavailableLockException;
 import org.bonitasoft.engine.lock.BonitaLock;
 import org.bonitasoft.engine.lock.LockService;
 import org.bonitasoft.engine.maintenance.MaintenanceDetails;
@@ -56,7 +64,11 @@ import org.bonitasoft.engine.scheduler.exception.SSchedulerException;
 import org.bonitasoft.engine.service.APIAccessResolver;
 import org.bonitasoft.engine.service.ServiceAccessor;
 import org.bonitasoft.engine.service.impl.ServiceAccessorFactory;
-import org.bonitasoft.engine.session.*;
+import org.bonitasoft.engine.session.APISession;
+import org.bonitasoft.engine.session.InvalidSessionException;
+import org.bonitasoft.engine.session.PlatformSession;
+import org.bonitasoft.engine.session.Session;
+import org.bonitasoft.engine.session.SessionService;
 import org.bonitasoft.engine.sessionaccessor.SessionAccessor;
 import org.bonitasoft.engine.transaction.UserTransactionService;
 import org.slf4j.Logger;
@@ -136,22 +148,32 @@ public class ServerAPIImpl implements ServerAPI {
             }
         } catch (final BonitaRuntimeException | BonitaException bre) {
             fillGlobalContextForException(session, bre);
-            // reset class loader
-            Thread.currentThread().setContextClassLoader(baseClassLoader);
             throw createServerWrappedException(bre);
         } catch (final UndeclaredThrowableException ute) {
-            // reset class loader
-            Thread.currentThread().setContextClassLoader(baseClassLoader);
             throw createServerWrappedException(ute);
         } catch (final Throwable cause) {
             final BonitaRuntimeException throwableToWrap = wrapThrowable(cause);
             fillGlobalContextForException(session, throwableToWrap);
-            // reset class loader
-            Thread.currentThread().setContextClassLoader(baseClassLoader);
             throw createServerWrappedException(throwableToWrap);
         } finally {
             cleanSessionIfNeeded(sessionAccessor);
+            // Reset the original classloader when not an equivalent BonitaClassLoader
+            // We do not reset the the classloader if the original classloader and the current classloader are BonitaClassloader having the same name
+            // e.g. for the cleanAndUninstallBusinessDataModel API method that reset the current classloader
+            if (shouldResetClassloader(baseClassLoader, Thread.currentThread().getContextClassLoader())) {
+                Thread.currentThread().setContextClassLoader(baseClassLoader);
+            }
             logger.trace("End Server API call {} {}", apiInterfaceName, methodName);
+        }
+    }
+
+    private boolean shouldResetClassloader(ClassLoader baseClassLoader, ClassLoader currentClassloader) {
+        if (currentClassloader instanceof BonitaClassLoader bonitaClassLoader
+                && baseClassLoader instanceof BonitaClassLoader bonitaBaseClassLoader) {
+            // Classloader name is different, reset it
+            return !Objects.equals(bonitaClassLoader.getName(), bonitaBaseClassLoader.getName());
+        } else {
+            return true;
         }
     }
 

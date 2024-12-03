@@ -211,6 +211,9 @@ public class APITestUtil extends PlatformTestUtil {
     public void clearSynchroRepository() {
         try {
             loginOnDefaultTenantWithDefaultTechnicalUser();
+            if (getTenantAdministrationAPI().isPaused()) {
+                getTenantAdministrationAPI().resume();
+            }
             ClientEventUtil.clearRepo(getCommandAPI());
             logoutOnTenant();
         } catch (final Exception e) {
