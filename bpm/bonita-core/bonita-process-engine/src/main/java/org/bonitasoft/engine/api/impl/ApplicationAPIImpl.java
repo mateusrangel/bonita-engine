@@ -13,6 +13,7 @@
  **/
 package org.bonitasoft.engine.api.impl;
 
+import static org.bonitasoft.engine.business.application.ApplicationSearchDescriptor.TOKEN;
 import static org.bonitasoft.engine.business.application.ApplicationSearchDescriptor.USER_ID;
 import static org.bonitasoft.engine.business.application.InternalProfiles.INTERNAL_PROFILE_SUPER_ADMIN;
 import static org.bonitasoft.engine.search.descriptor.SearchApplicationDescriptor.APPLICATION_VISIBILITY;
@@ -34,15 +35,38 @@ import org.bonitasoft.engine.api.impl.transaction.application.SearchApplicationM
 import org.bonitasoft.engine.api.impl.transaction.application.SearchApplicationPages;
 import org.bonitasoft.engine.api.impl.transaction.application.SearchApplications;
 import org.bonitasoft.engine.api.impl.transaction.application.SearchApplicationsOfUser;
-import org.bonitasoft.engine.business.application.*;
-import org.bonitasoft.engine.business.application.converter.*;
+import org.bonitasoft.engine.business.application.Application;
+import org.bonitasoft.engine.business.application.ApplicationCreator;
+import org.bonitasoft.engine.business.application.ApplicationImportPolicy;
+import org.bonitasoft.engine.business.application.ApplicationMenu;
+import org.bonitasoft.engine.business.application.ApplicationMenuCreator;
+import org.bonitasoft.engine.business.application.ApplicationMenuNotFoundException;
+import org.bonitasoft.engine.business.application.ApplicationMenuUpdater;
+import org.bonitasoft.engine.business.application.ApplicationNotFoundException;
+import org.bonitasoft.engine.business.application.ApplicationPage;
+import org.bonitasoft.engine.business.application.ApplicationPageNotFoundException;
+import org.bonitasoft.engine.business.application.ApplicationService;
+import org.bonitasoft.engine.business.application.ApplicationUpdater;
+import org.bonitasoft.engine.business.application.Icon;
+import org.bonitasoft.engine.business.application.converter.ApplicationMenuToNodeConverter;
+import org.bonitasoft.engine.business.application.converter.ApplicationPageToNodeConverter;
+import org.bonitasoft.engine.business.application.converter.ApplicationToNodeConverter;
+import org.bonitasoft.engine.business.application.converter.ApplicationsToNodeContainerConverter;
+import org.bonitasoft.engine.business.application.converter.NodeToApplicationConverter;
 import org.bonitasoft.engine.business.application.exporter.ApplicationContainerExporter;
 import org.bonitasoft.engine.business.application.exporter.ApplicationExporter;
 import org.bonitasoft.engine.business.application.importer.StrategySelector;
 import org.bonitasoft.engine.business.application.importer.validator.ApplicationImportValidator;
 import org.bonitasoft.engine.business.application.importer.validator.ApplicationMenuCreatorValidator;
 import org.bonitasoft.engine.business.application.importer.validator.ApplicationTokenValidator;
-import org.bonitasoft.engine.exception.*;
+import org.bonitasoft.engine.exception.AlreadyExistsException;
+import org.bonitasoft.engine.exception.BonitaRuntimeException;
+import org.bonitasoft.engine.exception.CreationException;
+import org.bonitasoft.engine.exception.DeletionException;
+import org.bonitasoft.engine.exception.ExportException;
+import org.bonitasoft.engine.exception.ImportException;
+import org.bonitasoft.engine.exception.SearchException;
+import org.bonitasoft.engine.exception.UpdateException;
 import org.bonitasoft.engine.page.PageService;
 import org.bonitasoft.engine.profile.ProfileService;
 import org.bonitasoft.engine.search.SearchOptions;
@@ -52,6 +76,7 @@ import org.bonitasoft.engine.search.descriptor.SearchApplicationDescriptor;
 import org.bonitasoft.engine.search.descriptor.SearchApplicationMenuDescriptor;
 import org.bonitasoft.engine.search.descriptor.SearchApplicationPageDescriptor;
 import org.bonitasoft.engine.search.impl.SearchFilter;
+import org.bonitasoft.engine.search.impl.SearchResultImpl;
 import org.bonitasoft.engine.service.ServiceAccessor;
 import org.bonitasoft.engine.service.impl.ServiceAccessorFactory;
 import org.bonitasoft.engine.session.SessionService;
@@ -177,6 +202,17 @@ public class ApplicationAPIImpl implements ApplicationAPI {
     @Deprecated(since = "10.2.0")
     @Override
     public SearchResult<Application> searchApplications(final SearchOptions searchOptions) throws SearchException {
+        if (searchOptions.getFilters().size() == 1) {
+            // Avoid a search query for a search by token to benefit from the cache optimization
+            final SearchFilter searchFilter = searchOptions.getFilters().get(0);
+            if (TOKEN.equals(searchFilter.getField())) {
+                try {
+                    return new SearchResultImpl<>(1, List.of(getApplicationByToken((String) searchFilter.getValue())));
+                } catch (ApplicationNotFoundException e) {
+                    return new SearchResultImpl<>(0, List.of());
+                }
+            }
+        }
         final ServiceAccessor serviceAccessor = getServiceAccessor();
         final SearchApplicationDescriptor appSearchDescriptor = serviceAccessor.getSearchEntitiesDescriptor()
                 .getSearchApplicationDescriptor();
