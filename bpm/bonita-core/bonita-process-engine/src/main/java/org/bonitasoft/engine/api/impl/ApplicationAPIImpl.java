@@ -13,6 +13,7 @@
  **/
 package org.bonitasoft.engine.api.impl;
 
+import static org.bonitasoft.engine.business.application.ApplicationSearchDescriptor.TOKEN;
 import static org.bonitasoft.engine.business.application.ApplicationSearchDescriptor.USER_ID;
 import static org.bonitasoft.engine.business.application.InternalProfiles.INTERNAL_PROFILE_SUPER_ADMIN;
 import static org.bonitasoft.engine.search.descriptor.SearchApplicationDescriptor.APPLICATION_VISIBILITY;
@@ -75,6 +76,7 @@ import org.bonitasoft.engine.search.descriptor.SearchApplicationDescriptor;
 import org.bonitasoft.engine.search.descriptor.SearchApplicationMenuDescriptor;
 import org.bonitasoft.engine.search.descriptor.SearchApplicationPageDescriptor;
 import org.bonitasoft.engine.search.impl.SearchFilter;
+import org.bonitasoft.engine.search.impl.SearchResultImpl;
 import org.bonitasoft.engine.service.TenantServiceAccessor;
 import org.bonitasoft.engine.service.TenantServiceSingleton;
 import org.bonitasoft.engine.service.impl.ServiceAccessorFactory;
@@ -170,6 +172,17 @@ public class ApplicationAPIImpl implements ApplicationAPI {
 
     @Override
     public SearchResult<Application> searchApplications(final SearchOptions searchOptions) throws SearchException {
+        if (searchOptions.getFilters().size() == 1) {
+            // Avoid a search query for a search by token to benefit from the cache optimization
+            final SearchFilter searchFilter = searchOptions.getFilters().get(0);
+            if (TOKEN.equals(searchFilter.getField())) {
+                try {
+                    return new SearchResultImpl<>(1, List.of(getApplicationByToken((String) searchFilter.getValue())));
+                } catch (ApplicationNotFoundException e) {
+                    return new SearchResultImpl<>(0, List.of());
+                }
+            }
+        }
         final TenantServiceAccessor tenantAccessor = getTenantAccessor();
         final SearchApplicationDescriptor appSearchDescriptor = tenantAccessor.getSearchEntitiesDescriptor()
                 .getSearchApplicationDescriptor();
