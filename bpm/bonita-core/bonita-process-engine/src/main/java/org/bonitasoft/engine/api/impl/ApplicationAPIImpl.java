@@ -38,6 +38,9 @@ import org.bonitasoft.engine.api.impl.transaction.application.SearchApplications
 import org.bonitasoft.engine.business.application.Application;
 import org.bonitasoft.engine.business.application.ApplicationCreator;
 import org.bonitasoft.engine.business.application.ApplicationImportPolicy;
+import org.bonitasoft.engine.business.application.ApplicationLink;
+import org.bonitasoft.engine.business.application.ApplicationLinkCreator;
+import org.bonitasoft.engine.business.application.ApplicationLinkUpdater;
 import org.bonitasoft.engine.business.application.ApplicationMenu;
 import org.bonitasoft.engine.business.application.ApplicationMenuCreator;
 import org.bonitasoft.engine.business.application.ApplicationMenuNotFoundException;
@@ -47,6 +50,7 @@ import org.bonitasoft.engine.business.application.ApplicationPage;
 import org.bonitasoft.engine.business.application.ApplicationPageNotFoundException;
 import org.bonitasoft.engine.business.application.ApplicationService;
 import org.bonitasoft.engine.business.application.ApplicationUpdater;
+import org.bonitasoft.engine.business.application.IApplication;
 import org.bonitasoft.engine.business.application.Icon;
 import org.bonitasoft.engine.business.application.converter.ApplicationMenuToNodeConverter;
 import org.bonitasoft.engine.business.application.converter.ApplicationPageToNodeConverter;
