@@ -258,7 +258,7 @@ public class ApplicationAPIImpl implements ApplicationAPI {
 
     protected SearchResult<IApplication> internalSearchIApplications(ServiceAccessor serviceAccessor,
             SearchApplicationDescriptor appSearchDescriptor, SearchOptions searchOptions) throws SearchException {
-        if(searchOptions.getFilters().size() == 1) {
+        if (searchOptions.getFilters().size() == 1) {
             // Avoid a search query for a search by token to benefit from the cache optimization
             final SearchFilter searchFilter = searchOptions.getFilters().get(0);
             if (TOKEN.equals(searchFilter.getField())) {
