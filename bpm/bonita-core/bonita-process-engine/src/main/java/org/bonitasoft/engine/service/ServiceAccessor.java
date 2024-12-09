@@ -289,8 +289,6 @@ public interface ServiceAccessor {
 
     TransactionService getTransactionService();
 
-    TenantServiceAccessor getTenantServiceAccessor();
-
     PlatformSessionService getPlatformSessionService();
 
     PlatformCommandService getPlatformCommandService();

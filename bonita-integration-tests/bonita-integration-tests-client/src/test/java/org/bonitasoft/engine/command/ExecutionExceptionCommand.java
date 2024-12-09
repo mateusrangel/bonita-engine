@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2019 Bonitasoft S.A.
+ * Copyright (C) 2011 Bonitasoft S.A.
  * Bonitasoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -11,25 +11,22 @@
  * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301, USA.
  **/
-package org.bonitasoft.engine.service.impl;
+package org.bonitasoft.engine.command;
 
-import org.bonitasoft.engine.dependency.DependencyService;
+import java.io.Serializable;
+import java.util.Map;
+
+import org.bonitasoft.engine.service.ServiceAccessor;
 
 /**
- * Uses spring to access tenant services
- *
- * @deprecated since 9.0.0, use {@link SpringServiceAccessor} instead
+ * @author Matthieu Chaffotte
  */
-@Deprecated(forRemoval = true, since = "9.0.0")
-public class SpringTenantServiceAccessor extends SpringServiceAccessor {
-
-    public SpringTenantServiceAccessor(final SpringBeanAccessor beanAccessor) {
-        super(beanAccessor);
-    }
+public class ExecutionExceptionCommand extends RuntimeCommand {
 
     @Override
-    public DependencyService getDependencyService() {
-        return beanAccessor.getService("dependencyService", DependencyService.class);
+    public Serializable execute(final Map<String, Serializable> parameters, final ServiceAccessor serviceAccessor)
+            throws SCommandParameterizationException, SCommandExecutionException {
+        throw new SCommandExecutionException("fail");
     }
 
 }

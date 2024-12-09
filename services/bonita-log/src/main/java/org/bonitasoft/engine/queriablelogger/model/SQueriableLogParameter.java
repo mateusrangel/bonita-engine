@@ -45,6 +45,7 @@ public class SQueriableLogParameter implements PersistentObject {
     @Id
     private long tenantId;
     @Id
+    @Builder.Default
     private long id = -1;
     @Column(name = "B_LOG_ID")
     private long queriableLogId;

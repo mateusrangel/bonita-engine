@@ -120,8 +120,6 @@ public class ProcessStarter {
             } else {
                 throw new ProcessExecutionException(e);
             }
-        } catch (final SBonitaException e) {
-            throw new ProcessExecutionException(e);
         }
     }
 

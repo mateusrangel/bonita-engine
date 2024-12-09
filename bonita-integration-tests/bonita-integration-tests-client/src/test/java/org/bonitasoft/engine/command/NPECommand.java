@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2019 Bonitasoft S.A.
+ * Copyright (C) 2024 Bonitasoft S.A.
  * Bonitasoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -11,18 +11,17 @@
  * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301, USA.
  **/
-package org.bonitasoft.engine.service.impl;
+package org.bonitasoft.engine.command;
 
-/**
- * Uses spring to access platform init services
- *
- * @deprecated since 9.0.0, use {@link SpringServiceAccessor} instead
- */
-@Deprecated(forRemoval = true, since = "9.0.0")
-public class SpringPlatformInitServiceAccessor extends SpringServiceAccessor {
+import java.io.Serializable;
+import java.util.Map;
 
-    public SpringPlatformInitServiceAccessor(final SpringBeanAccessor beanAccessor) {
-        super(beanAccessor);
+import org.bonitasoft.engine.service.ServiceAccessor;
+
+public class NPECommand extends RuntimeCommand {
+
+    public Serializable execute(Map<String, Serializable> parameters, ServiceAccessor serviceAccessor)
+            throws SCommandParameterizationException, SCommandExecutionException {
+        throw new NullPointerException();
     }
-
 }

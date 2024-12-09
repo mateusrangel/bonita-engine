@@ -27,7 +27,6 @@ import org.bonitasoft.engine.recorder.model.EntityUpdateDescriptor;
 public interface PlatformService {
 
     String PLATFORM = "PLATFORM";
-    String TENANT = "TENANT";
 
     /**
      * Retrieve the platform from the cache
@@ -39,19 +38,6 @@ public interface PlatformService {
      * @since 6.0
      */
     SPlatform getPlatform() throws SPlatformNotFoundException;
-
-    /**
-     * Update a sTenant from given sTenant and new content.
-     *
-     * @param tenant
-     *        sTenant
-     * @param descriptor
-     *        new content
-     * @throws STenantUpdateException
-     *         occurs when an exception is thrown during sTenant update
-     * @since 6.0
-     */
-    void updateTenant(STenant tenant, EntityUpdateDescriptor descriptor) throws STenantUpdateException;
 
     /**
      * Get tenant by its id

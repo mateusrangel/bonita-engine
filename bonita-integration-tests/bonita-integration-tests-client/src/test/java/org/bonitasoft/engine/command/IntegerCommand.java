@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2019 Bonitasoft S.A.
+ * Copyright (C) 2012 Bonitasoft S.A.
  * Bonitasoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -13,16 +13,20 @@
  **/
 package org.bonitasoft.engine.command;
 
+import java.io.Serializable;
+import java.util.Map;
+
+import org.bonitasoft.engine.service.ServiceAccessor;
+
 /**
- * Class to be subclassed by implementors of a platform scope {@link Command}. It is design to be executed by the
- * {@link org.bonitasoft.engine.api.PlatformCommandAPI}.
- *
- * @see org.bonitasoft.engine.api.PlatformCommandAPI
  * @author Matthieu Chaffotte
- * @since 6.0.0
- * @deprecated since 9.0.0, use {@link RuntimeCommand} instead
  */
-@Deprecated(forRemoval = true, since = "9.0.0")
-public abstract class PlatformCommand extends RuntimeCommand {
+public class IntegerCommand extends RuntimeCommand {
+
+    @Override
+    public Serializable execute(final Map<String, Serializable> parameters, final ServiceAccessor serviceAccessor)
+            throws SCommandParameterizationException, SCommandExecutionException {
+        return parameters.get("int");
+    }
 
 }

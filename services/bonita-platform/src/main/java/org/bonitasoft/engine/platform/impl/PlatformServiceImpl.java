@@ -38,7 +38,6 @@ import org.bonitasoft.engine.services.UpdateDescriptor;
 @Slf4j
 public class PlatformServiceImpl implements PlatformService {
 
-    private static final String TENANT = "TENANT";
     private static final String QUERY_GET_DEFAULT_TENANT = "getDefaultTenant";
 
     private final PersistenceService platformPersistenceService;
@@ -120,16 +119,6 @@ public class PlatformServiceImpl implements PlatformService {
             }
         }
         return defaultTenantId;
-    }
-
-    @Override
-    public void updateTenant(final STenant tenant, final EntityUpdateDescriptor descriptor)
-            throws STenantUpdateException {
-        try {
-            recorder.recordUpdate(UpdateRecord.buildSetFields(tenant, descriptor), TENANT);
-        } catch (final SRecorderException e) {
-            throw new STenantUpdateException("Problem while updating tenant: " + tenant, e);
-        }
     }
 
     @Override

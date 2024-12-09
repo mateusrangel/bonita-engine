@@ -68,6 +68,7 @@ public class SPageMapping implements PersistentObject {
     private String pageAuthorizRules;
 
     @Transient
+    @Builder.Default
     private List<String> authorizationRules = new ArrayList<>();
 
     private void parseRules() {

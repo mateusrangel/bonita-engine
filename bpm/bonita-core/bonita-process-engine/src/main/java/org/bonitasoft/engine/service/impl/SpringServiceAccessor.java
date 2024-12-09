@@ -95,11 +95,8 @@ import org.bonitasoft.engine.scheduler.SchedulerService;
 import org.bonitasoft.engine.search.descriptor.SearchEntitiesDescriptor;
 import org.bonitasoft.engine.service.BroadcastService;
 import org.bonitasoft.engine.service.InstallationService;
-import org.bonitasoft.engine.service.PlatformServiceAccessor;
 import org.bonitasoft.engine.service.ServiceAccessor;
 import org.bonitasoft.engine.service.ServicesResolver;
-import org.bonitasoft.engine.service.TenantServiceAccessor;
-import org.bonitasoft.engine.service.TenantServiceSingleton;
 import org.bonitasoft.engine.services.QueriableLoggerService;
 import org.bonitasoft.engine.session.SessionService;
 import org.bonitasoft.engine.sessionaccessor.SessionAccessor;
@@ -117,8 +114,7 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
 
-public class SpringServiceAccessor
-        implements ServiceAccessor, TenantServiceAccessor, PlatformServiceAccessor, PlatformInitServiceAccessor {
+public class SpringServiceAccessor implements ServiceAccessor {
 
     protected final SpringBeanAccessor beanAccessor;
 
@@ -586,11 +582,6 @@ public class SpringServiceAccessor
     @Override
     public PlatformService getPlatformService() {
         return beanAccessor.getService(PlatformService.class);
-    }
-
-    @Override
-    public TenantServiceAccessor getTenantServiceAccessor() {
-        return TenantServiceSingleton.getInstance();
     }
 
     @Override

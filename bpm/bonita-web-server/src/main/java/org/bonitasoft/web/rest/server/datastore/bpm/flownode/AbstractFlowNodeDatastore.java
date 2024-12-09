@@ -106,8 +106,6 @@ public class AbstractFlowNodeDatastore<CONSOLE_ITEM extends FlowNodeItem, ENGINE
             return convertEngineToConsoleItem(flowNodeInstance);
         } catch (final NotFoundException e) {
             throw new APIItemNotFoundException(FlowNodeDefinition.TOKEN, id);
-        } catch (final BonitaException e) {
-            throw new APIException(e);
         }
     }
 

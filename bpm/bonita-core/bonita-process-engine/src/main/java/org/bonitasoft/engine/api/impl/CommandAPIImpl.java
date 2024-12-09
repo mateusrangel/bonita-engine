@@ -355,7 +355,7 @@ public class CommandAPIImpl implements CommandAPI {
         }
     }
 
-    // Utility classes to factorize how we fetch a TenantCommand
+    // Utility classes to factorize how we fetch a RuntimeCommand
     private abstract static class SCommandFetcher {
 
         abstract SCommand fetch(final CommandService commandService) throws SCommandNotFoundException;

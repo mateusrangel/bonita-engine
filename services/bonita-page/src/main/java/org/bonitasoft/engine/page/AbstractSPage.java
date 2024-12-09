@@ -17,6 +17,7 @@ import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.MappedSuperclass;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -41,7 +42,9 @@ public class AbstractSPage implements PersistentObject {
     private long installationDate;
     private long installedBy;
     private boolean provided;
+    @Builder.Default
     private boolean editable = true;
+    @Builder.Default
     private boolean removable = true;
     private long lastModificationDate;
     private long lastUpdatedBy;

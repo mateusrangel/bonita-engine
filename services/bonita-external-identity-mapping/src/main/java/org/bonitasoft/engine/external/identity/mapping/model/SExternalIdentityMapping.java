@@ -54,8 +54,11 @@ public class SExternalIdentityMapping implements PersistentObject {
     private long tenantId;
     private String kind;
     private String externalId;
+    @Builder.Default
     private long userId = -1;
+    @Builder.Default
     private long groupId = -1;
+    @Builder.Default
     private long roleId = -1;
     @Transient
     private transient String displayNamePart1;

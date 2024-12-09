@@ -33,11 +33,6 @@ public interface IFlowNodeItem extends IItem, ItemHasUniqueId, ItemHasDualName, 
 
     String ATTRIBUTE_PROCESS_ID = "processId";
 
-    /**
-     * @see IFlowNodeItem#ATTRIBUTE_ROOT_CASE_ID
-     * @deprecated since 6.4.0
-     */
-    @Deprecated
     String ATTRIBUTE_CASE_ID = "caseId";
 
     /**

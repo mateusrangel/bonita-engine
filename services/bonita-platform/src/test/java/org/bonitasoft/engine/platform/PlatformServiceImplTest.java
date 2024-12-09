@@ -16,8 +16,6 @@ package org.bonitasoft.engine.platform;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
@@ -29,11 +27,7 @@ import org.bonitasoft.engine.platform.exception.STenantNotFoundException;
 import org.bonitasoft.engine.platform.impl.PlatformServiceImpl;
 import org.bonitasoft.engine.platform.model.SPlatform;
 import org.bonitasoft.engine.platform.model.STenant;
-import org.bonitasoft.engine.platform.model.builder.STenantUpdateBuilder;
-import org.bonitasoft.engine.platform.model.builder.impl.STenantUpdateBuilderImpl;
 import org.bonitasoft.engine.recorder.Recorder;
-import org.bonitasoft.engine.recorder.model.EntityUpdateDescriptor;
-import org.bonitasoft.engine.recorder.model.UpdateRecord;
 import org.bonitasoft.engine.services.PersistenceService;
 import org.bonitasoft.engine.services.UpdateDescriptor;
 import org.junit.Rule;
@@ -109,22 +103,6 @@ public class PlatformServiceImplTest {
         when(platformServiceImpl.getPlatform()).thenReturn(sPlatform);
 
         assertTrue(platformServiceImpl.isPlatformCreated());
-    }
-
-    @Test
-    public void updateTheTenantUsingTheSameName() throws SBonitaException {
-        // Given
-        final STenant tenant = buildTenant(15, "tenantName");
-        final STenantUpdateBuilder updateDescriptor = new STenantUpdateBuilderImpl(new EntityUpdateDescriptor());
-        updateDescriptor.setName("tenant1");
-        final EntityUpdateDescriptor descriptor = updateDescriptor.done();
-        final UpdateRecord updateRecord = UpdateRecord.buildSetFields(tenant, descriptor);
-
-        // When
-        platformServiceImpl.updateTenant(tenant, updateDescriptor.done());
-
-        // Then
-        verify(recorder).recordUpdate(eq(updateRecord), anyString());
     }
 
     @Test

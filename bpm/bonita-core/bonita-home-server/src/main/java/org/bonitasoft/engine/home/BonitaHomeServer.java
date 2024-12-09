@@ -19,7 +19,6 @@ import static org.bonitasoft.engine.home.FolderMgr.getFolder;
 import static org.bonitasoft.engine.home.FolderMgr.getPlatformTempFolder;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -213,27 +212,6 @@ public class BonitaHomeServer {
         getConfigurationService().deleteTenantConfiguration(tenantId);
         //allow re-import of profiles, need to be deleted when we remove the ability to delete tenant
         getTenantStorage().getProfileMD5(tenantId).delete();
-    }
-
-    public void modifyTechnicalUser(long tenantId, String userName, String password) throws IOException {
-        List<BonitaConfiguration> tenantEngineConf = getConfigurationService().getTenantEngineConf(tenantId);
-        for (BonitaConfiguration bonitaConfiguration : tenantEngineConf) {
-            if (bonitaConfiguration.getResourceName().equals("bonita-tenant-community-custom.properties")) {
-                Properties properties = new Properties();
-                properties.load(new ByteArrayInputStream(bonitaConfiguration.getResourceContent()));
-                if (userName != null) {
-                    properties.setProperty("bonita.runtime.admin.username", userName);
-                }
-                if (password != null) {
-                    properties.setProperty("bonita.runtime.admin.password", password);
-                }
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                properties.store(out, "");
-                bonitaConfiguration.setResourceContent(out.toByteArray());
-                break;
-            }
-        }
-        getConfigurationService().storeTenantEngineConf(tenantEngineConf, tenantId);
     }
 
     public File getSecurityScriptsFolder(long tenantId) throws BonitaHomeNotSetException, IOException {
